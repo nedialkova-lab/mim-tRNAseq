@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import os
 from collections import defaultdict
+from pybedtools import BedTool
 
 def getBamList (sampleGroups):
 # reads sampleGroups file and creates dictionary of bam and groups
@@ -33,9 +34,12 @@ def getCoverage(tRNAbed, sampleGroups, out_dir):
 	cov_mean = list()
 
 	for bam, info in bamfiles.items():
-		cmd = "bedtools coverage -a " + tRNAbed + " -b " + bam + " -d -s > " + out_dir + "coverage.txt"
+		a = BedTool(tRNAbed)
+		b = BedTool(bam)
 		print("Running bedtools coverage on {}...".format(bam))
-		subprocess.call(cmd, shell = True)
+		coverage_out = a.coverage(b, d = True, s = True).saveas(out_dir + "coverage.txt")
+		#cmd = "bedtools coverage -a " + tRNAbed + " -b " + bam + " -d -s > " + out_dir + "coverage.txt"
+		#subprocess.call(cmd, shell = True)
 
 		coverage = pd.read_table(out_dir + "coverage.txt", header = None, index_col = 0)[[6,7]]
 		coverage['aa'] = coverage.index.format()

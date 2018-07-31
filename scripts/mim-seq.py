@@ -27,7 +27,7 @@ def restrictedFloat(x):
 	except ValueError:
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
-def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, threads, snp_tolerance, keep_temp, mode, sample_data):
+def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, threads, max_multi, snp_tolerance, keep_temp, mode, sample_data):
 	
 	# Integrity check for output folder argument...
 	try:
@@ -56,7 +56,7 @@ def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, 
 		snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp)
 
 	# Coverage and plots
-	getCoverage.getCoverage(coverage_bed, coverageData, out)
+	getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi)
 	getCoverage.plotCoverage(out)
 
 	# featureCounts
@@ -115,9 +115,16 @@ if __name__ == '__main__':
 		of 1/y, where y is the number of features overlapping with the read). Default is 'none'",\
 	 	choices = ['none','all','fraction'])
 
+	bedtools = parser.add_argument_group("Bedtools coverage options")
+	bedtools.add_argument('--max_multi', metavar = 'Bedtools coverage multhreading', required = False, dest = 'max_multi', type = int, \
+		help = 'Maximum number of bam files to run bedtools coverage on simultaneously. Increasing this number reduces processing time\
+		by increasing number of files processed simultaneously. However, depending on the size of the bam files to process and\
+		available memory, too many files processed at once can cause termination of mim-tRNAseq due to insufficient memory. If\
+		mim-tRNAseq fails during coverage calculation, lower this number. Increase at your own discretion. Default is 3.')
+
 	parser.add_argument('sample_data', help = 'Sample data sheet in text format, tab-separated. Column 1: full path to fastq (or fastq.gz). Column 2: condition/group.')
 
-	parser.set_defaults(threads=1, out="./", mode = 'none')
+	parser.set_defaults(threads=1, out="./", mode = 'none', max_multi = 3)
 
 	if len(sys.argv[1:]) == 0:
 		print(figlet_format('mim-tRNAseq', font='standard'))
@@ -134,4 +141,4 @@ if __name__ == '__main__':
 		print("     Modification-induced misincorporation sequencing of tRNAs\n")
 		args = parser.parse_args()
 		mimseq(args.trnas, args.trnaout, args.modomics, args.name, args.out, args.cluster, args.cluster_id, \
-			args.posttrans, args.threads, args.snp_tolerance, args.keep_temp, args.mode, args.sample_data)
+			args.posttrans, args.threads, args.max_multi, args.snp_tolerance, args.keep_temp, args.mode, args.sample_data)

@@ -8,7 +8,6 @@ import subprocess, os, sys, re
 from collections import defaultdict
 from pathlib import Path
 import glob
-import HTSeq.scripts.count
 
 def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name, snp_index_path, \
 	snp_index_name, out_dir, threads, snp_tolerance, keep_temp):

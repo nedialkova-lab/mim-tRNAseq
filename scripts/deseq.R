@@ -55,8 +55,9 @@ png(paste(subdir, "qc-dispersions.png", sep = "/"), 1000, 1000, pointsize=20)
 plotDispEsts(dds, main="Dispersion plot")
 dev.off()
 
-# Regularized log transformation for clustering/heatmaps, etc
+# Variance stabilizing transformation for clustering/heatmaps, etc
 vsd = varianceStabilizingTransformation(dds, blind=FALSE)
+write.csv(assay(vsd), file = paste(subdir, "vst-transformedCounts.csv", sep = "/"))
 
 # Sample distance heatmap
 sampleDists = dist(t(assay(vsd)))

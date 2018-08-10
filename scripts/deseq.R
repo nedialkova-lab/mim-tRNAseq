@@ -20,9 +20,6 @@ subdir = "DESeq2"
 dir.create(file.path(outdir, subdir), showWarnings = FALSE)
 setwd(file.path(outdir))
 
-message("\n+----------------------------------------------+
-| Differential expression analysis with DESeq2 |
-+----------------------------------------------+\n")
 
 # Import data from featureCounts and sampleData
 countdata = read.table(paste("counts.txt", sep=""), header=TRUE, row.names=1)
@@ -116,6 +113,3 @@ volcanoplot = function (res, lfcthresh=2, sigthresh=0.05, main="Volcano Plot", l
 png(paste(subdir, "diffexpr-volcanoplot.png", sep="/"), 1200, 1000, pointsize=20)
 volcanoplot(resdata, lfcthresh=1, sigthresh=0.05, textcx=.8, xlim=c(-2.3, 2))
 dev.off()
-
-
-message("DESeq2 outputs located in: ", getwd())

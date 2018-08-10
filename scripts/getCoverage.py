@@ -3,11 +3,13 @@
 import subprocess
 import pandas as pd
 import numpy as np
-import os
+import os, logging
 from functools import partial
 from collections import defaultdict
 from pybedtools import BedTool
 from multiprocessing import Pool
+
+log = logging.getLogger(__name__)
 
 def bedtools_mp (tRNAbed, out_dir, inputs):
 # runs pybedtools coverage for input data
@@ -15,9 +17,9 @@ def bedtools_mp (tRNAbed, out_dir, inputs):
 	
 	a = BedTool(tRNAbed)
 	b = BedTool(inputs)
-	print("Running bedtools coverage on {}...".format(inputs))
+	log.info("Running bedtools coverage on {}...".format(inputs))
 	cov = a.coverage(b, d = True, s = True).saveas(out_dir + inputs.split("/")[-1] + "_coverage.txt")
-	print("Coverage calculation complete for {}".format(inputs))	
+	log.info("Coverage calculation complete for {}".format(inputs))	
 
 def getBamList (sampleGroups):
 # reads sampleGroups file and creates dictionary of bam and groups
@@ -40,9 +42,9 @@ def getBamList (sampleGroups):
 def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi):
 # Uses bedtools coverage and pandas generate coverage in 5% intervals per gene and isoacceptor for plotting
 
-	print("+-----------------------------------+\
+	log.info("\n+-----------------------------------+\
 		\n| Calculating coverage and plotting |\
-		\n+-----------------------------------+\n")
+		\n+-----------------------------------+")
 
 	baminfo, bamlist = getBamList(sampleGroups)
 	cov_mean = list()

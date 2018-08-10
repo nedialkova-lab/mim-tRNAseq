@@ -10,9 +10,11 @@ from Bio.SeqRecord import SeqRecord
 from Bio import Alphabet
 from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio.Blast import NCBIXML
-import re, copy, sys, os, shutil, subprocess
+import re, copy, sys, os, shutil, subprocess, logging
 from pathlib import Path
 
+
+log = logging.getLogger(__name__)
 
 def tRNAparser (gtRNAdb, tRNAscan_out, modomics, modifications_table, posttrans_mod_off):
 # tRNA sequence files parser and dictionary building
@@ -21,11 +23,11 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modomics, modifications_table, posttrans_
 	modifications = modificationParser(modifications_table)
 	temp_name = gtRNAdb.split("/")[-1]
                 
-	print("\n\n+" + ("-" * (len(temp_name)+24)) + "+\
+	log.info("\n+" + ("-" * (len(temp_name)+24)) + "+\
 		\n| Starting analysis for {} |\
-		\n+".format(temp_name) + ("-" * (len(temp_name)+24)) + "+\n")
+		\n+".format(temp_name) + ("-" * (len(temp_name)+24)) + "+")
 	      
-	print("Processing tRNA sequences...")
+	log.info("Processing tRNA sequences...")
 
 	# Build dictionary of sequences from gtRNAdb fasta
 	tRNA_dict = {}
@@ -51,7 +53,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modomics, modifications_table, posttrans_
 	# Read in and parse modomics file to contain similar headers to tRNA_dict
 	# Save in new dict
 
-	print("Processing modomics database...\n")
+	log.info("Processing modomics database...")
 	modomics_file = open(modomics, 'r')
 	modomics_dict = {}
 	
@@ -107,8 +109,8 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modomics, modifications_table, posttrans_
 
 	return(tRNA_dict,modomics_dict)
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experiment_name, out_dir, cluster = False, cluster_id = 0.95, posttrans_mod_off = False):
-# Builds SNP index needed for GSNAP based on modificaiton data fro each tRNA
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False):
+# Builds SNP index needed for GSNAP based on modificaiton data for each tRNA
 
 	nomatch_count = 0
 	match_count = 0
@@ -124,7 +126,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 	try:
 		os.mkdir(temp_dir)
 	except FileExistsError:
-		print("Temp folder present - previous run interrupted? Overwriting old temp files...\n")
+		log.warning("Temp folder present - previous run interrupted? Overwriting old temp files...\n")
 
 	###################################################
 	## Main code for matching and SNP index building ##
@@ -132,9 +134,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 
 	# match each sequence in tRNA_dict to value in modomics_dict using BLAST
 
-	print("+------------------------+ \
+	log.info("\n+------------------------+ \
 		\n| Beginning SNP indexing |\
-		\n+------------------------+ \n")	
+		\n+------------------------+")	
 
 	for seq in tRNA_dict:
 		# Initialise list of modified sites for each tRNA
@@ -185,6 +187,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 			nomatch_count += 1
 		total_snps+= len(tRNA_dict[seq]['modified'])
 
+
 		# Build seqrecord list for writing - add 20 N's up and down of transcript sequence
 		seq_records.append(SeqRecord(Seq(("N" * 20 ) + tRNA_dict[seq]['sequence'].upper() + ("N" * 20), Alphabet.generic_dna), id = str(seq)))
 
@@ -192,8 +195,11 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 
 	tRNAbed.close()
 
-	print("{} total tRNA gene sequences".format(len(tRNA_dict)))
-	print("{} sequences with a match to Modomics dataset\n".format(match_count))
+	if total_snps == 0:
+		snp_tolerance = False
+
+	log.info("{} total tRNA gene sequences".format(len(tRNA_dict)))
+	log.info("{} sequences with a match to Modomics dataset".format(match_count))
 
 	# if clustering is not activated then write ful gff report on total SNPs written 
 	if not cluster:
@@ -201,7 +207,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 		with open(out_dir + experiment_name + "_tRNA.gff","w") as tRNAgff:	
 			for seq in tRNA_dict:
 				tRNAgff.write(seq + "\ttRNAseq\texon\t21\t" + str(len(tRNA_dict[seq]['sequence']) + 20) + "\t.\t+\t0\tgene_id '" + seq + "'\n")
-		print("{:,} modifications written to SNP index\n".format(total_snps))
+		log.info("{:,} modifications written to SNP index".format(total_snps))
 
 	##########################
 	# Cluster tRNA sequences #
@@ -209,8 +215,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 
 	elif cluster:
 
-		print("**** Clustering tRNA sequences ****")
-		print("Clustering tRNA sequences by {:.0%} similarity...".format(cluster_id))
+		log.info("**** Clustering tRNA sequences ****")
+		log.info("Clustering tRNA sequences by {:.0%} similarity...".format(cluster_id))
 		# get dictionary of sequences for each anticodon and write to fastas
 		for anticodon in anticodon_list:
 			seq_set = {k:{'sequence':v['sequence'],'modified':v['modified']} for k,v in tRNA_dict.items() if v['anticodon'] == anticodon}
@@ -282,16 +288,20 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
 			SeqIO.write(final_centroids, clusterTranscripts, "fasta")
 
-		print("{} clusters created from {} tRNA sequences\n".format(cluster_num,len(tRNA_dict)))
+		log.info("{} clusters created from {} tRNA sequences".format(cluster_num,len(tRNA_dict)))
 
 		for cluster in mod_lists:
 			total_snps += len(mod_lists[cluster])
+
 			for (index, pos) in enumerate(mod_lists[cluster]):
 				# Build snp_records as before but with cluster names and non-redundant sets of modifications
 				# Position is 1-based for iit_store and snpindex GSNAP routines plus 20 "N" nucleotides, i.e. pos + 21
 				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 21) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
  
-		print("{:,} modifications written to SNP index\n".format(total_snps))		
+		if total_snps == 0:
+			snp_tolerance = False		
+
+		log.info("{:,} modifications written to SNP index".format(total_snps))		
 	
 	with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
 		SeqIO.write(seq_records, temptRNATranscripts, "fasta")
@@ -303,14 +313,14 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 	
 	shutil.rmtree(temp_dir)
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed)
+	return(coverage_bed, snp_tolerance)
 
-def generateGSNAPIndeces(experiment_name, out_dir, cluster = False):
+def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluster = False):
 	# Builds genome and snp index files required by GSNAP
 
-	print("+--------------------------+ \
-		 \n| Generating GSNAP indeces |\
-		 \n+--------------------------+ \n")
+	log.info("\n+--------------------------+ \
+		 \n| Generating GSNAP indices |\
+		 \n+--------------------------+")
 
 	genome_index_path = out_dir + experiment_name + "_tRNAgenome"
 	genome_index_name = genome_index_path.split("/")[-1]
@@ -318,7 +328,7 @@ def generateGSNAPIndeces(experiment_name, out_dir, cluster = False):
 	try:
 		os.mkdir(genome_index_path)
 	except FileExistsError:
-		print("Genome index folder found! Building indeces anyway...")
+		log.warning("Genome index folder found! Building indices anyway...")
 	
 	if cluster:
 		genome_file = out_dir + experiment_name + "_clusterTranscripts.fa"
@@ -328,26 +338,32 @@ def generateGSNAPIndeces(experiment_name, out_dir, cluster = False):
 	index_cmd = "gmap_build -D " + out_dir + " -d " + experiment_name + "_tRNAgenome " + genome_file + \
 				" &> " + out_dir + "genomeindex.log"
 	subprocess.call(index_cmd, shell = True) 
-	print("Genome indeces done...")
+	log.info("Genome indices done...")
 
 	snp_index_path = out_dir + experiment_name + "snp_index"
 
-	try:
-		os.mkdir(snp_index_path)
-	except FileExistsError:
-		print("SNP index folder found! Building indeces anyway...\n")
+	if snp_tolerance:
 
-	snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
-	snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
-	index_cmd = "cat " + snp_file + " | iit_store -o " + snp_index_path + "/" + snp_index_name + " &> " + out_dir + "snpindex.log"
-	subprocess.call(index_cmd, shell = True)
-	index_cmd = "snpindex -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
-				" -v " + experiment_name + "_modificationSNPs " + snp_index_path + "/" + experiment_name + \
-				"_modificationSNPs.iit &>> " + out_dir + "snpindex.log"
-	subprocess.call(index_cmd, shell = True)
-	print("SNP indeces done...\n")
+		try:
+			os.mkdir(snp_index_path)
+		except FileExistsError:
+			log.warning("SNP index folder found! Building indices anyway...\n")
 
-	return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
+		snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
+		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
+		index_cmd = "cat " + snp_file + " | iit_store -o " + snp_index_path + "/" + snp_index_name + " &> " + out_dir + "snpindex.log"
+		subprocess.call(index_cmd, shell = True)
+		index_cmd = "snpindex -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
+					" -v " + experiment_name + "_modificationSNPs " + snp_index_path + "/" + experiment_name + \
+					"_modificationSNPs.iit &>> " + out_dir + "snpindex.log"
+		subprocess.call(index_cmd, shell = True)
+		log.info("SNP indices done...\n")
+		return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
+
+	elif not snp_tolerance:
+		log.warning("SNP-tolerant alignemnt turned off or no modifications found for input tRNAs: SNP indices not built...\n")
+		snp_index_name = ""
+		return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
 
 def modificationParser(modifications_table):
 	# Read in modifications and build dictionary
@@ -412,7 +428,7 @@ def initIntronDict(tRNAscan_out):
 				Intron_dict[tRNA_ID]['intron_start'] = intron_start
 				Intron_dict[tRNA_ID]['intron_stop'] = intron_stop
 
-	print("{} introns registered...".format(intron_count))
+	log.info("{} introns registered...".format(intron_count))
 	return(Intron_dict)
 
 

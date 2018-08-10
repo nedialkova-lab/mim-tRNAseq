@@ -13,9 +13,23 @@
 import tRNAtools
 import tRNAmap
 import getCoverage
-import sys, os, subprocess
+import sys, os, subprocess, logging, datetime
 import argparse
 from pyfiglet import figlet_format
+
+###########
+# Logging #
+###########
+
+now = datetime.datetime.now()
+logging.basicConfig(
+		format="%(asctime)s [%(levelname)-5.5s] %(message)s",
+		level=logging.INFO,
+		handlers=[
+			logging.FileHandler("mim-tRNAseq_{}.log".format(now.strftime("%H-%M-%S"))),
+			logging.StreamHandler(sys.stdout)
+		])
+log = logging.getLogger(__name__)
 
 ## Method for restricting cluster_id argument to float between 0 and 1
 def restrictedFloat(x):
@@ -29,6 +43,8 @@ def restrictedFloat(x):
 
 def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, threads, max_multi, snp_tolerance, keep_temp, mode, sample_data):
 	
+	log = logging.getLogger(__name__)
+
 	# Integrity check for output folder argument...
 	try:
 		os.mkdir(out)
@@ -46,10 +62,10 @@ def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, 
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed = tRNAtools.modsToSNPIndex(trnas, trnaout, modomics, modifications, name, out, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance = tRNAtools.modsToSNPIndex(trnas, trnaout, modomics, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 
 	# Generate GSNAP indeces
-	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndeces(name, out, cluster)
+	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, snp_tolerance, cluster)
 
 	# Align
 	bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
@@ -65,17 +81,26 @@ def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, 
 	# DESeq2
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	sample_data = os.path.abspath(coverageData)
+
+	log.info("\n+----------------------------------------------+\
+	\n| Differential expression analysis with DESeq2 |\
+	\n+----------------------------------------------+")
 	deseq_cmd = "Rscript " + script_path + "/deseq.R " + out + " " + sample_data
 	subprocess.call(deseq_cmd, shell=True)
+	deseq_out = out + "DESeq2"
+
+	log.info("DESeq2 outputs located in: {}".format(deseq_out))
 
 	# tidy files
 	tRNAtools.tidyFiles(out)
 
-################### 
-# Parse arguments #
-################### 
 
 if __name__ == '__main__':
+	
+	################### 
+	# Parse arguments #
+	################### 
+	
 	parser = argparse.ArgumentParser(description = 'Custom high-throughput tRNA sequencing alignment and quantification pipeline\
 		based on modifications and misincorporation.', add_help = True, usage = "%(prog)s [options] sample_data")
 
@@ -126,6 +151,11 @@ if __name__ == '__main__':
 
 	parser.set_defaults(threads=1, out="./", mode = 'none', max_multi = 3)
 
+
+	#############################
+	# Print help or run mim-seq #
+	#############################
+
 	if len(sys.argv[1:]) == 0:
 		print(figlet_format('mim-tRNAseq', font='standard'))
 		print("     Modification-induced misincorporation sequencing of tRNAs\n")
@@ -142,3 +172,17 @@ if __name__ == '__main__':
 		args = parser.parse_args()
 		mimseq(args.trnas, args.trnaout, args.modomics, args.name, args.out, args.cluster, args.cluster_id, \
 			args.posttrans, args.threads, args.max_multi, args.snp_tolerance, args.keep_temp, args.mode, args.sample_data)
+
+	#####################
+	# Configure logging #
+	#####################
+
+#	logging.basicConfig(
+#		format="%(asctime)s [%(levelname)-5.5s] %(message)s",
+#		level=logging.INFO,
+#		handlers=[
+#			logging.FileHandler("{0}/mim-tRNAseq.log".format(args.out)),
+#			logging.StreamHandler(sys.stdout)
+#		])
+
+

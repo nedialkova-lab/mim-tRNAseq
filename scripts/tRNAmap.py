@@ -4,17 +4,19 @@
 # Wrapper functions for read aligmnent and placement #
 ######################################################
 
-import subprocess, os, sys, re
+import subprocess, os, sys, re, logging
 from collections import defaultdict
 from pathlib import Path
 import glob
 
+log = logging.getLogger(__name__)
+
 def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name, snp_index_path, \
 	snp_index_name, out_dir, threads, snp_tolerance, keep_temp):
 
-	print("+-----------+ \
+	log.info("\n+-----------+ \
 	\n| Alignment |\
-	\n+-----------+ \n")
+	\n+-----------+")
 
 	# Read sampleData 
 	sampleDict = defaultdict()
@@ -24,7 +26,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 		for line in sampleData:
 			line = line.strip()
 			if not line.startswith("#"):
-				print("**** {} ****\n".format(line.split("\t")[0].split("/")[-1]))
+				log.info("**** {} ****".format(line.split("\t")[0].split("/")[-1]))
 				fq = line.split("\t")[0]
 				name = line.split("\t")[0].split("/")[-1].split(".")[0]
 				group = line.split("\t")[1]
@@ -56,7 +58,7 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + \
 		" -t " + str(threads) + " --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 " + fq + " &>> " + out_dir + "align.log"
 
-	print("Aligning reads to {}...".format(genome_index_name))
+	log.info("Aligning reads to {}...".format(genome_index_name))
 	subprocess.call(map_cmd, shell = True)
 	
 	# remove transloc sam output if no reads present (often the case)
@@ -66,7 +68,7 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 		os.remove(out_dir + output_prefix + ".unpaired_transloc")
 
 	# write mapping stats and compress to bam - remove mutlimapping and unmapped unless keep_temp = True
-	print("Compressing SAM files and computing mapping stats...\n")
+	log.info("Compressing SAM files and computing mapping stats...")
 	with open(out_dir + "mapping_stats.txt","a") as stats_out:
 		align_pathlist = Path(out_dir).glob(output_prefix + "*")
 		for file in align_pathlist:
@@ -105,9 +107,9 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 
 def countReads(unique_bam_list, mode, threads, out_dir):
 
-	print('\n+-----------------------------------+\
+	log.info('\n+-----------------------------------+\
 		\n| Counting reads with featureCounts |\
-		\n+-----------------------------------+\n')
+		\n+-----------------------------------+')
 
 	# Find tRNA gff produced earlier...
 	gff_file = glob.glob(out_dir + '*.gff')[0]
@@ -123,7 +125,7 @@ def countReads(unique_bam_list, mode, threads, out_dir):
 
 	subprocess.call(cmd, shell=True)
 
-	print("Read counts per tRNA/cluster saved to " + out_dir + "counts/counts.txt")
+	log.info("Read counts per tRNA/cluster saved to " + out_dir + "counts/counts.txt")
 
 if __name__ == '__main__':
 	mainAlign(sys.argv[1:])

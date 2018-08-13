@@ -172,17 +172,3 @@ if __name__ == '__main__':
 		args = parser.parse_args()
 		mimseq(args.trnas, args.trnaout, args.modomics, args.name, args.out, args.cluster, args.cluster_id, \
 			args.posttrans, args.threads, args.max_multi, args.snp_tolerance, args.keep_temp, args.mode, args.sample_data)
-
-	#####################
-	# Configure logging #
-	#####################
-
-#	logging.basicConfig(
-#		format="%(asctime)s [%(levelname)-5.5s] %(message)s",
-#		level=logging.INFO,
-#		handlers=[
-#			logging.FileHandler("{0}/mim-tRNAseq.log".format(args.out)),
-#			logging.StreamHandler(sys.stdout)
-#		])
-
-

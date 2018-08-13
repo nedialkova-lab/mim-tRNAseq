@@ -246,6 +246,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 			with open(path,"r") as cluster_file:
 				for line in cluster_file:
 					line = line.strip()
+
+					# Handle cluster centroids and initialise modified positions list
 					if line.split("\t")[0] == "S":
 						cluster_num += 1
 						cluster_name = line.split("\t")[8]
@@ -253,22 +255,64 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 						clusterbed.write(cluster_name + "\t20\t" + str(len(tRNA_dict[cluster_name]['sequence']) + 20) + "\t" + cluster_name + "\t1000\t+\n" )
 						clustergff.write(cluster_name + "\ttRNAseq\texon\t21\t" + str(len(tRNA_dict[cluster_name]['sequence']) + 20) + "\t.\t+\t0\tgene_id '" + cluster_name + "'\n")
 						cluster_dict[cluster_name] = cluster_num
+				
+					# Handle members of clusters
 					elif line.split("\t")[0] == "H":
 						member_name = line.split("\t")[8]
 						cluster_name = line.split("\t")[9]
+						compr_aln = line.split("\t")[7]
 						# if member of cluster is 100% identical (i.e. "=" in 8th column of cluster file)
-						if line.split("\t")[7] == "=":
+						if compr_aln == "=":
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + tRNA_dict[member_name]["modified"]))
 							cluster_dict[member_name] = cluster_dict[cluster_name]
-						# else if there are inserts or deletions in the member, make new cluster for this sequence, add to centroids to be written to clusterTranscripts
-						elif re.search("[ID]",line.split("\t")[7]):
-							cluster_num += 1
-							mod_lists[member_name] = tRNA_dict[member_name]["modified"]
-							final_centroids.append(SeqRecord(Seq(("N" * 20) + str(tRNA_dict[member_name]["sequence"]).upper() + ("N" * 20), Alphabet.generic_dna), id = member_name))
-							clusterbed.write(member_name + "\t20\t" + str(len(tRNA_dict[member_name]['sequence']) + 20) + "\t" + member_name + "\t1000\t+\n" )
-							clustergff.write(member_name + "\ttRNAseq\texon\t21\t" + str(len(tRNA_dict[member_name]['sequence']) + 20) + "\t.\t+\t0\tgene_id '" + member_name + "'\n")
-							cluster_dict[member_name] = cluster_num
-						# else find mismatches and build non-redundant set
+						
+						# if there are insertions or deletions in the member, edit member or centroid sequences to ignore these positions
+						# and edit modified positions list in order to make non-redundant positions list similar to last else statement
+						elif re.search("[ID]", compr_aln):
+							for match in re.finditer('[ID]', compr_aln):
+								match_pos = match.start()
+								pre_match = compr_aln[:match_pos]
+								indel_start = 0
+								indel_end = 0
+								prev_match = 0
+								# Determine position  of indel from compressed alignment string
+								for group in re.finditer('[A-Z]', pre_match):
+									if len(pre_match[prev_match:group.start()+1]) > 1:
+										indel_start += int(pre_match[prev_match:group.start()])
+									elif len(pre_match[prev_match:group.start()+1]) == 1:
+										indel_start += 1
+									prev_match = group.start() + 1
+
+								# Handle stretches of indels more than 1 nt long
+								if re.search('[0-9]', compr_aln[match_pos-1:match_pos]):
+									indel_end = indel_start + int(compr_aln[match_pos-1:match_pos])
+								else:
+									indel_end = indel_start + 1
+								
+								# Deal with insertions and deletions in almost opposite ways
+								# i.e. if "I" - insertion in centroid, remove from centroid sequence to compare to members
+								# remove position from modifications list if present as a modified position
+								if match.group() == 'I':
+									cluster_seq = tRNA_dict[cluster_name]["sequence"][ :indel_start] + tRNA_dict[cluster_name]["sequence"][indel_end: ] 
+									member_seq = tRNA_dict[member_name]["sequence"]
+									for i in range(indel_start, indel_end + 1):
+										if i in mod_lists[cluster_name]:
+											mod_lists[cluster_name].remove(i)
+										
+								elif match.group() == 'D':
+									cluster_seq = tRNA_dict[cluster_name]["sequence"]
+									member_seq = tRNA_dict[member_name]["sequence"][ :indel_start] + tRNA_dict[member_name]["sequence"][indel_end: ]
+									for i in range(indel_start, indel_end + 1):
+										if i in mod_lists[cluster_name]:
+											mod_lists[cluster_name].remove[i]
+
+							mismatches = [i for i in range(len(member_seq)) if member_seq[i] != cluster_seq[i]]
+							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
+							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
+							cluster_dict[member_name] = cluster_dict[cluster_name]
+
+						# handle members that are not exact sequence matches but have no indels either
+						# find mismatches and build non-redundant set
 						else:
 							cluster_seq = tRNA_dict[cluster_name]["sequence"]
 							member_seq = tRNA_dict[member_name]["sequence"]
@@ -281,8 +325,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 
 		# Write cluster information to tsv
 		with open(out_dir + experiment_name + "clusterInfo.txt","w") as clusterInfo:
+			clusterInfo.write("tRNA\tcluster_num\tcluster_size\n")
 			for key, value in cluster_dict.items():
-				clusterInfo.write("{}\t{}\n".format(key, value))
+				clusterInfo.write("{}\t{}\t{}\n".format(key, value, sum(clusters == value for clusters in cluster_dict.values())))
 
 		# write cluster transcripts
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
@@ -311,7 +356,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 		for item in snp_records:
 			snp_file.write('{}\n'.format(item))
 	
-	shutil.rmtree(temp_dir)
+	#shutil.rmtree(temp_dir)
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance)
 

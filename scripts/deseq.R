@@ -9,6 +9,7 @@ library(RColorBrewer)
 library(pheatmap)
 library(ggplot2)
 library(calibrate)
+library(plyr)
 
 # Arguments
 args = commandArgs(trailingOnly = TRUE)
@@ -80,15 +81,24 @@ ggsave(paste(subdir, "qc-pca.png", sep="/"), height = 7, width = 8)
 # Get combinations of coditions for various DE contrasts
 combinations = combn(unique(dds$condition), 2, simplify=FALSE)
 
+clusterFile = list.files(path="./", pattern="clusterInfo.txt", full.names=T)
+clusterInfo = read.table(clusterFile[1], header=T, row.names=1)
+clusterInfo = clusterInfo[ , 'cluster_size', drop=F]
+clusterInfo$rn = rownames(clusterInfo)
 # For each contrast...
 for (i in 1:length(combinations)) {
   # Get differential expression results
   res = results(dds, contrast=c("condition",as.vector(combinations[[i]])))
   ## Order by adjusted p-value
   res = res[order(res$padj), ]
+  res$rn = rownames(res)
+  count_df = as.data.frame(counts(dds, normalized=TRUE))
+  count_df$rn = rownames(count_df)
   ## Merge with normalized count data
-  resdata = merge(as.data.frame(res), as.data.frame(counts(dds, normalized=TRUE)), by="row.names", sort=FALSE)
-  names(resdata)[1] = "Gene"
+  resdata = join_all(list(as.data.frame(res), count_df, clusterInfo), by="rn", type = 'full')
+  names(resdata)[7] = "Gene"
+  col_idx = grep("Gene", names(resdata))
+  resdata = resdata[, c(col_idx, (1:ncol(resdata))[-col_idx])]
   ## Write results
   write.csv(resdata, file=paste(subdir, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))
 }

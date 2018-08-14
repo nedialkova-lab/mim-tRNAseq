@@ -17,19 +17,6 @@ import sys, os, subprocess, logging, datetime
 import argparse
 from pyfiglet import figlet_format
 
-###########
-# Logging #
-###########
-
-now = datetime.datetime.now()
-logging.basicConfig(
-		format="%(asctime)s [%(levelname)-5.5s] %(message)s",
-		level=logging.INFO,
-		handlers=[
-			logging.FileHandler("mim-tRNAseq_{}.log".format(now.strftime("%H-%M-%S"))),
-			logging.StreamHandler(sys.stdout)
-		])
-log = logging.getLogger(__name__)
 
 ## Method for restricting cluster_id argument to float between 0 and 1
 def restrictedFloat(x):
@@ -43,8 +30,6 @@ def restrictedFloat(x):
 
 def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, threads, max_multi, snp_tolerance, keep_temp, mode, sample_data):
 	
-	log = logging.getLogger(__name__)
-
 	# Integrity check for output folder argument...
 	try:
 		os.mkdir(out)
@@ -53,6 +38,22 @@ def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, 
 
 	if not out.endswith("/"):
 		out = out + "/"
+
+	###########
+	# Logging #
+	###########
+
+	now = datetime.datetime.now()
+	logging.basicConfig(
+		format="%(asctime)s [%(levelname)-5.5s] %(message)s",
+		level=logging.INFO,
+		handlers=[
+			logging.FileHandler(out + "mim-tRNAseq_{}.log".format(now.strftime("%H-%M-%S"))),
+			logging.StreamHandler(sys.stdout)
+		])
+	log = logging.getLogger(__name__)
+	log.info("mim-tRNAseq run with command:")
+	log.info(" ".join(sys.argv))
 
 
 	########

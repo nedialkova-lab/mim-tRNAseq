@@ -304,7 +304,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 									member_seq = tRNA_dict[member_name]["sequence"][ :indel_start] + tRNA_dict[member_name]["sequence"][indel_end: ]
 									for i in range(indel_start, indel_end + 1):
 										if i in mod_lists[cluster_name]:
-											mod_lists[cluster_name].remove[i]
+											mod_lists[cluster_name].remove(i)
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i] != cluster_seq[i]]
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
@@ -356,7 +356,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 		for item in snp_records:
 			snp_file.write('{}\n'.format(item))
 	
-	#shutil.rmtree(temp_dir)
+	shutil.rmtree(temp_dir)
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance)
 

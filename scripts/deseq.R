@@ -95,7 +95,7 @@ for (i in 1:length(combinations)) {
   count_df = as.data.frame(counts(dds, normalized=TRUE))
   count_df$rn = rownames(count_df)
   ## Merge with normalized count data
-  resdata = join_all(list(as.data.frame(res), count_df, clusterInfo), by="rn", type = 'full')
+  resdata = join_all(list(as.data.frame(res), count_df, clusterInfo), by="rn", type = 'left')
   names(resdata)[7] = "Gene"
   col_idx = grep("Gene", names(resdata))
   resdata = resdata[, c(col_idx, (1:ncol(resdata))[-col_idx])]

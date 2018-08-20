@@ -406,7 +406,7 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 		return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
 
 	elif not snp_tolerance:
-		log.warning("SNP-tolerant alignemnt turned off or no modifications found for input tRNAs: SNP indices not built...\n")
+		log.warning("SNP-tolerant alignment turned off or no modifications found for input tRNAs: SNP indices not built...\n")
 		snp_index_name = ""
 		return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
 

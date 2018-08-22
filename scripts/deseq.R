@@ -82,9 +82,17 @@ ggsave(paste(subdir, "qc-pca.png", sep="/"), height = 7, width = 8)
 combinations = combn(unique(dds$condition), 2, simplify=FALSE)
 
 clusterFile = list.files(path="./", pattern="clusterInfo.txt", full.names=T)
-clusterInfo = read.table(clusterFile[1], header=T, row.names=1)
-clusterInfo = clusterInfo[ , 'cluster_size', drop=F]
-clusterInfo$rn = rownames(clusterInfo)
+if (length(clusterFile) == 1) {
+	clusterInfo = read.table(clusterFile[1], header=T, row.names=1)
+	clusterInfo = clusterInfo[ , 'cluster_size', drop=F]
+	clusterInfo$rn = rownames(clusterInfo)
+}
+
+else if (length(clusterFile == 0)) {
+	clusterInfo = data.frame(cluster_size = 1, rn = rownames(dds))
+	rownames(clusterInfo) = clusterInfo$rn
+}
+
 # For each contrast...
 for (i in 1:length(combinations)) {
   # Get differential expression results

@@ -224,7 +224,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 				for sequence in seq_set:
 					anticodon_seqs.write(">" + sequence + "\n" + seq_set[sequence]['sequence'] + "\n")
 			# run usearch on each anticodon sequence fatsa to cluster
-			cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null" 
+			cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null" 
 			subprocess.call(cluster_cmd, shell = True)
 		# combine centroids files into one file
 		combine_cmd = "cat " + temp_dir + "*_centroids.fa > " + temp_dir + "all_centroids.fa"
@@ -266,47 +266,67 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + tRNA_dict[member_name]["modified"]))
 							cluster_dict[member_name] = cluster_dict[cluster_name]
 						
-						# if there are insertions or deletions in the member, edit member or centroid sequences to ignore these positions
-						# and edit modified positions list in order to make non-redundant positions list similar to last else statement
+						# if there are insertions or deletions in the centroid, edit member or centroid sequences to ignore these positions
+						# and edit modified positions list in order to make non-redundant positions list similar to next else statement
 						elif re.search("[ID]", compr_aln):
-							for match in re.finditer('[ID]', compr_aln):
-								match_pos = match.start()
-								pre_match = compr_aln[:match_pos]
-								indel_start = 0
-								indel_end = 0
-								prev_match = 0
-								# Determine position  of indel from compressed alignment string
-								for group in re.finditer('[A-Z]', pre_match):
-									if len(pre_match[prev_match:group.start()+1]) > 1:
-										indel_start += int(pre_match[prev_match:group.start()])
-									elif len(pre_match[prev_match:group.start()+1]) == 1:
-										indel_start += 1
-									prev_match = group.start() + 1
+							cluster_seq = tRNA_dict[cluster_name]["sequence"]
+							member_seq = tRNA_dict[member_name]["sequence"]
+							pos = 0
+							adjust_pos_del = 0
+							adjust_pos_ins = 0
+							insertion_pos = list()
+							deletion_pos = list()
+							aln_list = re.split('(.*?[A-Z])', compr_aln)
+							aln_list = list(filter(None, aln_list))
 
-								# Handle stretches of indels more than 1 nt long
-								if re.search('[0-9]', compr_aln[match_pos-1:match_pos]):
-									indel_end = indel_start + int(compr_aln[match_pos-1:match_pos])
-								else:
-									indel_end = indel_start + 1
+							for phrase in aln_list:
 								
-								# Deal with insertions and deletions in almost opposite ways
-								# i.e. if "I" - insertion in centroid, remove from centroid sequence to compare to members
-								# remove position from modifications list if present as a modified position
-								if match.group() == 'I':
-									cluster_seq = tRNA_dict[cluster_name]["sequence"][ :indel_start] + tRNA_dict[cluster_name]["sequence"][indel_end: ] 
-									member_seq = tRNA_dict[member_name]["sequence"]
-									for i in range(indel_start, indel_end + 1):
-										if i in mod_lists[cluster_name]:
-											mod_lists[cluster_name].remove(i)
-										
-								elif match.group() == 'D':
-									cluster_seq = tRNA_dict[cluster_name]["sequence"]
-									member_seq = tRNA_dict[member_name]["sequence"][ :indel_start] + tRNA_dict[member_name]["sequence"][indel_end: ]
-									for i in range(indel_start, indel_end + 1):
-										if i in mod_lists[cluster_name]:
-											mod_lists[cluster_name].remove(i)
+								if ("M" in phrase) and (phrase.split("M")[0] != ""):
+									pos += int(phrase.split("M")[0])
+								elif ("M" in phrase) and (phrase.split("M")[0] == ""):
+									pos += 1
 
-							mismatches = [i for i in range(len(member_seq)) if member_seq[i] != cluster_seq[i]]
+								if ("I" in phrase) and (phrase.split("I")[0] != ""):
+									insert_len = int(phrase.split("I")[0])
+
+									for i in range(insert_len):
+										insertion_pos.append(pos+i)
+										#pos += 1
+								elif ("I" in phrase) and (phrase.split("I")[0] == ""):
+									insertion_pos.append(pos)
+									#pos += 1
+
+								if ("D" in phrase) and (phrase.split("D")[0] != ""):
+									delete_len = int(phrase.split("D")[0])
+
+									for i in range(delete_len):
+										deletion_pos.append(pos)
+										pos += 1
+								elif ("D" in phrase) and (phrase.split("D")[0] == ""):
+									deletion_pos.append(pos)
+									pos += 1
+
+							for delete in deletion_pos:
+								# if delete in tRNA_dict[member_name]["modified"]:
+								# 	tRNA_dict[member_name]["modified"].remove(delete)
+								new_delete = delete + adjust_pos_del
+								member_seq = member_seq[ :new_delete] + member_seq[new_delete+1: ]
+								adjust_pos_del -= 1
+
+							for index, insert in enumerate(insertion_pos):
+								adjust_pos_len = 0
+								# if insert in mod_lists[cluster_name]:
+								# 	mod_lists[cluster_name].remove(insert)
+								for delete in deletion_pos:
+									if delete < insert:
+										adjust_pos_len -= 1
+								if index != 0:
+									if insert == insertion_pos[index-1] + 1:
+										adjust_pos_ins -= 1
+								new_insert = insert + adjust_pos_len + adjust_pos_ins
+								cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
+
+							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							cluster_dict[member_name] = cluster_dict[cluster_name]
@@ -316,7 +336,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 						else:
 							cluster_seq = tRNA_dict[cluster_name]["sequence"]
 							member_seq = tRNA_dict[member_name]["sequence"]
-							mismatches = [i for i in range(len(member_seq)) if member_seq[i] != cluster_seq[i]]
+							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							cluster_dict[member_name] = cluster_dict[cluster_name]

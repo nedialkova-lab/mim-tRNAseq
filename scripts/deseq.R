@@ -15,6 +15,7 @@ library(plyr)
 args = commandArgs(trailingOnly = TRUE)
 outdir = args[1]
 sampleData = args[2]
+control_cond = args[3]
 subdir = "DESeq2"
 
 # Output directory
@@ -78,17 +79,25 @@ ggplot(pcaData, aes(PC1, PC2, color=condition)) +
   coord_fixed()
 ggsave(paste(subdir, "qc-pca.png", sep="/"), height = 7, width = 8)
 
+# Function to order control/WT condition last in combinations so that contrasts for DE are always mutant/condition vs WT/control
+lastlevel = function(f, control) {
+    if (!is.factor(f)) stop("input for contrast combinations not a factor")
+    orig_levels = levels(f)
+    if (! control %in% orig_levels) stop("control must be a level of f")
+    new_levels = c(setdiff(orig_levels, control), control)
+    factor(f, levels = new_levels)
+}
+
 # Get combinations of coditions for various DE contrasts
-combinations = combn(unique(dds$condition), 2, simplify=FALSE)
+ordered_levels = levels(lastlevel(unique(dds$condition), control_cond))
+combinations = combn(ordered_levels, 2, simplify=FALSE)
 
 clusterFile = list.files(path="./", pattern="clusterInfo.txt", full.names=T)
 if (length(clusterFile) == 1) {
 	clusterInfo = read.table(clusterFile[1], header=T, row.names=1)
 	clusterInfo = clusterInfo[ , 'cluster_size', drop=F]
 	clusterInfo$rn = rownames(clusterInfo)
-}
-
-else if (length(clusterFile == 0)) {
+} else if (length(clusterFile == 0)) {
 	clusterInfo = data.frame(cluster_size = 1, rn = rownames(dds))
 	rownames(clusterInfo) = clusterInfo$rn
 }

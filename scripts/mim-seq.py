@@ -28,7 +28,7 @@ def restrictedFloat(x):
 	except ValueError:
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
-def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, threads, max_multi, snp_tolerance, keep_temp, mode, sample_data):
+def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, keep_temp, mode, sample_data):
 	
 	# Integrity check for output folder argument...
 	try:
@@ -86,7 +86,7 @@ def mimseq(trnas, trnaout, modomics, name, out, cluster, cluster_id, posttrans, 
 	log.info("\n+----------------------------------------------+\
 	\n| Differential expression analysis with DESeq2 |\
 	\n+----------------------------------------------+")
-	deseq_cmd = "Rscript " + script_path + "/deseq.R " + out + " " + sample_data
+	deseq_cmd = "Rscript " + script_path + "/deseq.R " + out + " " + sample_data + " " + control_cond
 	subprocess.call(deseq_cmd, shell=True)
 	deseq_out = out + "DESeq2"
 
@@ -125,6 +125,9 @@ if __name__ == '__main__':
 	options.add_argument('--posttrans_mod_off', required = False, dest = 'posttrans', action = 'store_true', \
 		help = "Disable post-transcriptional modification of tRNAs, i.e. addition of 3'-CCA and 5'-G (His) to mature sequences. Disable for certain \
 		prokaryotes (e.g. E. coli) where this is genomically encoded. Leave enabled (default) for all eukaryotes.")
+	options.add_argument('--control_condition', metavar = 'control condition', required = True, dest = 'control_cond', \
+		help = 'Name of control/wild-type condition as per user defined group specified in sample data input. This must exactly match the group name \
+		specified in sample data. This is used for differential expression analysis so that results are always in the form mutant/treatment vs WT/control. REQUIRED')
 
 	outputs = parser.add_argument_group("Output options")
 	outputs.add_argument('-n', '--name', metavar = 'experiment name', required = True, dest = 'name', help = \
@@ -171,5 +174,15 @@ if __name__ == '__main__':
 		print(figlet_format('mim-tRNAseq', font='standard'))
 		print("     Modification-induced misincorporation sequencing of tRNAs\n")
 		args = parser.parse_args()
-		mimseq(args.trnas, args.trnaout, args.modomics, args.name, args.out, args.cluster, args.cluster_id, \
-			args.posttrans, args.threads, args.max_multi, args.snp_tolerance, args.keep_temp, args.mode, args.sample_data)
+		# Check that control_cond exists in sample data
+		conditions = list()
+		with open(args.sample_data, "r") as sampleData:
+			for line in sampleData:
+				line = line.strip()
+				if not line.startswith("#"):
+					conditions.append(line.split("\t")[1])
+		if args.control_cond not in conditions:
+			raise argparse.ArgumentTypeError('{} not a valid condition in {}'.format(args.control_cond, args.sample_data))
+		else:
+			mimseq(args.trnas, args.trnaout, args.modomics, args.name, args.out, args.cluster, args.cluster_id, \
+				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, args.keep_temp, args.mode, args.sample_data)

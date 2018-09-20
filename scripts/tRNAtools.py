@@ -12,11 +12,12 @@ from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio.Blast import NCBIXML
 import re, copy, sys, os, shutil, subprocess, logging
 from pathlib import Path
+import urllib.request
 
 
 log = logging.getLogger(__name__)
 
-def tRNAparser (gtRNAdb, tRNAscan_out, modomics, modifications_table, posttrans_mod_off):
+def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 # tRNA sequence files parser and dictionary building
 
 	# Generate modification reference table
@@ -37,6 +38,8 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modomics, modifications_table, posttrans_
 	Intron_dict = initIntronDict(tRNAscan_out)
 
 	for seq in temp_dict:
+		# Get species of input tRNA seqs to subset full Modomics table
+		species = ' '.join(seq.split('_')[0:2])
 		tRNA_dict[seq] = {}
 		tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
 		tRNA_dict[seq]['sequence'] = tRNAseq
@@ -54,62 +57,80 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modomics, modifications_table, posttrans_
 	# Save in new dict
 
 	log.info("Processing modomics database...")
-	modomics_file = open(modomics, 'r')
+	modomics_file = getModomics()
 	modomics_dict = {}
 	
-	for line in modomics_file:
+	for line in modomics_file.splitlines():
 		line = line.strip()
 		sameIDcount = 0
+
 		if line.startswith('>'):
 			line = line.replace(' | ','|')
-			# Replace modomics antidon with normal ACGT codon
-			anticodon = str(line.split('|')[2])
-			new_anticodon = getUnmodSeq(anticodon, modifications)
+			# Check if species matches those from gtRNAdb input, otherwise skip entry
+			mod_species = line.split('|')[3]
+			if not mod_species == species:
+				continue
+			else:
+				# Replace modomics antidon with normal ACGT codon
+				anticodon = str(line.split('|')[2])
+				new_anticodon = getUnmodSeq(anticodon, modifications)
 
-			# Check amino acid name in modomics - set to iMet if equal to Ini to match gtRNAdb
-			amino = str(line.split('|')[1])
-			if amino == 'Ini' :
-				amino = 'iMet'
+				# Check amino acid name in modomics - set to iMet if equal to Ini to match gtRNAdb
+				amino = str(line.split('|')[1])
+				if amino == 'Ini' :
+					amino = 'iMet'
 
-			curr_id = str(line.split('|')[3].split(' ')[0]) + '_' + str(line.split('|')[3].split(' ')[1]) + '_' + str(line.split('|')[0].split(' ')[1]) + '-' + amino + '-' + new_anticodon
+				curr_id = str(line.split('|')[3].split(' ')[0]) + '_' + str(line.split('|')[3].split(' ')[1]) + '_' + str(line.split('|')[0].split(' ')[1]) + '-' + amino + '-' + new_anticodon
 		
-			#Unique names for duplicates
-			if curr_id in modomics_dict:
-				sameIDcount += 1
-				curr_id = curr_id + '-' + str(sameIDcount)
+				#Unique names for duplicates
+				if curr_id in modomics_dict:
+					sameIDcount += 1
+					curr_id = curr_id + '-' + str(sameIDcount)
 
-			tRNA_type = str(line.split('|')[4])
-			modomics_dict[curr_id] = {'sequence':'','type':tRNA_type, 'anticodon':new_anticodon}
+				tRNA_type = str(line.split('|')[4])
+				modomics_dict[curr_id] = {'sequence':'','type':tRNA_type, 'anticodon':new_anticodon}
 		
 		else:
-			sequence = line.strip().replace('U','T').replace('-','')
-			modomics_dict[curr_id]['sequence'] = sequence
-			unmod_sequence = getUnmodSeq(sequence, modifications)
-
-			# Return list of modified nucl indices and add to modomics_dict
-			# add unmodified seq to modomics_dict by lookup to modifications
-			nonMod = ['A','C','G','T','-']
-			modPos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x not in nonMod]
-			modomics_dict[curr_id]['modified'] = modPos
-			modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
-
-			# If 'N' in anticodon then duplicate entry 4 times for each possibility
-			anticodon = curr_id.split('-')[2]
-			if 'N' in anticodon:
-				for rep in ['A','C','G','T']:
-					duplicate_item = str(curr_id.split('-')[0]) + '-' + str(curr_id.split('-')[1]) + '-' + str(anticodon.replace('N', rep))
-					duplicate_unmod_seq = modomics_dict[curr_id]['unmod_sequence'].replace('N',rep)
-					modomics_dict[duplicate_item] = copy.deepcopy(modomics_dict[curr_id])
-					modomics_dict[duplicate_item]['unmod_sequence'] = duplicate_unmod_seq
-				del modomics_dict[curr_id]
+			if not mod_species == species:
+				continue
 			else:
-				duplicate_item = curr_id
+				sequence = line.strip().replace('U','T').replace('-','')
+				modomics_dict[curr_id]['sequence'] = sequence
+				unmod_sequence = getUnmodSeq(sequence, modifications)
 
-	modomics_file.close()
+				# Return list of modified nucl indices and add to modomics_dict
+				# add unmodified seq to modomics_dict by lookup to modifications
+				nonMod = ['A','C','G','T','-']
+				modPos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x not in nonMod]
+				modomics_dict[curr_id]['modified'] = modPos
+				modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
+
+				# If 'N' in anticodon then duplicate entry 4 times for each possibility
+				anticodon = curr_id.split('-')[2]
+				if 'N' in anticodon:
+					for rep in ['A','C','G','T']:
+						duplicate_item = str(curr_id.split('-')[0]) + '-' + str(curr_id.split('-')[1]) + '-' + str(anticodon.replace('N', rep))
+						duplicate_unmod_seq = modomics_dict[curr_id]['unmod_sequence'].replace('N',rep)
+						modomics_dict[duplicate_item] = copy.deepcopy(modomics_dict[curr_id])
+						modomics_dict[duplicate_item]['unmod_sequence'] = duplicate_unmod_seq
+					del modomics_dict[curr_id]
+				else:
+					duplicate_item = curr_id
+
+	log.info('Number of Modomics entries matching species of input tRNA sequences: {}'.format(len(modomics_dict)))
 
 	return(tRNA_dict,modomics_dict)
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False):
+def getModomics():
+	# Get full Modomics modified tRNA data from web
+
+	with urllib.request.urlopen('http://modomics.genesilico.pl/sequences/list/?type_field=tRNA&subtype=all&species=all&display_ascii=Display+as+ASCII&nomenclature=abbrev') as response:
+		modomics = response.read().decode()
+
+	return modomics
+
+
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA
 
 	nomatch_count = 0
@@ -120,7 +141,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modomics, modifications_table, experim
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
-	tRNA_dict, modomics_dict = tRNAparser(gtRNAdb, tRNAscan_out, modomics, modifications_table, posttrans_mod_off)
+	tRNA_dict, modomics_dict = tRNAparser(gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off)
 	temp_dir = out_dir + "/tmp/"
 
 	try:
@@ -507,9 +528,9 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
 	else:
 		seq = str(seqIO_dict[seqIO_record].seq)
 	if 'His' in seqIO_record and posttrans_mod_off == False:
-		seq = 'G' + seq + 'CCA'
+		seq = 'G' + seq + 'C'
 	elif posttrans_mod_off == False:
-		seq = seq + 'CCA'
+		seq = seq + 'C'
 
 	return(seq)
 

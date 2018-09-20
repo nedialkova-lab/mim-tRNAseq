@@ -21,6 +21,20 @@ if (length(args)==0) {
 	xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(fill = "Isoacceptor")
 	ggsave(paste(out_dir, "coverage_byaa_norm.pdf", sep = ''), cov_byaa_norm, height = 4, width = 8)
 
+	cov_byaa_sum = aggregate(x = cov_byaa$cov_norm, by = list(bin = cov_byaa$bin, condition = cov_byaa$condition), FUN = sum)
+	scale_factors = cov_byaa_sum[which(cov_byaa_sum$bin == 100),]
+	cov_byaa_scaled = cov_byaa
+	cov_byaa_scaled$cov_norm_scaled = NA
+	for (i in 1:nrow(cov_byaa_scaled)){
+		cov_byaa_scaled[i,'cov_norm_scaled'] = cov_byaa_scaled[i,'cov_norm']/scale_factors[which(cov_byaa_scaled[i,'condition'] == scale_factors$condition),3]
+	}
+	
+	
+	cov_byaa_norm_scaled = ggplot(cov_byaa_scaled, aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + geom_bar(stat = "identity") + facet_wrap(~condition, nrow = 1) + 
+	xlab("Gene (%)") + ylab("Scaled normalised coverage") + labs(fill = "Isoacceptor") + scale_y_continuous(breaks = seq(0,1,0.25))
+	ggsave(paste(out_dir, "coverage_byaa_norm_scaled.pdf", sep = ''), cov_byaa_norm_scaled, height = 4, width = 8)
+
+
 	cov_byaa$aa_groups = aa_groups[match(cov_byaa$aa, aa_groups$aa),2]
 
 	cov_byaa_agg = aggregate(x = cov_byaa$cov_norm, by = list(condition = cov_byaa$condition, bin = cov_byaa$bin, aa_groups = cov_byaa$aa_groups), FUN = mean)

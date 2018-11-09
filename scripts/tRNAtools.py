@@ -117,7 +117,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 				else:
 					duplicate_item = curr_id
 
-	log.info('Number of Modomics entries matching species of input tRNA sequences: {}'.format(len(modomics_dict)))
+	log.info('Number of Modomics entries for species of interest: {}'.format(len(modomics_dict)))
 
 	return(tRNA_dict,modomics_dict)
 
@@ -199,9 +199,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 				match_count += 1
 				tRNA_dict[seq]['modified'] = match[tophit]['modified']
 				for (index, pos) in enumerate(tRNA_dict[seq]['modified']):
-					# Build snp_records with chromosomes equal to sequence name since this will be appended to the genome as individual chr
-					# Position is 1-based for iit_store and snpindex GSNAP routines plus 20 "N" nucleotides, i.e. pos + 21
-					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 21) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
+					# Build snp_records with chromosomes equal to transcript names
+					# Position is 1-based for iit_store i.e. pos + 1
+					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
 			elif len(tophit) == 0:
 				nomatch_count += 1
 		if len(match) == 0:
@@ -209,10 +209,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		total_snps+= len(tRNA_dict[seq]['modified'])
 
 
-		# Build seqrecord list for writing - add 20 N's up and down of transcript sequence
-		seq_records.append(SeqRecord(Seq(("N" * 20 ) + tRNA_dict[seq]['sequence'].upper() + ("N" * 20), Alphabet.generic_dna), id = str(seq)))
+		# Build seqrecord list for writing
+		seq_records.append(SeqRecord(Seq(tRNA_dict[seq]['sequence'].upper(), Alphabet.generic_dna), id = str(seq)))
 
-		tRNAbed.write(seq + "\t20\t" + str(len(tRNA_dict[seq]['sequence']) + 20) + "\t" + seq + "\t1000\t+\n" )
+		tRNAbed.write(seq + "\t0\t" + str(len(tRNA_dict[seq]['sequence'])) + "\t" + seq + "\t1000\t+\n" )
 
 	tRNAbed.close()
 
@@ -227,7 +227,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		coverage_bed = tRNAbed.name
 		with open(out_dir + experiment_name + "_tRNA.gff","w") as tRNAgff:	
 			for seq in tRNA_dict:
-				tRNAgff.write(seq + "\ttRNAseq\texon\t21\t" + str(len(tRNA_dict[seq]['sequence']) + 20) + "\t.\t+\t0\tgene_id '" + seq + "'\n")
+				tRNAgff.write(seq + "\ttRNAseq\texon\t1\t" + str(len(tRNA_dict[seq]['sequence'])) + "\t.\t+\t0\tgene_id '" + seq + "'\n")
 		log.info("{:,} modifications written to SNP index".format(total_snps))
 
 	##########################
@@ -251,7 +251,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		combine_cmd = "cat " + temp_dir + "*_centroids.fa > " + temp_dir + "all_centroids.fa"
 		subprocess.call(combine_cmd, shell = True)
 		# add N's
-		final_centroids = [SeqRecord(Seq(("N" *20) + str(seq_record.seq).upper() + ("N" * 20), Alphabet.generic_dna), id = seq_record.id) for seq_record in SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")]
+		final_centroids = [SeqRecord(Seq(str(seq_record.seq).upper(), Alphabet.generic_dna), id = seq_record.id) for seq_record in SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")]
 			
 		# read cluster files, get nonredudant set of mod positions of all members of a cluster, create snp_records for writing SNP index
 		cluster_pathlist = Path(temp_dir).glob("**/*_clusters.uc")
@@ -273,8 +273,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 						cluster_num += 1
 						cluster_name = line.split("\t")[8]
 						mod_lists[cluster_name] = tRNA_dict[cluster_name]["modified"]
-						clusterbed.write(cluster_name + "\t20\t" + str(len(tRNA_dict[cluster_name]['sequence']) + 20) + "\t" + cluster_name + "\t1000\t+\n" )
-						clustergff.write(cluster_name + "\ttRNAseq\texon\t21\t" + str(len(tRNA_dict[cluster_name]['sequence']) + 20) + "\t.\t+\t0\tgene_id '" + cluster_name + "'\n")
+						clusterbed.write(cluster_name + "\t0\t" + str(len(tRNA_dict[cluster_name]['sequence'])) + "\t" + cluster_name + "\t1000\t+\n" )
+						clustergff.write(cluster_name + "\ttRNAseq\texon\t1\t" + str(len(tRNA_dict[cluster_name]['sequence'])) + "\t.\t+\t0\tgene_id '" + cluster_name + "'\n")
 						cluster_dict[cluster_name] = cluster_num
 				
 					# Handle members of clusters
@@ -381,8 +381,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 
 			for (index, pos) in enumerate(mod_lists[cluster]):
 				# Build snp_records as before but with cluster names and non-redundant sets of modifications
-				# Position is 1-based for iit_store and snpindex GSNAP routines plus 20 "N" nucleotides, i.e. pos + 21
-				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 21) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
+				# Position is 1-based for iit_store i.e. pos + 1
+				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
  
 		if total_snps == 0:
 			snp_tolerance = False		
@@ -399,7 +399,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	
 	shutil.rmtree(temp_dir)
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance)
+	return(coverage_bed, snp_tolerance, mod_lists)
 
 def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluster = False):
 	# Builds genome and snp index files required by GSNAP

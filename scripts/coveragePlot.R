@@ -17,7 +17,7 @@ if (length(args)==0) {
 
 	cov_byaa = read.table(args[2], header=TRUE, sep = "\t")
 	out_dir = args[3]
-	cov_byaa_norm = ggplot(cov_byaa, aes(x = bin, y = cov_norm, fill = aa, group = aa)) + geom_bar(stat = "identity") + facet_wrap(~condition, nrow = 1) + 
+	cov_byaa_norm = ggplot(cov_byaa, aes(x = bin, y = cov_norm, fill = aa, group = aa)) + geom_bar(stat = "identity") + facet_wrap(~condition, ncol = 4) + 
 	xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(fill = "Isoacceptor")
 	ggsave(paste(out_dir, "coverage_byaa_norm.pdf", sep = ''), cov_byaa_norm, height = 4, width = 8)
 
@@ -30,7 +30,7 @@ if (length(args)==0) {
 	}
 	
 	
-	cov_byaa_norm_scaled = ggplot(cov_byaa_scaled, aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + geom_bar(stat = "identity") + facet_wrap(~condition, nrow = 1) + 
+	cov_byaa_norm_scaled = ggplot(cov_byaa_scaled, aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + geom_bar(stat = "identity") + facet_wrap(~condition, ncol = 4) + 
 	xlab("Gene (%)") + ylab("Scaled normalised coverage") + labs(fill = "Isoacceptor") + scale_y_continuous(breaks = seq(0,1,0.25))
 	ggsave(paste(out_dir, "coverage_byaa_norm_scaled.pdf", sep = ''), cov_byaa_norm_scaled, height = 4, width = 8)
 
@@ -38,7 +38,7 @@ if (length(args)==0) {
 	cov_byaa$aa_groups = aa_groups[match(cov_byaa$aa, aa_groups$aa),2]
 
 	cov_byaa_agg = aggregate(x = cov_byaa$cov_norm, by = list(condition = cov_byaa$condition, bin = cov_byaa$bin, aa_groups = cov_byaa$aa_groups), FUN = mean)
-	cov_byaa_line = ggplot(cov_byaa_agg, aes(x = bin, y = x, color = aa_groups, group = aa_groups)) + geom_line() + facet_wrap(~condition, nrow = 1) +
+	cov_byaa_line = ggplot(cov_byaa_agg, aes(x = bin, y = x, color = aa_groups, group = aa_groups)) + geom_line() + facet_wrap(~condition, ncol = 4) +
 	xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(color = "Amino acid group")
 	ggsave(paste(out_dir, "coverage_byaa_line.pdf", sep = ''), cov_byaa_line, height = 4, width = 8)
 

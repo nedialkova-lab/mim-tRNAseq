@@ -13,6 +13,7 @@
 import tRNAtools
 import tRNAmap
 import getCoverage
+#import modQuant
 import sys, os, subprocess, logging, datetime
 import argparse
 from pyfiglet import figlet_format
@@ -63,7 +64,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance, mod_lists = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 
 	# Generate GSNAP indeces
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, snp_tolerance, cluster)
@@ -73,7 +74,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp)
 
 	# Coverage and plots
-	getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi)
+	cov_table = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi)
 	getCoverage.plotCoverage(out)
 
 	# featureCounts
@@ -91,6 +92,10 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	deseq_out = out + "DESeq2"
 
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))
+
+	# Misincorporation analysis
+	#modQuant.generateModsTable(coverageData, out, mod_lists, max_multi, cov_table)
+
 
 	# tidy files
 	tRNAtools.tidyFiles(out)

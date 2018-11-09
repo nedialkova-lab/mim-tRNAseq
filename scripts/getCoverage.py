@@ -1,5 +1,9 @@
 #! /usr/bin/env python3
 
+######################################################
+# Coverage calculation and table output for plotting #
+######################################################
+
 import subprocess
 import pandas as pd
 import numpy as np
@@ -84,6 +88,7 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi):
 	cov_mean_aa = cov_mean.groupby(['aa', 'bin', 'condition']).mean()	
 	cov_mean_aa.to_csv(out_dir + "coverage_byaa.txt", sep = "\t")
 
+	return(cov_mean)
 
 def plotCoverage(out_dir):
 	script_path = os.path.dirname(os.path.realpath(__file__))

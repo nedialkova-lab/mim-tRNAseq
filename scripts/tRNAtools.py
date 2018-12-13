@@ -454,7 +454,7 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 def modificationParser(modifications_table):
 	# Read in modifications and build dictionary
 
-		mods = open(modifications_table, 'r')
+		mods = open(modifications_table, 'r', encoding='utf-8')
 		modifications = {}
 		for line in mods:
 			if not line.startswith("#"):
@@ -528,9 +528,9 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
 	else:
 		seq = str(seqIO_dict[seqIO_record].seq)
 	if 'His' in seqIO_record and posttrans_mod_off == False:
-		seq = 'G' + seq + 'C'
+		seq = 'G' + seq + 'CCA'
 	elif posttrans_mod_off == False:
-		seq = seq + 'C'
+		seq = seq + 'CCA'
 
 	return(seq)
 
@@ -541,6 +541,7 @@ def tidyFiles (out_dir):
 	os.mkdir(out_dir + "indices/")
 	os.mkdir(out_dir + "cov/")
 	os.mkdir(out_dir + "counts/")
+	os.mkdir(out_dir + "mods/")
 
 	files = os.listdir(out_dir)
 
@@ -556,4 +557,6 @@ def tidyFiles (out_dir):
 			shutil.move(full_file, out_dir + "cov")
 		if ("counts".upper() in file.upper()):
 			shutil.move(full_file, out_dir + "counts")
+		if ("Table" in file):
+			shutil.move(full_file, out_dir + "mods")
 

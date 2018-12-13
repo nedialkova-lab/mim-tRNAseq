@@ -13,7 +13,7 @@
 import tRNAtools
 import tRNAmap
 import getCoverage
-#import modQuant
+import mmQuant
 import sys, os, subprocess, logging, datetime
 import argparse
 from pyfiglet import figlet_format
@@ -94,7 +94,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))
 
 	# Misincorporation analysis
-	#modQuant.generateModsTable(coverageData, out, mod_lists, max_multi, cov_table)
+	mmQuant.generateModsTable(coverageData, out, mod_lists, threads, cov_table)
 
 
 	# tidy files

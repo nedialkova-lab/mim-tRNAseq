@@ -77,6 +77,8 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi):
 
 		# bin by grouping by each gene and cutting into 20 - i.e. 5% bins by gene length (pos)
 		coverage['bin'] = coverage.groupby([coverage.index])['pos'].transform(lambda x: pd.qcut(x, 25, labels=range(4,104,4)))
+		# add bam name to distinguish samples with same condition - NB for mmQuant mismatch counting and normalisation to coverage
+		coverage['bam'] = bam
 		# append big coverage table and remove original coverage output
 		cov_mean.append(coverage)
 		os.remove(out_dir + bam.split("/")[-1] + "_coverage.txt")	 

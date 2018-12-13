@@ -51,12 +51,15 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 
 	if snp_tolerance:
 		output_prefix = fq.split("/")[-1].split(".")[0] + "_SNP"
-		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " + snp_index_name + \
-		" -t " + str(threads) + " --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 " + fq + " &>> " + out_dir + "align.log"
+		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
+		+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
+		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  " + \
+		fq + " &>> " + out_dir + "align.log"
 	else:
 		output_prefix = fq.split("/")[-1].split(".")[0] + "_noSNP"
-		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + \
-		" -t " + str(threads) + " --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 " + fq + " &>> " + out_dir + "align.log"
+		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
+		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp " + \
+		fq + " &>> " + out_dir + "align.log"
 
 	log.info("Aligning reads to {}...".format(genome_index_name))
 	subprocess.call(map_cmd, shell = True)
@@ -68,7 +71,7 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 		os.remove(out_dir + output_prefix + ".unpaired_transloc")
 
 	# write mapping stats and compress to bam - remove mutlimapping and unmapped unless keep_temp = True
-	log.info("Compressing SAM files and computing mapping stats...")
+	log.info("Compressing SAM files, sorting, and computing mapping stats...")
 	with open(out_dir + "mapping_stats.txt","a") as stats_out:
 		align_pathlist = Path(out_dir).glob(output_prefix + "*")
 		for file in align_pathlist:
@@ -85,7 +88,7 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 				cmd = "samtools view -@ " + str(threads) + " -c " + out_dir + file.name
 				unique_count = int(subprocess.check_output(cmd, shell = True))
 				unique_bam = out_dir + file.name + ".bam"
-				cmd = "samtools view -@ " + str(threads) + " -bh -o " + unique_bam + " " + out_dir + file.name
+				cmd = "samtools view -@ " + str(threads) + " -bh " + out_dir + file.name + " | samtools sort -@ " + str(threads) + " -o " + unique_bam + " - "
 				subprocess.call(cmd, shell = True)
 				os.remove(out_dir + file.name)
 			elif re.search("nomapping",file.name):

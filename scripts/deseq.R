@@ -4,12 +4,12 @@
 ## based on Stephen Turner's script, @genetics_blog
 ## https://gist.github.com/stephenturner/f60c1934405c127f09a6
 
-library(DESeq2)
-library(RColorBrewer)
-library(pheatmap)
-library(ggplot2)
-library(calibrate)
-library(plyr)
+suppressMessages(library(DESeq2))
+suppressMessages(library(RColorBrewer))
+suppressMessages(library(pheatmap))
+suppressMessages(library(ggplot2))
+suppressMessages(library(calibrate))
+suppressMessages(library(plyr))
 
 # Arguments
 args = commandArgs(trailingOnly = TRUE)
@@ -24,11 +24,11 @@ setwd(file.path(outdir))
 
 
 # Import data from featureCounts and sampleData
-countdata = read.table(paste("counts.txt", sep=""), header=TRUE, row.names=1)
+countdata = read.table(paste("counts.txt", sep=""), header=TRUE, row.names=1, check.names = FALSE)
 coldata = read.table(paste(sampleData, sep=""), header=FALSE, sep = "\t", row.names=1)
 
 # Remove first five columns (chr, start, end, strand, length)
-countdata = countdata[ ,6:ncol(countdata)]
+countdata = countdata[ ,6:ncol(countdata), drop = FALSE]
 coldata = data.frame(row.names=rownames(coldata), condition = coldata[,1])
 
 # Remove .bam or .sam and outdir from filenames

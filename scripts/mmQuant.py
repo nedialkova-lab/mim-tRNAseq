@@ -2,6 +2,7 @@
 
 ###########################################################################
 # Analysis of modifications/misincorporations and stops per tRNA position #
+#    also includes counting of CCA vs CC ends required for CCA analysis   #
 ###########################################################################
 
 import os, logging
@@ -16,20 +17,31 @@ from collections import defaultdict
 
 log = logging.getLogger(__name__)
 
-def countMods_mp(out_dir, cov_table, info, inputs):
-# modification counting and table generation
+def countMods_mp(out_dir, cov_table, info, cca, inputs):
+# modification counting and table generation, and CCA analysis
 	
-	# generate DataFrame with the references (as index) and positions imported from cov_table
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 	stopTable = defaultdict(lambda: defaultdict(int))
 	geneCov = defaultdict(int)
 	condition = info[inputs][0]
+
+	if cca:
+		aln_count = 0
+		cca_dict = defaultdict(lambda: defaultdict(int))
+		dinuc_dict = defaultdict(int)
+		dinuc_prop = open(inputs + "_dinuc.csv", "w")
+		CCAvsCC_counts = open(inputs + "_CCAcounts.csv", "w")
+
 	bam_file = pysam.AlignmentFile(inputs, "rb")
-	log.info('Analysing misincorporations and stops for {}...'.format(inputs))
+	log.info('Analysing {}...'.format(inputs))
 	for read in bam_file.fetch(until_eof=True):
 		query = read.query_name
 		reference = read.reference_name
 		geneCov[reference] += 1
+
+		#########################
+		# Modification analysis #
+		#########################
 
 		# get MD tags for mismatches, split into list of integers and characters
 		md_tag = read.get_tag('MD')
@@ -78,10 +90,36 @@ def countMods_mp(out_dir, cov_table, info, inputs):
 				insertion = len(interval) - 1
 				ref_pos += insertion
 
+		################
+		# CCA analysis #
+		################
+
+		if cca:
+			aln_count += 1
+			dinuc = read.query_sequence[-2:]
+			cca_dict[reference][dinuc] += 1
+			dinuc_dict[dinuc] += 1
+
+	if cca:
+		# write dinuc proportions for current bam
+		for dinuc, count in dinuc_dict.items():
+			dinuc_prop.write(dinuc + "\t" + str(count/aln_count) + "\t" + inputs.split("/")[-1] + "\n")
+
+		# write CCA outputs for current bam
+		for cluster, data in cca_dict.items():
+			for dinuc, count in data.items():
+				if (dinuc.upper() == "CC") or (dinuc.upper() == "CA"):
+					CCAvsCC_counts.write(cluster + "\t" + dinuc + "\t" + inputs + "\t" + condition + "\t" + str(count) + "\n")
+
+		dinuc_prop.close()
+		CCAvsCC_counts.close()
+
+	# Edit misincorportation and stop data before writing
+
 	# build dictionaries for mismatches, known modification sites, and stops, normalizing to total coverage per nucleotide
 	modTable_prop = {cluster: {pos: {
 				group: count / cov_table[(cov_table.pos == pos) & (cov_table.condition == condition) & (cov_table.bam == inputs)].loc[cluster]['cov']
-				for group, count in data.items() if group in ['A','C','G','T']
+				  for group, count in data.items() if group in ['A','C','G','T']
 								}
 			for pos, data in values.items()
 							}
@@ -131,12 +169,25 @@ def countMods_mp(out_dir, cov_table, info, inputs):
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
-def generateModsTable(sampleGroups, out_dir, mod_lists, threads, cov_table):
+def generateModsTable(sampleGroups, out_dir, threads, cov_table, cca):
 # Wrapper function to call countMods_mp with multiprocessing
 
-	log.info("\n+---------------------------------------------+\
-	\n| Analysing misincorporations and stops to RT |\
-	\n+---------------------------------------------+")
+	if cca:
+	
+		log.info("\n+--------------------------------------------------------------------+\
+		\n| Analysing misincorporations and stops to RT, and analysing 3' ends |\
+		\n+--------------------------------------------------------------------+")
+
+		os.mkdir(out_dir + "CCAanalysis")
+		os.mkdir(out_dir + "mods")
+
+	else:
+
+		log.info("\n+---------------------------------------------+\
+		\n| Analysing misincorporations and stops to RT |\
+		\n+---------------------------------------------+")
+
+		os.mkdir(out_dir + "mods")
 
 	# Get bam info using function in getCoverage
 	baminfo, bamlist = getBamList(sampleGroups)
@@ -148,7 +199,7 @@ def generateModsTable(sampleGroups, out_dir, mod_lists, threads, cov_table):
 
 	# initiate multiprocessing pool and run with bam names
 	pool = Pool(multi)
-	func = partial(countMods_mp, out_dir, cov_table, baminfo)
+	func = partial(countMods_mp, out_dir, cov_table, baminfo, cca)
 	pool.map(func, bamlist)
 	pool.close()
 	pool.join()
@@ -156,6 +207,9 @@ def generateModsTable(sampleGroups, out_dir, mod_lists, threads, cov_table):
 	modTable_total = pd.DataFrame()
 	knownTable_total = pd.DataFrame()
 	stopTable_total = pd.DataFrame()
+
+	dinuc_table = pd.DataFrame()
+	CCAvsCC_table = pd.DataFrame()
 
 	for bam in bamlist:
 		# read in temp files and then delete
@@ -171,12 +225,26 @@ def generateModsTable(sampleGroups, out_dir, mod_lists, threads, cov_table):
 		knownTable_total = knownTable_total.append(knownTable)
 		stopTable_total = stopTable_total.append(stopTable)
 
-	modTable_total.to_csv(out_dir + "mismatchTable.csv", sep = "\t", index = False, header = False)
-	knownTable_total.to_csv(out_dir + "knownModsTable.csv", sep = "\t", index = False, header = False)
-	stopTable_total.to_csv(out_dir + "RTstopTable.csv", sep = "\t", index = False, header = False)	
+		if cca:
+			# same for CCA analysis files
+			dinuc = pd.read_table(bam + "_dinuc.csv", header = None)
+			os.remove(bam + "_dinuc.csv")
+			CCA = pd.read_table(bam + "_CCAcounts.csv", header = None)
+			os.remove(bam + "_CCAcounts.csv")
 
+			dinuc_table = dinuc_table.append(dinuc)
+			CCAvsCC_table = CCAvsCC_table.append(CCA)
 
+	modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, header = False)
+	knownTable_total.to_csv(out_dir + "mods/knownModsTable.csv", sep = "\t", index = False, header = False)
+	stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, header = False)	
 
+	if cca:
+		dinuc_table.columns = ['dinuc', 'proportion', 'sample']
+		dinuc_table.to_csv(out_dir + "CCAanalysis/AlignedDinucProportions.csv", sep = "\t", index = False)
+		CCAvsCC_table.columns = ['gene', 'end', 'sample', 'condition', 'count']
+		#CCAvsCC_table = CCAvsCC_table.pivot_table(index = 'gene', columns = 'sample', values = 'count', fill_value = 0)
+		CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
 
 			

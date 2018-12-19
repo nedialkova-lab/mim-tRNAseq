@@ -10,10 +10,7 @@
 # contact: aberens@biochem.mpg.de
 # github: https://github.com/drewjbeh
 
-import tRNAtools
-import tRNAmap
-import getCoverage
-import mmQuant
+import tRNAtools, tRNAmap, getCoverage, mmQuant, CCAanalysis
 import sys, os, subprocess, logging, datetime
 import argparse
 from pyfiglet import figlet_format
@@ -29,7 +26,8 @@ def restrictedFloat(x):
 	except ValueError:
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
-def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, keep_temp, mode, sample_data):
+def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
+	keep_temp, mode, cca, sample_data):
 	
 	# Integrity check for output folder argument...
 	try:
@@ -64,7 +62,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance, mod_lists = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 
 	# Generate GSNAP indeces
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, snp_tolerance, cluster)
@@ -94,11 +92,14 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))
 
 	# Misincorporation analysis
-	mmQuant.generateModsTable(coverageData, out, mod_lists, threads, cov_table)
+	mmQuant.generateModsTable(coverageData, out, threads, cov_table, cca)
 
+	# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
+	if cca:
+		CCAanalysis.plotDinuc(out)
 
 	# tidy files
-	tRNAtools.tidyFiles(out)
+	tRNAtools.tidyFiles(out, cca)
 
 
 if __name__ == '__main__':
@@ -118,7 +119,7 @@ if __name__ == '__main__':
 	
 	options = parser.add_argument_group("Program options")
 	options.add_argument('--cluster', required = False, dest = 'cluster', action = 'store_true',\
-		help = 'Enable usearch sequence clustering of tRNAs by isodecoder - drastically reduces multi-mapping reads.')
+		help = 'Enable usearch sequence clustering of tRNAs by isodecoder - drastically reduces rate of multi-mapping reads.')
 	options.add_argument('--cluster_id', metavar = 'clutering id cutoff', dest = 'cluster_id', type = restrictedFloat, nargs = '?', default = 0.95,\
 		required = False, help = 'Identity cutoff for usearch clustering between 0 and 1. Default is 0.95.')
 	options.add_argument('--snp_tolerance', required = False, dest = 'snp_tolerance', action = 'store_true',\
@@ -131,6 +132,9 @@ if __name__ == '__main__':
 	options.add_argument('--control_condition', metavar = 'control condition', required = True, dest = 'control_cond', \
 		help = 'Name of control/wild-type condition as per user defined group specified in sample data input. This must exactly match the group name \
 		specified in sample data. This is used for differential expression analysis so that results are always in the form mutant/treatment vs WT/control. REQUIRED')
+	options.add_argument('--cca_analysis', required = False, dest = 'cca', action = 'store_true',\
+		help = "Enable analysis of 3'-CCA ends: Calculates proportions of CC vs CCA ending reads per cluster and performs DESeq2 analysis. \
+		Useful for comparing functional to non-funtional mature tRNAs.")
 
 	outputs = parser.add_argument_group("Output options")
 	outputs.add_argument('-n', '--name', metavar = 'experiment name', required = True, dest = 'name', help = \
@@ -188,4 +192,5 @@ if __name__ == '__main__':
 			raise argparse.ArgumentTypeError('{} not a valid condition in {}'.format(args.control_cond, args.sample_data))
 		else:
 			mimseq(args.trnas, args.trnaout, args.name, args.out, args.cluster, args.cluster_id, \
-				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, args.keep_temp, args.mode, args.sample_data)
+				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
+				args.keep_temp, args.mode, args.cca, args.sample_data)

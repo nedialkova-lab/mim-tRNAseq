@@ -85,9 +85,11 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi):
 
 	# concatenate all tables together, groupby + mean
 	cov_mean = 	pd.concat(cov_mean, axis = 0)
-	cov_mean_gene = cov_mean.groupby([cov_mean.index, 'bin', 'condition']).mean()
+	cov_mean_gene = cov_mean.copy()
+	cov_mean_gene.index = cov_mean_gene.index.str.split("-").str[1:].str.join('-')
+	cov_mean_gene = cov_mean_gene.groupby([cov_mean_gene.index, 'bin', 'bam']).mean()
 	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t")
-	cov_mean_aa = cov_mean.groupby(['aa', 'bin', 'condition']).mean()	
+	cov_mean_aa = cov_mean.groupby(['aa', 'bin', 'bam']).mean()	
 	cov_mean_aa.to_csv(out_dir + "coverage_byaa.txt", sep = "\t")
 
 	return(cov_mean)

@@ -13,6 +13,7 @@ from Bio.Blast import NCBIXML
 import re, copy, sys, os, shutil, subprocess, logging
 from pathlib import Path
 import urllib.request
+from collections import defaultdict
 
 
 log = logging.getLogger(__name__)
@@ -37,9 +38,10 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 	# Initialise intron dictionary
 	Intron_dict = initIntronDict(tRNAscan_out)
 
+	species = set()
 	for seq in temp_dict:
 		# Get species of input tRNA seqs to subset full Modomics table
-		species = ' '.join(seq.split('_')[0:2])
+		species.add(' '.join(seq.split('_')[0:2]))
 		tRNA_dict[seq] = {}
 		tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
 		tRNA_dict[seq]['sequence'] = tRNAseq
@@ -59,7 +61,6 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 	log.info("Processing modomics database...")
 	modomics_file = getModomics()
 	modomics_dict = {}
-	
 	for line in modomics_file.splitlines():
 		line = line.strip()
 		sameIDcount = 0
@@ -68,7 +69,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 			line = line.replace(' | ','|')
 			# Check if species matches those from gtRNAdb input, otherwise skip entry
 			mod_species = line.split('|')[3]
-			if not mod_species == species:
+			if not mod_species in species:
 				continue
 			else:
 				# Replace modomics antidon with normal ACGT codon
@@ -81,7 +82,6 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 					amino = 'iMet'
 
 				curr_id = str(line.split('|')[3].split(' ')[0]) + '_' + str(line.split('|')[3].split(' ')[1]) + '_' + str(line.split('|')[0].split(' ')[1]) + '-' + amino + '-' + new_anticodon
-		
 				#Unique names for duplicates
 				if curr_id in modomics_dict:
 					sameIDcount += 1
@@ -91,7 +91,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 				modomics_dict[curr_id] = {'sequence':'','type':tRNA_type, 'anticodon':new_anticodon}
 		
 		else:
-			if not mod_species == species:
+			if not mod_species in species:
 				continue
 			else:
 				sequence = line.strip().replace('U','T').replace('-','')
@@ -222,12 +222,18 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	log.info("{} total tRNA gene sequences".format(len(tRNA_dict)))
 	log.info("{} sequences with a match to Modomics dataset".format(match_count))
 
-	# if clustering is not activated then write ful gff report on total SNPs written 
+	# if clustering is not activated then write full gff and report on total SNPs written 
 	if not cluster:
 		coverage_bed = tRNAbed.name
-		with open(out_dir + experiment_name + "_tRNA.gff","w") as tRNAgff:	
+		with open(out_dir + experiment_name + "_tRNA.gff","w") as tRNAgff, open(out_dir + experiment_name + "isoacceptorInfo.txt","w") as isoacceptorInfo:	
+			isoacceptor_dict = defaultdict(int)
+			isoacceptorInfo.write("Isoacceptor\tsize\n")
 			for seq in tRNA_dict:
 				tRNAgff.write(seq + "\ttRNAseq\texon\t1\t" + str(len(tRNA_dict[seq]['sequence'])) + "\t.\t+\t0\tgene_id '" + seq + "'\n")
+				isoacceptor_group = '-'.join(seq.split("-")[:-2])
+				isoacceptor_dict[isoacceptor_group] += 1
+			for key, value in isoacceptor_dict.items():
+				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 		log.info("{:,} modifications written to SNP index".format(total_snps))
 
 	##########################
@@ -365,10 +371,16 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		clusterbed.close()
 
 		# Write cluster information to tsv
-		with open(out_dir + experiment_name + "clusterInfo.txt","w") as clusterInfo:
+		with open(out_dir + experiment_name + "clusterInfo.txt","w") as clusterInfo, open(out_dir + experiment_name + "isoacceptorInfo.txt","w") as isoacceptorInfo:
+			isoacceptor_dict = defaultdict(int)
 			clusterInfo.write("tRNA\tcluster_num\tcluster_size\n")
+			isoacceptorInfo.write("Isoacceptor\tsize\n")
 			for key, value in cluster_dict.items():
 				clusterInfo.write("{}\t{}\t{}\n".format(key, value, sum(clusters == value for clusters in cluster_dict.values())))
+				isoacceptor_group = '-'.join(key.split("-")[:-2])
+				isoacceptor_dict[isoacceptor_group] += 1
+			for key, value in isoacceptor_dict.items():
+				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 
 		# write cluster transcripts
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
@@ -399,7 +411,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	
 	shutil.rmtree(temp_dir)
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance, mod_lists)
+	return(coverage_bed, snp_tolerance)
 
 def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluster = False):
 	# Builds genome and snp index files required by GSNAP
@@ -534,20 +546,19 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
 
 	return(seq)
 
-def tidyFiles (out_dir):
+def tidyFiles (out_dir, cca):
 	
 	os.mkdir(out_dir + "annotation/")
 	os.mkdir(out_dir + "align/")
 	os.mkdir(out_dir + "indices/")
 	os.mkdir(out_dir + "cov/")
 	os.mkdir(out_dir + "counts/")
-	os.mkdir(out_dir + "mods/")
 
 	files = os.listdir(out_dir)
 
 	for file in files:
 		full_file = out_dir + file
-		if (file.endswith("bed") or file.endswith("bed") or file.endswith("gff") or file.endswith("fa") or "clusterInfo" in file or "modificationSNPs" in file):
+		if (file.endswith("bed") or file.endswith("bed") or file.endswith("gff") or file.endswith("fa") or "clusterInfo" in file or "isoacceptorInfo" in file or "modificationSNPs" in file):
 			shutil.move(full_file, out_dir + "annotation")
 		if (file.endswith("tRNAgenome") or file.endswith("index") or "index.log" in file):
 			shutil.move(full_file, out_dir + "indices")
@@ -557,6 +568,3 @@ def tidyFiles (out_dir):
 			shutil.move(full_file, out_dir + "cov")
 		if ("counts".upper() in file.upper()):
 			shutil.move(full_file, out_dir + "counts")
-		if ("Table" in file):
-			shutil.move(full_file, out_dir + "mods")
-

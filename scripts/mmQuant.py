@@ -17,7 +17,7 @@ from collections import defaultdict
 
 log = logging.getLogger(__name__)
 
-def countMods_mp(out_dir, cov_table, info, cca, inputs):
+def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, inputs):
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -47,6 +47,18 @@ def countMods_mp(out_dir, cov_table, info, cca, inputs):
 		md_tag = read.get_tag('MD')
 		md_list = re.split('(.*?)([A-Za-z]|[\^][A-Za-z]+)', md_tag)
 		md_list = list(filter(None, md_list))
+
+		# get cigar string, split as above
+		cigar = read.cigarstring
+		cigar_list = re.split('(.*?)([A-Za-z]|[\^][A-Za-z]+)', cigar)
+		cigar_list = list(filter(None, cigar_list))
+
+		# check cigar for softclipping at 5' of read (usually because of terminal transferase of RT) - if so remove soft-clipped bases from sequence
+		if cigar_list[1].upper() == "S".upper():
+			soft_clip = int(cigar_list[0])
+			read_seq = read.query_sequence[soft_clip:]
+		else:
+			read_seq = read.query_sequence 
 		
 		# get offset of read mapping position to reference start in order to adjust mismatch position 
 		# (offset is simply start position of read alignment realtive to reference)
@@ -65,27 +77,35 @@ def countMods_mp(out_dir, cov_table, info, cca, inputs):
 					interval = int(interval) + offset
 					ref_pos += interval
 				elif interval.isalpha(): # is a mismatch
-					identity = read.query_sequence[read_pos]
-					ref_pos += 1
-					read_pos += 1
-					modTable[reference][ref_pos][identity] += 1 # log the identity of the misincorporated base
-					if interval == interval.lower():
-						modTable[reference][ref_pos]['known'] = True # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
-					else:
-						modTable[reference][ref_pos]['known'] = False
+					identity = read_seq[read_pos]
+		
+					# check for position in mismatch dictionary from clustering
+					# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
+					if (interval not in mismatch_dict[reference]) or (interval in mismatch_dict[reference] and identity.islower()):
+						ref_pos += 1
+						read_pos += 1
+						modTable[reference][ref_pos][identity] += 1 # log the identity of the misincorporated base
+						if interval == interval.lower():
+							modTable[reference][ref_pos]['known'] = True # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
+						else:
+							modTable[reference][ref_pos]['known'] = False
 			elif not interval.startswith('^'):
 				if interval.isdigit(): # stretch of matches
 					read_pos += int(interval)
 					ref_pos += int(interval)
 				elif interval.isalpha(): # is a mismatch
-					identity = read.query_sequence[read_pos] # identity is misincorporated nucleotide
-					read_pos += 1
-					ref_pos += 1
-					modTable[reference][ref_pos][identity] += 1
-					if interval == interval.lower():
-						modTable[reference][ref_pos]['known'] = True
-					else:
-						modTable[reference][ref_pos]['known'] = False
+					identity = read_seq[read_pos] # identity is misincorporated nucleotide
+		
+					# check for position in mismatch dictionary from clustering
+					# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
+					if (interval not in mismatch_dict[reference]) or (interval in mismatch_dict[reference] and identity.islower()):
+						read_pos += 1
+						ref_pos += 1
+						modTable[reference][ref_pos][identity] += 1
+						if interval == interval.lower():
+							modTable[reference][ref_pos]['known'] = True
+						else:
+							modTable[reference][ref_pos]['known'] = False
 			elif interval.startswith('^'):
 				insertion = len(interval) - 1
 				ref_pos += insertion
@@ -169,7 +189,7 @@ def countMods_mp(out_dir, cov_table, info, cca, inputs):
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
-def generateModsTable(sampleGroups, out_dir, threads, cov_table, cca):
+def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, cca):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -199,7 +219,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, cca):
 
 	# initiate multiprocessing pool and run with bam names
 	pool = Pool(multi)
-	func = partial(countMods_mp, out_dir, cov_table, baminfo, cca)
+	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca)
 	pool.map(func, bamlist)
 	pool.close()
 	pool.join()

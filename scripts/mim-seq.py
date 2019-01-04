@@ -62,7 +62,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance, mismatch_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 
 	# Generate GSNAP indeces
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, snp_tolerance, cluster)
@@ -92,7 +92,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))
 
 	# Misincorporation analysis
-	mmQuant.generateModsTable(coverageData, out, threads, cov_table, cca)
+	mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, cca)
 
 	# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 	if cca:

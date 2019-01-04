@@ -261,9 +261,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 			
 		# read cluster files, get nonredudant set of mod positions of all members of a cluster, create snp_records for writing SNP index
 		cluster_pathlist = Path(temp_dir).glob("**/*_clusters.uc")
-		mod_lists = dict()
+		mod_lists = dict() # stores non-redundant sets of mismatches and mod positions for clusters
 		snp_records = list()
-		cluster_dict = dict()
+		cluster_dict = dict() # info about clusters
+		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for misincorporation analysis in mmQuant)
 		cluster_num = 0
 		total_snps = 0
 		clusterbed = open(out_dir + experiment_name + "_clusters.bed","w")
@@ -294,7 +295,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 							cluster_dict[member_name] = cluster_dict[cluster_name]
 						
 						# if there are insertions or deletions in the centroid, edit member or centroid sequences to ignore these positions
-						# and edit modified positions list in order to make non-redundant positions list similar to next else statement
+						# and edit modified positions list in order to make non-redundant positions list, similar to next else statement
 						elif re.search("[ID]", compr_aln):
 							cluster_seq = tRNA_dict[cluster_name]["sequence"]
 							member_seq = tRNA_dict[member_name]["sequence"]
@@ -354,6 +355,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 								cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
+							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							cluster_dict[member_name] = cluster_dict[cluster_name]
@@ -364,6 +366,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 							cluster_seq = tRNA_dict[cluster_name]["sequence"]
 							member_seq = tRNA_dict[member_name]["sequence"]
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
+							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							cluster_dict[member_name] = cluster_dict[cluster_name]
@@ -410,8 +413,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 			snp_file.write('{}\n'.format(item))
 	
 	shutil.rmtree(temp_dir)
+
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance)
+	return(coverage_bed, snp_tolerance, mismatch_dict)
 
 def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluster = False):
 	# Builds genome and snp index files required by GSNAP

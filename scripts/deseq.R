@@ -11,6 +11,18 @@ suppressMessages(library(ggplot2))
 suppressMessages(library(calibrate))
 suppressMessages(library(plyr))
 
+## Volcano plot with "significant" genes labeled
+volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="topright", labelsig=FALSE, textcx=1, ...) {
+  with(res, plot(log2FoldChange, -log10(pvalue), pch=19, main=main, xlab="log2 Fold Change", ylab="-log10(p-value)", ...))
+  with(subset(res, padj<sigthresh ), points(log2FoldChange, -log10(pvalue), pch=19, col="#d95f02", ...))
+  if (labelsig) {
+    require(calibrate)
+    #with(subset(res, padj<sigthresh & abs(log2FoldChange)>lfcthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
+    with(subset(res, padj<sigthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
+  }
+  legend(legendpos, xjust=1, yjust=1, legend=c(paste("FDR < ",sigthresh,sep="")), pch=19, col="#d95f02")
+}
+
 # Arguments
 args = commandArgs(trailingOnly = TRUE)
 outdir = args[1]
@@ -149,6 +161,7 @@ for (i in 1:length(combinations)) {
   # Get differential expression results
   res_cluster = results(dds_cluster, contrast=c("condition",as.vector(combinations[[i]])))
   res_anticodon = results(dds_anticodon, contrast=c("condition",as.vector(combinations[[i]])))
+  
   ## Order by adjusted p-value
   res_cluster = res_cluster[order(res_cluster$padj), ]
   res_anticodon = res_anticodon[order(res_anticodon$padj), ]
@@ -158,6 +171,7 @@ for (i in 1:length(combinations)) {
   count_df_anticodon = as.data.frame(counts(dds_anticodon, normalized=TRUE))
   count_df_cluster$rn = rownames(count_df_cluster)
   count_df_anticodon$rn = rownames(count_df_anticodon)
+  
   ## Merge with normalized count data
   resdata_cluster = join_all(list(as.data.frame(res_cluster), count_df_cluster, clusterInfo), by="rn", type = 'left')
   resdata_anticodon = join_all(list(as.data.frame(res_anticodon), count_df_anticodon, isoacceptorInfo), by="rn", type = 'left')
@@ -167,6 +181,16 @@ for (i in 1:length(combinations)) {
   resdata_cluster = resdata_cluster[, c(col_idx, (1:ncol(resdata_cluster))[-col_idx])]
   col_idx = grep("Gene", names(resdata_anticodon))
   resdata_anticodon = resdata_anticodon[, c(col_idx, (1:ncol(resdata_anticodon))[-col_idx])]
+
+  # Volcano plots
+  png(paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.png", sep="_"), sep="/"), 1200, 1000, pointsize=20)
+  volcanoplot(resdata_cluster, main=paste(combinations[[i]], collapse=" vs "), sigthresh=0.05, textcx=.8, xlim=c(-max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)-0.2, max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)+0.2))
+  dev.off()
+
+  png(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.png", sep="_"), sep="/"), 1200, 1000, pointsize=20)
+  volcanoplot(resdata_anticodon, main=paste(combinations[[i]], collapse=" vs "), sigthresh=0.05, textcx=.8, xlim=c(-max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)-0.2, max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)+0.2))
+  dev.off()
+  
   ## Write results
   write.csv(resdata_cluster, file=paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))
   write.csv(resdata_anticodon, file=paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))
@@ -179,26 +203,5 @@ dev.off()
 
 png(paste(subdir_anticodon, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
 plotMA(dds_anticodon)
-dev.off()
-
-## Volcano plot with "significant" genes labeled
-volcanoplot = function (res, lfcthresh=2, sigthresh=0.05, main="Volcano Plot", legendpos="bottomright", labelsig=TRUE, textcx=1, ...) {
-  with(res, plot(log2FoldChange, -log10(pvalue), pch=20, main=main, ...))
-  with(subset(res, padj<sigthresh ), points(log2FoldChange, -log10(pvalue), pch=20, col="red", ...))
-  with(subset(res, abs(log2FoldChange)>lfcthresh), points(log2FoldChange, -log10(pvalue), pch=20, col="orange", ...))
-  with(subset(res, padj<sigthresh & abs(log2FoldChange)>lfcthresh), points(log2FoldChange, -log10(pvalue), pch=20, col="green", ...))
-  if (labelsig) {
-    require(calibrate)
-    #with(subset(res, padj<sigthresh & abs(log2FoldChange)>lfcthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
-    with(subset(res, padj<sigthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
-  }
-  legend(legendpos, xjust=1, yjust=1, legend=c(paste("FDR<",sigthresh,sep=""), paste("|LogFC|>",lfcthresh,sep=""), "both"), pch=20, col=c("red","orange","green"))
-}
-png(paste(subdir_cluster, "diffexpr-volcanoplot.png", sep="/"), 1200, 1000, pointsize=20)
-volcanoplot(resdata_cluster, lfcthresh=1, sigthresh=0.05, textcx=.8, xlim=c(-2.3, 2))
-dev.off()
-
-png(paste(subdir_anticodon, "diffexpr-volcanoplot.png", sep="/"), 1200, 1000, pointsize=20)
-volcanoplot(resdata_anticodon, lfcthresh=1, sigthresh=0.05, textcx=.8, xlim=c(-2.3, 2))
 dev.off()
 

@@ -59,7 +59,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, inputs):
 			read_seq = read.query_sequence[soft_clip:]
 		else:
 			read_seq = read.query_sequence 
-		
+
 		# get offset of read mapping position to reference start in order to adjust mismatch position 
 		# (offset is simply start position of read alignment realtive to reference)
 		offset = read.reference_start
@@ -78,34 +78,36 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, inputs):
 					ref_pos += interval
 				elif interval.isalpha(): # is a mismatch
 					identity = read_seq[read_pos]
-		
+					ref_pos += offset 
 					# check for position in mismatch dictionary from clustering
 					# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
-					if (interval not in mismatch_dict[reference]) or (interval in mismatch_dict[reference] and identity.islower()):
-						ref_pos += 1
-						read_pos += 1
-						modTable[reference][ref_pos][identity] += 1 # log the identity of the misincorporated base
+					if (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and identity.islower()):
+						modTable[reference][ref_pos+1][identity] += 1 # log the identity of the misincorporated base
 						if interval == interval.lower():
 							modTable[reference][ref_pos]['known'] = True # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
 						else:
 							modTable[reference][ref_pos]['known'] = False
+					# move forward
+					read_pos += 1
+					ref_pos += 1
+
 			elif not interval.startswith('^'):
 				if interval.isdigit(): # stretch of matches
 					read_pos += int(interval)
 					ref_pos += int(interval)
 				elif interval.isalpha(): # is a mismatch
 					identity = read_seq[read_pos] # identity is misincorporated nucleotide
-		
 					# check for position in mismatch dictionary from clustering
 					# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
-					if (interval not in mismatch_dict[reference]) or (interval in mismatch_dict[reference] and identity.islower()):
-						read_pos += 1
-						ref_pos += 1
-						modTable[reference][ref_pos][identity] += 1
+					if (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and identity.islower()):
+						modTable[reference][ref_pos+1][identity] += 1
 						if interval == interval.lower():
 							modTable[reference][ref_pos]['known'] = True
 						else:
 							modTable[reference][ref_pos]['known'] = False
+					# move forward
+					read_pos += 1
+					ref_pos += 1
 			elif interval.startswith('^'):
 				insertion = len(interval) - 1
 				ref_pos += insertion
@@ -134,9 +136,10 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, inputs):
 		dinuc_prop.close()
 		CCAvsCC_counts.close()
 
-	# Edit misincorportation and stop data before writing
+	## Edit misincorportation and stop data before writing
 
 	# build dictionaries for mismatches, known modification sites, and stops, normalizing to total coverage per nucleotide
+
 	modTable_prop = {cluster: {pos: {
 				group: count / cov_table[(cov_table.pos == pos) & (cov_table.condition == condition) & (cov_table.bam == inputs)].loc[cluster]['cov']
 				  for group, count in data.items() if group in ['A','C','G','T']

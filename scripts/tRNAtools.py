@@ -413,7 +413,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 			snp_file.write('{}\n'.format(item))
 	
 	shutil.rmtree(temp_dir)
-
+	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance, mismatch_dict)
 

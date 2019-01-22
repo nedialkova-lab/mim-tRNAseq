@@ -15,15 +15,32 @@ from multiprocessing import Pool
 
 log = logging.getLogger(__name__)
 
-def bedtools_mp (tRNAbed, out_dir, inputs):
+def filterCoverage (bedtool_cov, min_cov):
+# returns BedTool features with less than min_cov reads as list
+	
+	filtered_list = list()
+	for i in bedtool_cov:
+		if int(i[6]) < min_cov:
+			filtered_list.append(i[0])
+
+	return(filtered_list)
+
+
+def bedtools_mp (tRNAbed, out_dir, min_cov, inputs):
 # runs pybedtools coverage for input data
-# useful for multiprocessing of coverage tasks
+# multiprocessing of coverage tasks
 	
 	a = BedTool(tRNAbed)
 	b = BedTool(inputs)
 	log.info("Running bedtools coverage on {}...".format(inputs))
-	cov = a.coverage(b, d = True, s = True).saveas(out_dir + inputs.split("/")[-1] + "_coverage.txt")
+	cov = a.coverage(b, s = True, counts = True)
+	filtered = filterCoverage(cov, min_cov)
+	cov_filtered = cov.filter(lambda x: int(x[6]) >= min_cov)
+	a_filtered = a.intersect(cov_filtered)
+	cov_pernucl_filtered = a_filtered.coverage(b, d = True, s = True).saveas(out_dir + inputs.split("/")[-1] + "_coverage.txt")
 	log.info("Coverage calculation complete for {}".format(inputs))	
+
+	return(filtered)
 
 def getBamList (sampleGroups):
 # reads sampleGroups file and creates dictionary of bam and groups
@@ -43,7 +60,7 @@ def getBamList (sampleGroups):
 	return(baminfo, bamlist)
 	sampleGroups.close()
 
-def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi):
+def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov):
 # Uses bedtools coverage and pandas generate coverage in 5% intervals per gene and isoacceptor for plotting
 
 	log.info("\n+-----------------------------------+\
@@ -61,10 +78,13 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi):
 	# create process pool, make partial function of bedtools_mp (above) with some inputs, 
 	# map partial function with bam inputs to pool of prcoesses for multithreaded coverage calculation
 	pool = Pool(max_multi)
-	func = partial(bedtools_mp, tRNAbed, out_dir)
-	pool.map(func, bamlist)
+	func = partial(bedtools_mp, tRNAbed, out_dir, min_cov)
+	filtered = pool.map(func, bamlist)
+	filtered = list(set([item for sublist in filtered for item in sublist]))
 	pool.close()
 	pool.join()
+
+	log.info("{} clusters filtered out according to minimum coverage threshold: {}".format(len(filtered), min_cov))
 
 	for bam, info in baminfo.items():
 
@@ -85,6 +105,7 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi):
 
 	# concatenate all tables together, groupby + mean
 	cov_mean = 	pd.concat(cov_mean, axis = 0)
+	cov_mean = cov_mean[~cov_mean.index.isin(filtered)]
 	cov_mean_gene = cov_mean.copy()
 	cov_mean_gene.index = cov_mean_gene.index.str.split("-").str[1:].str.join('-')
 	cov_mean_gene = cov_mean_gene.groupby([cov_mean_gene.index, 'bin', 'bam']).mean()
@@ -92,7 +113,7 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi):
 	cov_mean_aa = cov_mean.groupby(['aa', 'bin', 'bam']).mean()	
 	cov_mean_aa.to_csv(out_dir + "coverage_byaa.txt", sep = "\t")
 
-	return(cov_mean)
+	return(cov_mean, filtered)
 
 def plotCoverage(out_dir):
 	script_path = os.path.dirname(os.path.realpath(__file__))

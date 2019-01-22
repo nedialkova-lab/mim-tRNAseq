@@ -165,7 +165,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		temp_tRNAFasta = open(temp_dir + seq + ".fa","w")
 		temp_tRNAFasta.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
 		temp_tRNAFasta.close()
-		tRNA_dict[seq]['anticodon'] = anticodon = seq.split('-')[2]
+		tRNA_dict[seq]['anticodon'] = anticodon = re.search('.*tRNA-.*?-(.*?)-', seq).group(1)
 		if not anticodon in anticodon_list:
 			anticodon_list.append(anticodon)
 		match = {k:v for k,v in modomics_dict.items() if anticodon in v['anticodon']}
@@ -538,7 +538,8 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
 # Use Intron_dict to find and remove introns plus add CCA and 5' G for His (if eukaryotic)
 
 	# Find a match, slice intron and add G and CCA
-	ID = re.search("tRNAscan-SE ID: (.*?)\).",seqIO_dict[seqIO_record].description).group(1)
+	ID = re.search("tRNAscan-SE ID: (.*?)\).|\((chr.*?)-",seqIO_dict[seqIO_record].description).groups()
+	ID = list(filter(None, ID))[0]
 	if ID in Intron_dict:
 		seq = str(seqIO_dict[seqIO_record].seq[:Intron_dict[ID]['intron_start']] + seqIO_dict[seqIO_record].seq[Intron_dict[ID]['intron_stop']:])
 	else:

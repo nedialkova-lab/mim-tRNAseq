@@ -27,7 +27,7 @@ def restrictedFloat(x):
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
 def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, mode, cca, sample_data):
+	keep_temp, mode, cca, min_cov, sample_data):
 	
 	# Integrity check for output folder argument...
 	try:
@@ -72,7 +72,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp)
 
 	# Coverage and plots
-	cov_table = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi)
+	cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
 	getCoverage.plotCoverage(out)
 
 	# featureCounts
@@ -92,7 +92,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))
 
 	# Misincorporation analysis
-	mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, cca)
+	mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca)
 
 	# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 	if cca:
@@ -152,6 +152,9 @@ if __name__ == '__main__':
 	 	choices = ['none','all','fraction'])
 
 	bedtools = parser.add_argument_group("Bedtools coverage options")
+	bedtools.add_argument('--min_cov', metavar = 'Minimum coverage per cluster', required = False, dest = 'min_cov', type = int, \
+		help = "Minimum coverage per cluster to include this cluster in coverage plots, modification analysis, and 3'-CCA analysis. Clusters with \
+		 less than this will be filtered out of these analyses. Note that all clusters are included for differential expression analysis with DESeq2.")
 	bedtools.add_argument('--max_multi', metavar = 'Bedtools coverage multhreading', required = False, dest = 'max_multi', type = int, \
 		help = 'Maximum number of bam files to run bedtools coverage on simultaneously. Increasing this number reduces processing time\
 		by increasing number of files processed simultaneously. However, depending on the size of the bam files to process and\
@@ -160,7 +163,7 @@ if __name__ == '__main__':
 
 	parser.add_argument('sample_data', help = 'Sample data sheet in text format, tab-separated. Column 1: full path to fastq (or fastq.gz). Column 2: condition/group.')
 
-	parser.set_defaults(threads=1, out="./", mode = 'none', max_multi = 3)
+	parser.set_defaults(threads=1, out="./", mode = 'none', max_multi = 3, min_cov = 0)
 
 
 	#############################
@@ -193,4 +196,4 @@ if __name__ == '__main__':
 		else:
 			mimseq(args.trnas, args.trnaout, args.name, args.out, args.cluster, args.cluster_id, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
-				args.keep_temp, args.mode, args.cca, args.sample_data)
+				args.keep_temp, args.mode, args.cca, args.min_cov, args.sample_data)

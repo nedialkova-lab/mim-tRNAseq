@@ -12,7 +12,7 @@ suppressMessages(library(calibrate))
 suppressMessages(library(plyr))
 
 ## Volcano plot with "significant" genes labeled
-volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="topright", labelsig=FALSE, textcx=1, ...) {
+volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="bottomright", labelsig=FALSE, textcx=1, ...) {
   with(res, plot(log2FoldChange, -log10(pvalue), pch=19, main=main, xlab="log2 Fold Change", ylab="-log10(p-value)", ...))
   with(subset(res, padj<sigthresh ), points(log2FoldChange, -log10(pvalue), pch=19, col="#d95f02", ...))
   if (labelsig) {
@@ -20,7 +20,7 @@ volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="top
     #with(subset(res, padj<sigthresh & abs(log2FoldChange)>lfcthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
     with(subset(res, padj<sigthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
   }
-  legend(legendpos, xjust=1, yjust=1, legend=c(paste("FDR < ",sigthresh,sep="")), pch=19, col="#d95f02")
+  legend(legendpos, xjust=1, yjust=1, legend=c(paste("FDR < ",sigthresh,sep="")), pch=19, col="#d95f02", bg="white")
 }
 
 # Arguments
@@ -183,11 +183,11 @@ for (i in 1:length(combinations)) {
   resdata_anticodon = resdata_anticodon[, c(col_idx, (1:ncol(resdata_anticodon))[-col_idx])]
 
   # Volcano plots
-  png(paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.png", sep="_"), sep="/"), 1200, 1000, pointsize=20)
+  pdf(paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.pdf", sep="_"), sep="/"), width=15, height=12, pointsize=20)
   volcanoplot(resdata_cluster, main=paste(combinations[[i]], collapse=" vs "), sigthresh=0.05, textcx=.8, xlim=c(-max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)-0.2, max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)+0.2))
   dev.off()
 
-  png(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.png", sep="_"), sep="/"), 1200, 1000, pointsize=20)
+  pdf(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.pdf", sep="_"), sep="/"), width=15, height=12, pointsize=20)
   volcanoplot(resdata_anticodon, main=paste(combinations[[i]], collapse=" vs "), sigthresh=0.05, textcx=.8, xlim=c(-max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)-0.2, max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)+0.2))
   dev.off()
   

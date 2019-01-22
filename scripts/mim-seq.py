@@ -29,6 +29,8 @@ def restrictedFloat(x):
 def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
 	keep_temp, mode, cca, min_cov, sample_data):
 	
+# Main wrapper
+
 	# Integrity check for output folder argument...
 	try:
 		os.mkdir(out)

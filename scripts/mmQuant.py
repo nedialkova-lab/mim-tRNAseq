@@ -17,7 +17,7 @@ from collections import defaultdict
 
 log = logging.getLogger(__name__)
 
-def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, inputs):
+def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, inputs):
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -37,6 +37,8 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, inputs):
 	for read in bam_file.fetch(until_eof=True):
 		query = read.query_name
 		reference = read.reference_name
+		if reference in filtered_list:
+			continue
 		geneCov[reference] += 1
 
 		#########################
@@ -192,7 +194,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, inputs):
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
-def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, cca):
+def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, filtered_list, cca):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -222,7 +224,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 
 	# initiate multiprocessing pool and run with bam names
 	pool = Pool(multi)
-	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca)
+	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca, filtered_list)
 	pool.map(func, bamlist)
 	pool.close()
 	pool.join()

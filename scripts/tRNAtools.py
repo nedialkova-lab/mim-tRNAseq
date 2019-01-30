@@ -14,6 +14,7 @@ import re, copy, sys, os, shutil, subprocess, logging
 from pathlib import Path
 import urllib.request
 from collections import defaultdict
+import ssAlign
 
 
 log = logging.getLogger(__name__)
@@ -222,6 +223,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	log.info("{} total tRNA gene sequences".format(len(tRNA_dict)))
 	log.info("{} sequences with a match to Modomics dataset".format(match_count))
 
+	with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
+		SeqIO.write(seq_records, temptRNATranscripts, "fasta")
+
 	# if clustering is not activated then write full gff and report on total SNPs written 
 	if not cluster:
 		coverage_bed = tRNAbed.name
@@ -235,6 +239,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 			for key, value in isoacceptor_dict.items():
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 		log.info("{:,} modifications written to SNP index".format(total_snps))
+		# generate Stockholm alignment file for all tRNA transcripts
+		ssAlign.aligntRNA(temptRNATranscripts.name)
+		# empty mismatch dict to avoid error when returning it from this function
+		mismatch_dict = defaultdict(list)
 
 	##########################
 	# Cluster tRNA sequences #
@@ -389,6 +397,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
 			SeqIO.write(final_centroids, clusterTranscripts, "fasta")
 
+		# generate Stockholm alignment file for cluster transcripts
+		ssAlign.aligntRNA(clusterTranscripts.name)
+
 		log.info("{} clusters created from {} tRNA sequences".format(cluster_num,len(tRNA_dict)))
 
 		for cluster in mod_lists:
@@ -403,9 +414,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 			snp_tolerance = False		
 
 		log.info("{:,} modifications written to SNP index".format(total_snps))		
-	
-	with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
-		SeqIO.write(seq_records, temptRNATranscripts, "fasta")
 	
 	# write outputs for indexing 
 	with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
@@ -563,7 +571,7 @@ def tidyFiles (out_dir, cca):
 
 	for file in files:
 		full_file = out_dir + file
-		if (file.endswith("bed") or file.endswith("bed") or file.endswith("gff") or file.endswith("fa") or "clusterInfo" in file or "isoacceptorInfo" in file or "modificationSNPs" in file):
+		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "clusterInfo" in file or "isoacceptorInfo" in file or "modificationSNPs" in file):
 			shutil.move(full_file, out_dir + "annotation")
 		if (file.endswith("tRNAgenome") or file.endswith("index") or "index.log" in file):
 			shutil.move(full_file, out_dir + "indices")

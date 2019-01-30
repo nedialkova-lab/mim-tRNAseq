@@ -10,6 +10,7 @@ suppressMessages(library(pheatmap))
 suppressMessages(library(ggplot2))
 suppressMessages(library(calibrate))
 suppressMessages(library(plyr))
+suppressMessages(library(grid))
 
 ## Volcano plot with "significant" genes labeled
 volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="bottomright", labelsig=FALSE, textcx=1, ...) {
@@ -21,6 +22,23 @@ volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="bot
     with(subset(res, padj<sigthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
   }
   legend(legendpos, xjust=1, yjust=1, legend=c(paste("FDR < ",sigthresh,sep="")), pch=19, col="#d95f02", bg="white")
+}
+
+# Function to order control/WT condition last in combinations so that contrasts for DE are always mutant/condition vs WT/control
+lastlevel = function(f, control) {
+    if (!is.factor(f)) stop("input for contrast combinations not a factor")
+    orig_levels = levels(f)
+    if (! control %in% orig_levels) stop("control must be a level of f")
+    new_levels = c(setdiff(orig_levels, control), control)
+    factor(f, levels = new_levels)
+}
+
+# for getting r-squared values back for plotting
+lm_eqn <- function(linear_mod){
+  l <- list(r2 = format(summary(linear_mod)$r.squared, digits = 2));
+  eq <- substitute(~~italic(r)^2~"="~r2,l)
+  
+  as.character(as.expression(eq));                 
 }
 
 # Arguments
@@ -70,6 +88,10 @@ dds_anticodon = DESeqDataSetFromMatrix(countData=anticodon_countdata, colData=co
 # Run the DESeq pipeline
 dds_cluster = DESeq(dds_cluster)
 dds_anticodon = DESeq(dds_anticodon)
+
+# count tables with mean per condition for dot plots below
+baseMeanPerLvl_cluster = as.data.frame(sapply(levels(dds_cluster$condition), function(lvl) rowMeans(counts(dds_cluster,normalized=TRUE)[,dds_cluster$condition == lvl] )))
+baseMeanPerLvl_anticodon = as.data.frame(sapply(levels(dds_anticodon$condition), function(lvl) rowMeans(counts(dds_anticodon,normalized=TRUE)[,dds_anticodon$condition == lvl] )))
 
 # Plot dispersions
 png(paste(subdir_cluster, "qc-dispersions.png", sep = "/"), 1000, 1000, pointsize=20)
@@ -127,27 +149,18 @@ ggplot(pcaData_anticodon, aes(PC1, PC2, color=condition)) +
   coord_fixed()
 ggsave(paste(subdir_anticodon, "qc-pca.png", sep="/"), height = 7, width = 8)
 
-# Function to order control/WT condition last in combinations so that contrasts for DE are always mutant/condition vs WT/control
-lastlevel = function(f, control) {
-    if (!is.factor(f)) stop("input for contrast combinations not a factor")
-    orig_levels = levels(f)
-    if (! control %in% orig_levels) stop("control must be a level of f")
-    new_levels = c(setdiff(orig_levels, control), control)
-    factor(f, levels = new_levels)
-}
-
 # Get combinations of coditions for various DE contrasts
 ordered_levels = levels(lastlevel(unique(dds_cluster$condition), control_cond))
 combinations = combn(ordered_levels, 2, simplify=FALSE)
 
 clusterFile = list.files(path="./", pattern="clusterInfo.txt", full.names=T)
 if (length(clusterFile) == 1) {
-	clusterInfo = read.table(clusterFile[1], header=T, row.names=1)
-	clusterInfo = clusterInfo[ , 'cluster_size', drop=F]
-	clusterInfo$rn = rownames(clusterInfo)
+  clusterInfo = read.table(clusterFile[1], header=T, row.names=1)
+  clusterInfo = clusterInfo[ , 'cluster_size', drop=F]
+  clusterInfo$rn = rownames(clusterInfo)
 } else if (length(clusterFile == 0)) {
-	clusterInfo = data.frame(cluster_size = 1, rn = rownames(dds))
-	rownames(clusterInfo) = clusterInfo$rn
+  clusterInfo = data.frame(cluster_size = 1, rn = rownames(dds))
+  rownames(clusterInfo) = clusterInfo$rn
 }
 
 isoacceptorFile = list.files(path="./", pattern="isoacceptorInfo.txt", full.names=T)
@@ -182,14 +195,39 @@ for (i in 1:length(combinations)) {
   col_idx = grep("Gene", names(resdata_anticodon))
   resdata_anticodon = resdata_anticodon[, c(col_idx, (1:ncol(resdata_anticodon))[-col_idx])]
 
-  # Volcano plots
-  pdf(paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.pdf", sep="_"), sep="/"), width=15, height=12, pointsize=20)
-  volcanoplot(resdata_cluster, main=paste(combinations[[i]], collapse=" vs "), sigthresh=0.05, textcx=.8, xlim=c(-max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)-0.2, max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)+0.2))
-  dev.off()
+  # Count plots
+  # add significance to baseMean matrices for current contrast
+  baseMeanPerLvl_cluster$sig = res_cluster[rownames(baseMeanPerLvl_cluster),'padj'] < 0.05
+  baseMeanPerLvl_anticodon$sig = resdata_anticodon[rownames(baseMeanPerLvl_anticodon),'padj'] < 0.05
 
-  pdf(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.pdf", sep="_"), sep="/"), width=15, height=12, pointsize=20)
-  volcanoplot(resdata_anticodon, main=paste(combinations[[i]], collapse=" vs "), sigthresh=0.05, textcx=.8, xlim=c(-max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)-0.2, max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)+0.2))
-  dev.off()
+  cluster_lin_mod = lm(baseMeanPerLvl_cluster[,combinations[[i]][1]] ~ baseMeanPerLvl_cluster[,combinations[[i]][2]])
+  anticodon_lin_mod = lm(baseMeanPerLvl_anticodon[,combinations[[i]][1]] ~ baseMeanPerLvl_anticodon[,combinations[[i]][2]])
+
+  cluster_dot = ggplot(subset(baseMeanPerLvl_cluster, select = c(combinations[[i]], "sig")), aes_string(x = combinations[[i]][1], y = combinations[[i]][2])) +
+    geom_point(aes(color = sig, shape = sig)) + labs(color = 'Adjusted p-value < 0.05') + 
+    geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
+    scale_color_manual('Adjusted p-value < 0.05', labels = c("False", "True"), values = c("black", "#4daf4a")) + 
+    scale_shape_manual('Adjusted p-value < 0.05', labels = c("False", "True"), values = c(19, 17)) + 
+    annotate("label", -Inf, Inf, hjust = 0, vjust = 1, label = lm_eqn(cluster_lin_mod), parse = TRUE)
+
+  anticodon_dot = ggplot(subset(baseMeanPerLvl_anticodon, select = c(combinations[[i]], "sig")), aes_string(x = combinations[[i]][1], y = combinations[[i]][2])) +
+    geom_point(aes(color = sig, shape = sig)) + labs(color = 'Adjusted p-value < 0.05') + 
+    geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
+    scale_color_manual('Adjusted p-value < 0.05', labels = c("False", "True"), values = c("black", "#4daf4a")) + 
+    scale_shape_manual('Adjusted p-value < 0.05', labels = c("False", "True"), values = c(19, 17)) + 
+    annotate("label", -Inf, Inf, hjust = 0, vjust = 1, label = lm_eqn(anticodon_lin_mod), parse = TRUE)
+
+  ggsave(paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-countplot.pdf", sep="_"), sep="/"), cluster_dot, height = 5, width = 8)
+  ggsave(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-countplot.pdf", sep="_"), sep="/"), anticodon_dot, height = 5, width = 8)
+
+  # Volcano plots
+  # pdf(paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.pdf", sep="_"), sep="/"), width=15, height=12, pointsize=20)
+  # volcanoplot(resdata_cluster, main=paste(combinations[[i]], collapse=" vs "), sigthresh=0.05, textcx=.8, xlim=c(-max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)-0.2, max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)+0.2))
+  # dev.off()
+
+  # pdf(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-volcanoplot.pdf", sep="_"), sep="/"), width=15, height=12, pointsize=20)
+  # volcanoplot(resdata_anticodon, main=paste(combinations[[i]], collapse=" vs "), sigthresh=0.05, textcx=.8, xlim=c(-max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)-0.2, max(abs(resdata_anticodon$log2FoldChange), na.rm=TRUE)+0.2))
+  # dev.off()
   
   ## Write results
   write.csv(resdata_cluster, file=paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))

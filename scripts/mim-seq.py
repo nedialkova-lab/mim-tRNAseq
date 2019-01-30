@@ -10,7 +10,7 @@
 # contact: aberens@biochem.mpg.de
 # github: https://github.com/drewjbeh
 
-import tRNAtools, tRNAmap, getCoverage, mmQuant, CCAanalysis
+import tRNAtools, tRNAmap, getCoverage, mmQuant, CCAanalysis, ssAlign
 import sys, os, subprocess, logging, datetime
 import argparse
 from pyfiglet import figlet_format
@@ -65,7 +65,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
 	coverage_bed, snp_tolerance, mismatch_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
-
+	ssAlign.structureParser()
 	# Generate GSNAP indeces
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, snp_tolerance, cluster)
 

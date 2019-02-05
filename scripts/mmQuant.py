@@ -14,10 +14,11 @@ from functools import partial
 import pandas as pd
 import numpy as np
 from collections import defaultdict
+import ssAlign
 
 log = logging.getLogger(__name__)
 
-def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, inputs):
+def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tRNA_struct, inputs):
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -164,15 +165,27 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, in
 		for cluster, values in stopTable.items()
 				}
 
-	# reformat modTable and save to temp file
+	# reformat modTable, add gaps and structure, and save to temp file
 	reform = {(outerKey, innerKey): values for outerKey, innerDict in modTable_prop.items() for innerKey, values in innerDict.items()}
 	modTable_prop_df = pd.DataFrame.from_dict(reform)
 	modTable_prop_df['type'] = modTable_prop_df.index
 	modTable_prop_melt = modTable_prop_df.melt(id_vars=['type'], var_name=['cluster','pos'], value_name='proportion')
 	modTable_prop_melt['condition'] = condition
 	modTable_prop_melt['bam'] = inputs
-	modTable_prop_melt = modTable_prop_melt[['cluster','pos','type','proportion','condition', 'bam']]
-	modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = '0')
+	modTable_prop_melt.pos = pd.to_numeric(modTable_prop_melt.pos)
+	
+	grouped = modTable_prop_melt.groupby('cluster')
+	for name, group in grouped:
+		for pos in tRNA_struct.loc[name].index:
+			if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
+				modTable_prop_melt.loc[(modTable_prop_melt.cluster == name) & (modTable_prop_melt.pos >= pos), 'pos'] += 1
+				new = pd.DataFrame({'cluster':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]})
+				modTable_prop_melt = modTable_prop_melt.append(new)
+
+	modTable_prop_melt = modTable_prop_melt[['cluster','pos', 'type','proportion','condition', 'bam']]
+	modTable_prop_melt = modTable_prop_melt.join(tRNA_struct, on=['cluster', 'pos'])
+
+	modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 	# reformat knownTable and save to temp file
 	knownTable_df = pd.DataFrame.from_dict(knownTable)
@@ -181,16 +194,28 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, in
 	knownTable_df_melt['condition'] = condition
 	knownTable_df_melt['bam'] = inputs
 	knownTable_df_melt = knownTable_df_melt[['cluster', 'pos', 'known', 'condition', 'bam']]
-	knownTable_df_melt.to_csv(inputs + "knownModSites.csv", sep = "\t", index = False, na_rep = '0')
+	knownTable_df_melt.to_csv(inputs + "knownModSites.csv", sep = "\t", index = False, na_rep = 'NA')
 
-	# reformat stopTable and save to temp file
+	# reformat stopTable, add gaps and structure, and save to temp file
 	stopTable_prop_df = pd.DataFrame.from_dict(stopTable_prop)
 	stopTable_prop_df['pos'] = stopTable_prop_df.index
 	stopTable_prop_melt = stopTable_prop_df.melt(id_vars='pos', var_name='cluster', value_name='proportion')
 	stopTable_prop_melt['condition'] = condition
 	stopTable_prop_melt['bam'] = inputs
+	stopTable_prop_melt.pos = pd.to_numeric(stopTable_prop_melt.pos)
+
+	grouped = stopTable_prop_melt.groupby('cluster')
+	for name, group in grouped:
+		for pos in tRNA_struct.loc[name].index:
+			if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
+				stopTable_prop_melt.loc[(stopTable_prop_melt.cluster == name) & (stopTable_prop_melt.pos >= pos), 'pos'] += 1
+				new = pd.DataFrame({'cluster':name, 'pos':pos, 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]}, index=[0])
+				stopTable_prop_melt = stopTable_prop_melt.append(new)
+
 	stopTable_prop_melt = stopTable_prop_melt[['cluster', 'pos', 'proportion', 'condition', 'bam']]
-	stopTable_prop_melt.to_csv(inputs + "RTstopTable.csv", sep = "\t", index = False, na_rep = '0')
+	stopTable_prop_melt = stopTable_prop_melt.join(tRNA_struct, on = ['cluster', 'pos'])
+
+	stopTable_prop_melt.to_csv(inputs + "RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
@@ -222,9 +247,14 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 	else:
 		multi = len(baminfo)
 
+	# get tRNA struct info from ssAlign
+	tRNA_struct = ssAlign.tRNAclassifier()
+	tRNA_struct_df = pd.DataFrame(tRNA_struct).unstack().rename_axis(('cluster', 'pos')).rename('struct')
+	tRNA_struct_df = pd.DataFrame(tRNA_struct_df)
+
 	# initiate multiprocessing pool and run with bam names
 	pool = Pool(multi)
-	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca, filtered_list)
+	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca, filtered_list, tRNA_struct_df)
 	pool.map(func, bamlist)
 	pool.close()
 	pool.join()
@@ -238,11 +268,11 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 
 	for bam in bamlist:
 		# read in temp files and then delete
-		modTable = pd.read_table(bam + "mismatchTable.csv", header = None)
+		modTable = pd.read_table(bam + "mismatchTable.csv", header = 0)
 		os.remove(bam + "mismatchTable.csv")
-		knownTable = pd.read_table(bam + "knownModSites.csv", header = None)
+		knownTable = pd.read_table(bam + "knownModSites.csv", header = 0)
 		os.remove(bam + "knownModSites.csv")
-		stopTable = pd.read_table(bam + "RTstopTable.csv", header = None)
+		stopTable = pd.read_table(bam + "RTstopTable.csv", header = 0)
 		os.remove(bam + "RTstopTable.csv")
 
 		# add individual temp files to main big table and save
@@ -260,9 +290,9 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 			dinuc_table = dinuc_table.append(dinuc)
 			CCAvsCC_table = CCAvsCC_table.append(CCA)
 
-	modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, header = False)
-	knownTable_total.to_csv(out_dir + "mods/knownModsTable.csv", sep = "\t", index = False, header = False)
-	stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, header = False)	
+	modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
+	knownTable_total.to_csv(out_dir + "mods/knownModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
+	stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')	
 
 	if cca:
 		dinuc_table.columns = ['dinuc', 'proportion', 'sample']

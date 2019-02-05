@@ -56,8 +56,6 @@ setwd(file.path(outdir))
 dir.create(file.path(subdir, 'cluster'), showWarnings = FALSE)
 dir.create(file.path(subdir, 'anticodon'), showWarnings = FALSE)
 
-
-
 # Import data from featureCounts and sampleData
 cluster_countdata = read.table("counts.txt", header=TRUE, row.names=1, check.names = FALSE)
 anticodon_countdata = read.table("Anticodon_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
@@ -75,6 +73,26 @@ colnames(cluster_countdata) = substr(colnames(cluster_countdata),nchar(outdir)+1
 colnames(anticodon_countdata) = substr(colnames(anticodon_countdata),nchar(outdir)+1,nchar(colnames(anticodon_countdata)))
 rownames(coldata) = substr(rownames(coldata),nchar(outdir)+1,nchar(rownames(coldata)))
 colnames(coldata) = "condition"
+
+# Duplicate conditions with single samples to avoid errors - NOTE: DE results from these samples should not be interepretated either way!!
+for (con in unique(coldata$condition)) {
+
+  num = nrow(subset(coldata, condition == con))
+  if (num == 1) {
+    sample = rownames(coldata[which(coldata$condition == con), , drop = FALSE])
+    new_sample = paste(sample, '2', sep = '')
+    con = as.data.frame(con)
+    rownames(con) = new_sample
+    names(con) = 'condition'
+    coldata = rbind(con, coldata)
+    cluster_countdata[[new_sample]] = cluster_countdata[[sample]]
+    anticodon_countdata[[new_sample]] = anticodon_countdata[[sample]]
+  }
+}
+
+cluster_countdata = cluster_countdata[, order(colnames(cluster_countdata))]
+anticodon_countdata = anticodon_countdata[, order(colnames(anticodon_countdata))]
+coldata = coldata[order(rownames(coldata)), , drop = FALSE]
 
 # Convert to matrix
 cluster_countdata = as.matrix(cluster_countdata)
@@ -198,24 +216,45 @@ for (i in 1:length(combinations)) {
   # Count plots
   # add significance to baseMean matrices for current contrast
   baseMeanPerLvl_cluster$sig = res_cluster[rownames(baseMeanPerLvl_cluster),'padj'] < 0.05
-  baseMeanPerLvl_anticodon$sig = resdata_anticodon[rownames(baseMeanPerLvl_anticodon),'padj'] < 0.05
+  baseMeanPerLvl_cluster$sig = !is.na(baseMeanPerLvl_cluster$sig) & baseMeanPerLvl_cluster$sig # deal with NAs turning them into FALSE
+  baseMeanPerLvl_anticodon$sig = res_anticodon[rownames(baseMeanPerLvl_anticodon),'padj'] < 0.05
+  baseMeanPerLvl_anticodon$sig = !is.na(baseMeanPerLvl_anticodon$sig) & baseMeanPerLvl_anticodon$sig # deal with NAs turning them into FALSE
+
+  # add direction of DE to baseMean
+  baseMeanPerLvl_cluster$direction = sign(res_cluster[rownames(baseMeanPerLvl_cluster), 'log2FoldChange'])
+  baseMeanPerLvl_cluster[is.na(baseMeanPerLvl_cluster$direction),'direction'] = 0
+  baseMeanPerLvl_anticodon$direction = sign(res_anticodon[rownames(baseMeanPerLvl_anticodon), 'log2FoldChange'])
+  baseMeanPerLvl_anticodon[is.na(baseMeanPerLvl_anticodon$direction),'direction'] = 0
+
+  baseMeanPerLvl_cluster$comb = paste(baseMeanPerLvl_cluster$sig, baseMeanPerLvl_cluster$direction, sep='')
+  baseMeanPerLvl_cluster$comb[which(baseMeanPerLvl_cluster$comb %in% c('FALSE1','FALSE0','FALSE-1'))] = "FALSE"
+  baseMeanPerLvl_anticodon$comb = paste(baseMeanPerLvl_anticodon$sig, baseMeanPerLvl_anticodon$direction, sep='')
+  baseMeanPerLvl_anticodon$comb[which(baseMeanPerLvl_anticodon$comb %in% c('FALSE1','FALSE0','FALSE-1'))] = "FALSE"
 
   cluster_lin_mod = lm(baseMeanPerLvl_cluster[,combinations[[i]][1]] ~ baseMeanPerLvl_cluster[,combinations[[i]][2]])
   anticodon_lin_mod = lm(baseMeanPerLvl_anticodon[,combinations[[i]][1]] ~ baseMeanPerLvl_anticodon[,combinations[[i]][2]])
 
-  cluster_dot = ggplot(subset(baseMeanPerLvl_cluster, select = c(combinations[[i]], "sig")), aes_string(x = combinations[[i]][1], y = combinations[[i]][2])) +
-    geom_point(aes(color = sig, shape = sig)) + labs(color = 'Adjusted p-value < 0.05') + 
-    geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
-    scale_color_manual('Adjusted p-value < 0.05', labels = c("False", "True"), values = c("black", "#4daf4a")) + 
-    scale_shape_manual('Adjusted p-value < 0.05', labels = c("False", "True"), values = c(19, 17)) + 
-    annotate("label", -Inf, Inf, hjust = 0, vjust = 1, label = lm_eqn(cluster_lin_mod), parse = TRUE)
+  cluster_dot = ggplot(subset(baseMeanPerLvl_cluster, select = c(combinations[[i]], "sig", "comb")), aes_string(x = combinations[[i]][2], y = combinations[[i]][1])) +
+    geom_point(aes(color = comb, shape = comb, size = sig)) +
+    scale_x_log10() + scale_y_log10() +
+    #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
+    geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
+    scale_color_manual('Differential expression', labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
+    scale_shape_manual('Differential expression', labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
+    scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() + 
+    labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
+    annotate("label", 0, Inf, hjust = 0, vjust = 1, label = lm_eqn(cluster_lin_mod), parse = TRUE)
 
-  anticodon_dot = ggplot(subset(baseMeanPerLvl_anticodon, select = c(combinations[[i]], "sig")), aes_string(x = combinations[[i]][1], y = combinations[[i]][2])) +
-    geom_point(aes(color = sig, shape = sig)) + labs(color = 'Adjusted p-value < 0.05') + 
-    geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
-    scale_color_manual('Adjusted p-value < 0.05', labels = c("False", "True"), values = c("black", "#4daf4a")) + 
-    scale_shape_manual('Adjusted p-value < 0.05', labels = c("False", "True"), values = c(19, 17)) + 
-    annotate("label", -Inf, Inf, hjust = 0, vjust = 1, label = lm_eqn(anticodon_lin_mod), parse = TRUE)
+  anticodon_dot = ggplot(subset(baseMeanPerLvl_anticodon, select = c(combinations[[i]], "sig", "comb")), aes_string(x = combinations[[i]][2], y = combinations[[i]][1])) +
+    geom_point(aes(color = comb, shape = comb, size = sig)) +
+    scale_x_log10() + scale_y_log10() + 
+    #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
+    geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
+    scale_color_manual('Differential expression', labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
+    scale_shape_manual('Differential expression', labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
+    scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
+    labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
+    annotate("label", 0, Inf, hjust = 0, vjust = 1, label = lm_eqn(anticodon_lin_mod), parse = TRUE)
 
   ggsave(paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-countplot.pdf", sep="_"), sep="/"), cluster_dot, height = 5, width = 8)
   ggsave(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-countplot.pdf", sep="_"), sep="/"), anticodon_dot, height = 5, width = 8)

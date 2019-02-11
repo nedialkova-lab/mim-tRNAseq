@@ -19,13 +19,106 @@ def aligntRNA(tRNAseqs):
 	cmcommand = 'cmalign -o ' + stkname + ' --nonbanded -g ' + cmfile + ' ' + tRNAseqs
 	subprocess.call(cmcommand, shell = True)
 
+def tRNAclassifier(out):
+
+	struct_dict = structureParser()
+	tRNA_struct = defaultdict(dict)
+
+	# Loop thorugh every tRNA in alignment and create dictionary entry for pos - structure information (1-based to match to mismatchTable from mmQuant)
+	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
+	for record in stk:
+		tRNA = record.id
+		seq = record.seq
+		bases = ["A", "C", "G", "U"]
+
+		for i, letter in enumerate(seq, 1):
+			if letter.upper() in bases:
+				tRNA_struct[tRNA][i] = struct_dict[i]
+			else:
+				tRNA_struct[tRNA][i] = 'gap'
+
+	# Get non-redundant list of gaps in all tRNAs and adjust position info accordingly. Useful to retain cononical numbering of tRNA positions (i.e. anticodon at 34 - 36, m1A 58 etc...)
+	# Return list of characters with pos or '-'. To be used in all plots with positional data such as heatmaps for stops or modifications.
+	gaps = sorted(set([i for data in tRNA_struct.values() for i, struct in data.items() if struct == 'gap' ]))
+	gapseq = list()
+	gap_test = False
+	gap_adjust = 0
+	for i, char in enumerate(record.seq, 1):
+	 	for gap in gaps:
+	 		if gap == i:
+	 			gap_adjust += 1
+	 			gapseq.append('-')
+	 			gap_test = True
+	 	if gap_test == False:
+	 		gapseq.append(str(i-gap_adjust))
+	 	gap_test = False
+
+	# write structure and corrected pos labels to files for plots
+	with open(out + 'struct.txt', 'w') as struct_out:
+		for item in struct_dict.values():
+			struct_out.write(item + "\n")
+
+	with open(out + 'labels.txt', 'w') as labels_out:
+		for item in gapseq:
+			labels_out.write(item + "\n")
+
+	return(tRNA_struct)
+
+def tRNAclassifier_nogaps():
+
+	struct_dict = structureParser()
+	tRNA_struct = defaultdict(dict)
+
+	# Loop thorugh every tRNA in alignment and create dictionary entry for pos - structure information (1-based to match to mismatchTable from mmQuant)
+	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
+	for record in stk:
+		tRNA = record.id
+		seq = record.seq
+		pos = 0
+		bases = ["A", "C", "G", "U"]
+
+		for i, letter in enumerate(seq):
+			if letter.upper() in bases:
+				tRNA_struct[tRNA][pos] = struct_dict[i+1]
+				pos += 1
+
+	return(tRNA_struct)
+
+def getAnticodon():
+	# return anticodon position from conserved alignment
+
+	anticodon = list()
+	rf_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC RF")])
+	# use '*' in rf_cons from stk to delimit the anticodon positions
+	for pos, char in enumerate(rf_cons):
+	 	if char == "*":
+	 		anticodon.append(pos)
+
+	return(anticodon)
+
+def clusterAnticodon(cons_anticodon, cluster):
+	# return anticodon position without gaps for specific cluster
+
+	bases = ["A", "C", "G", "U"]
+	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
+	cluster_anticodon = list()
+	for record in stk:
+		if record.id == cluster:
+			for pos in cons_anticodon:
+				gapcount = 0
+				for char in record.seq[:pos]:
+					if char.upper() not in bases:
+						gapcount += 1
+				cluster_anticodon.append(pos - gapcount)
+
+	return(cluster_anticodon)
+
 def structureParser():
 # read in stk file generated above and define structural regions for each tRNA input
 	
 	struct_dict = dict()
 	# get conserved tRNA structure from alignment
 	ss_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC SS_cons")])
-	rf_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC RF")])
 
 	acc = defaultdict()
 
@@ -89,11 +182,6 @@ def structureParser():
 	struct_dict = {**term, **acc}
 	struct_dict.update(stemloops)
 
-	# use '*' in rf_cons from stk to delimit the anticodon positions
-	# for pos, char in enumerate(rf_cons):
-	# 	if char == "*":
-	# 		struct_dict[pos+1] = "anticodon"
-
 	# bulges classification - i.e. everyhting that isn't already classified as a strucutral element
 	for pos, char in enumerate(ss_cons):
 		if (pos+1) not in [x for x in struct_dict.keys()]:
@@ -121,40 +209,4 @@ def structureParser():
 				struct_dict[pos] = 'bulge' + str(bulge_count)
 
 	return(struct_dict)
-
-def tRNAclassifier():
-
-	struct_dict = structureParser()
-	tRNA_struct = defaultdict(dict)
-
-	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
-	for record in stk:
-		tRNA = record.id
-		seq = record.seq
-		pos = 1
-		bases = ["A", "C", "G", "U"]
-
-		for i, letter in enumerate(seq):
-			if letter.upper() in bases:
-				tRNA_struct[tRNA][pos] = struct_dict[i+1]
-				pos += 1
-			else:
-				tRNA_struct[tRNA][pos] = 'gap'
-				pos += 1
-
-	return(tRNA_struct)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

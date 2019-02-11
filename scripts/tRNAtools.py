@@ -120,7 +120,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 
 	log.info('Number of Modomics entries for species of interest: {}'.format(len(modomics_dict)))
 
-	return(tRNA_dict,modomics_dict)
+	return(tRNA_dict,modomics_dict, species)
 
 def getModomics():
 	# Get full Modomics modified tRNA data from web
@@ -132,7 +132,7 @@ def getModomics():
 
 
 def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False):
-# Builds SNP index needed for GSNAP based on modificaiton data for each tRNA
+# Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0
 	match_count = 0
@@ -142,7 +142,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
-	tRNA_dict, modomics_dict = tRNAparser(gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off)
+	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off)
 	temp_dir = out_dir + "/tmp/"
 
 	try:
@@ -190,25 +190,14 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 						maxbit = hsp.bits
 						tophit = alignment.title.split(' ')[0]
 			
-			# return list of all modified positions for the match as long as there is only 1
-			# index SNPs
-			# Format for SNP index (space separated):
-			# >snpID chromosomeName:position(1-based) RefMod
-			# e.g. >rs111 Homo_sapiens_nmt_tRNA-Leu-TAA-1-1_exp0:29 GN
-
+			# return list of all modified positions for the match as long as there is only 1, add to tRNA_dict
 			if tophit:
 				match_count += 1
 				tRNA_dict[seq]['modified'] = match[tophit]['modified']
-				for (index, pos) in enumerate(tRNA_dict[seq]['modified']):
-					# Build snp_records with chromosomes equal to transcript names
-					# Position is 1-based for iit_store i.e. pos + 1
-					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
 			elif len(tophit) == 0:
 				nomatch_count += 1
 		if len(match) == 0:
 			nomatch_count += 1
-		total_snps+= len(tRNA_dict[seq]['modified'])
-
 
 		# Build seqrecord list for writing
 		seq_records.append(SeqRecord(Seq(tRNA_dict[seq]['sequence'].upper(), Alphabet.generic_dna), id = str(seq)))
@@ -216,9 +205,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		tRNAbed.write(seq + "\t0\t" + str(len(tRNA_dict[seq]['sequence'])) + "\t" + seq + "\t1000\t+\n" )
 
 	tRNAbed.close()
-
-	if total_snps == 0:
-		snp_tolerance = False
 
 	log.info("{} total tRNA gene sequences".format(len(tRNA_dict)))
 	log.info("{} sequences with a match to Modomics dataset".format(match_count))
@@ -238,9 +224,28 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 				isoacceptor_dict[isoacceptor_group] += 1
 			for key, value in isoacceptor_dict.items():
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
-		log.info("{:,} modifications written to SNP index".format(total_snps))
-		# generate Stockholm alignment file for all tRNA transcripts
+		# generate Stockholm alignment file for all tRNA transcripts and parse additional mods file
 		ssAlign.aligntRNA(temptRNATranscripts.name)
+		additionalMods = additionalModsParser(species, out_dir)
+		# add additional SNPs from extra file to list of modified positions, and ensure non-redundancy with set()
+		# index SNPs
+		# Format for SNP index (space separated):
+		# >snpID chromosomeName:position(1-based) RefMod
+		# e.g. >rs111 Homo_sapiens_nmt_tRNA-Leu-TAA-1-1_exp0:29 GN
+		for seq in tRNA_dict:
+			isodecoder = "-".join(seq.split("-")[1:3])
+			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder}
+			if additionalMods_sub:
+				tRNA_dict[seq]['modified'] = list(set(tRNA_dict[seq]['modified'] + additionalMods_sub[isodecoder]))
+			for (index, pos) in enumerate(tRNA_dict[seq]['modified']):
+				# Build snp_records with chromosomes equal to transcript names
+				# Position is 1-based for iit_store i.e. pos + 1
+				snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
+			total_snps+= len(tRNA_dict[seq]['modified'])
+			if total_snps == 0:
+				snp_tolerance = False
+
+		log.info("{:,} modifications written to SNP index".format(total_snps))
 		# empty mismatch dict to avoid error when returning it from this function
 		mismatch_dict = defaultdict(list)
 
@@ -264,7 +269,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		# combine centroids files into one file
 		combine_cmd = "cat " + temp_dir + "*_centroids.fa > " + temp_dir + "all_centroids.fa"
 		subprocess.call(combine_cmd, shell = True)
-		# add N's
 		final_centroids = [SeqRecord(Seq(str(seq_record.seq).upper(), Alphabet.generic_dna), id = seq_record.id) for seq_record in SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")]
 			
 		# read cluster files, get nonredudant set of mod positions of all members of a cluster, create snp_records for writing SNP index
@@ -397,12 +401,18 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
 			SeqIO.write(final_centroids, clusterTranscripts, "fasta")
 
-		# generate Stockholm alignment file for cluster transcripts
+		# generate Stockholm alignment file for cluster transcripts and process additional mods file
 		ssAlign.aligntRNA(clusterTranscripts.name)
+		additionalMods = additionalModsParser(species, out_dir)
 
 		log.info("{} clusters created from {} tRNA sequences".format(cluster_num,len(tRNA_dict)))
 
 		for cluster in mod_lists:
+			isodecoder = "-".join(cluster.split("-")[1:3])
+			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder}
+			if additionalMods_sub:
+				mod_lists[cluster] = list(set(mod_lists[cluster] + additionalMods_sub[isodecoder]))
+
 			total_snps += len(mod_lists[cluster])
 
 			for (index, pos) in enumerate(mod_lists[cluster]):
@@ -424,6 +434,61 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance, mismatch_dict)
+
+def additionalModsParser(input_species, out_dir):
+	# Reads in manual addition of modifcations in /data/additionalMods.txt
+
+	mods ='/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1]) + '/data/additionalMods.txt'
+	mods = open(mods, 'r')
+	additionalMods = defaultdict(list)
+
+	# build dict of additional mods
+	for line in mods:
+		line = line.strip()
+		species, tRNA, mods = line.split("\t")
+		if species in input_species:
+			additionalMods[tRNA] = mods.split(";")
+
+	# initialise dictionaries of structure (with and without gapped numbering) and anticodon positions to define canonical mod sites
+	tRNA_struct = ssAlign.tRNAclassifier(out_dir)
+	tRNA_struct_nogap = ssAlign.tRNAclassifier_nogaps()
+	cons_anticodon = ssAlign.getAnticodon()
+
+	# dictionary storing additional mods per tRNA cluster with corrected positions
+	additionalMods_parse = defaultdict(list)
+
+	# for each additional modification in dictionary, define mod site based on conserved location relative to structural features
+	for isodecoder, mods in additionalMods.items():
+		struct = [value for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key][0] # assume same structure for all members of an isodecoder/cluster and therefore just use first one
+		cluster = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key][0]
+		anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
+		for mod in mods:
+			if mod == "m1A58":
+				section = [pos for pos, value in struct.items() if value == "T stem-loop"]
+				mod_site = section[-8]
+				additionalMods_parse[isodecoder].append(mod_site)
+			if mod == "m2,2G26":
+				section	= [pos for pos, value in struct.items() if value == 'bulge2']
+				mod_site = section[0]
+				additionalMods_parse[isodecoder].append(mod_site)
+			if mod == "m1G9":
+				section = [pos for pos, value in struct.items() if value == 'bulge1']
+				mod_site = section[-1]
+				additionalMods_parse[isodecoder].append(mod_site)
+			if mod == "m1G37":
+				mod_site = max(anticodon) + 1
+				additionalMods_parse[isodecoder].append(mod_site)
+			if mod == 'm3C32':
+				mod_site = min(anticodon) - 2
+				additionalMods_parse[isodecoder].append(mod_site)
+			if mod == 'm3C47':
+				section = [pos for pos, value in struct.items() if value == 'Variable loop']
+				mod_site = section[-2]
+				additionalMods_parse[isodecoder].append(mod_site)
+			#if mod == 'm3C20':
+
+	return(additionalMods_parse)
+
 
 def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluster = False):
 	# Builds genome and snp index files required by GSNAP

@@ -248,7 +248,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 		multi = len(baminfo)
 
 	# get tRNA struct info from ssAlign
-	tRNA_struct = ssAlign.tRNAclassifier()
+	tRNA_struct = ssAlign.tRNAclassifier(out_dir)
 	tRNA_struct_df = pd.DataFrame(tRNA_struct).unstack().rename_axis(('cluster', 'pos')).rename('struct')
 	tRNA_struct_df = pd.DataFrame(tRNA_struct_df)
 

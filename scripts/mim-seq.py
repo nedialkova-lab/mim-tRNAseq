@@ -124,8 +124,6 @@ if __name__ == '__main__':
 		help = 'Enable usearch sequence clustering of tRNAs by isodecoder - drastically reduces rate of multi-mapping reads.')
 	options.add_argument('--cluster_id', metavar = 'clutering id cutoff', dest = 'cluster_id', type = restrictedFloat, nargs = '?', default = 0.95,\
 		required = False, help = 'Identity cutoff for usearch clustering between 0 and 1. Default is 0.95.')
-	options.add_argument('--snp_tolerance', required = False, dest = 'snp_tolerance', action = 'store_true',\
-		help = 'Enable GSNAP SNP-tolerant read alignment, where modifications effecting misincorporation are mapped as SNPs.')
 	options.add_argument('--threads', metavar = 'thread number', required = False, dest = 'threads', type = int, \
 		help = 'Set processor threads to use during read alignment and read counting.')
 	options.add_argument('--posttrans_mod_off', required = False, dest = 'posttrans', action = 'store_true', \
@@ -140,8 +138,11 @@ if __name__ == '__main__':
 
 	align = parser.add_argument_group("GSNAP alignment options")
 	align.add_argument('--max-mismatches', metavar = 'allowed mismatches', required = False, dest = 'mismatches', type = float, \
-		help = 'Maximum allowed mismatches. If specified between 0.0 and 1.0, then trated as a fraction of read length. Otherwise, treated as \
+		help = 'Maximum mismatches allowed. If specified between 0.0 and 1.0, then trated as a fraction of read length. Otherwise, treated as \
 		integer number of mismatches. Default is an automatic ultrafast value calculated by GSNAP; see GSNAP help for more info.')
+	align.add_argument('--snp_tolerance', required = False, dest = 'snp_tolerance', action = 'store_true',\
+		help = 'Enable GSNAP SNP-tolerant read alignment, where known modifications from Modomics are mapped as SNPs.')
+
 
 	outputs = parser.add_argument_group("Output options")
 	outputs.add_argument('-n', '--name', metavar = 'experiment name', required = True, dest = 'name', help = \

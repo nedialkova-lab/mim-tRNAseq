@@ -13,7 +13,7 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name, snp_index_path, \
-	snp_index_name, out_dir, threads, snp_tolerance, keep_temp):
+	snp_index_name, out_dir, threads, snp_tolerance, keep_temp, mismatches):
 
 	log.info("\n+-----------+ \
 	\n| Alignment |\
@@ -33,7 +33,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 				group = line.split("\t")[1]
 
 				# align
-				unique_bam, librarySize = mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp)
+				unique_bam, librarySize = mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches)
 				unique_bam_list.append(unique_bam)
 				coverageData.write(unique_bam + "\t" + group + "\t" + str(librarySize) + "\n")
 
@@ -42,7 +42,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 	return(unique_bam_list, coverageData.name)
 
 def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, \
-	out_dir,snp_tolerance, keep_temp):
+	out_dir,snp_tolerance, keep_temp, mismatches):
 # map with or without SNP index and report initial map statistics
 
 	# check zip status of input reads for command building
@@ -50,17 +50,31 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 	if re.search(".gz",fq):
  		zipped = '--gunzip'
 
-	if snp_tolerance:
-		output_prefix = fq.split("/")[-1].split(".")[0] + "_SNP"
-		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
-		+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
-		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  " + \
-		fq + " &>> " + out_dir + "align.log"
+	if mismatches:
+ 		if snp_tolerance:
+ 			output_prefix = fq.split("/")[-1].split(".")[0] + "_SNP"
+ 			map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
+ 			+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
+ 			" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --max-mismatches " + str(mismatches) + " " + \
+ 			fq + " &>> " + out_dir + "align.log"
+ 		else:
+ 			output_prefix = fq.split("/")[-1].split(".")[0] + "_noSNP"
+ 			map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
+ 			" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --max-mismatches " + \
+ 			str(mismatches) + " " + fq + " &>> " + out_dir + "align.log"
+
 	else:
-		output_prefix = fq.split("/")[-1].split(".")[0] + "_noSNP"
-		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
-		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp " + \
-		fq + " &>> " + out_dir + "align.log"
+ 		if snp_tolerance:
+ 			output_prefix = fq.split("/")[-1].split(".")[0] + "_SNP"
+ 			map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
+ 			+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
+ 			" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  " + \
+ 			fq + " &>> " + out_dir + "align.log"
+ 		else:
+ 			output_prefix = fq.split("/")[-1].split(".")[0] + "_noSNP"
+ 			map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
+ 			" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp " + \
+ 			fq + " &>> " + out_dir + "align.log"
 
 	log.info("Aligning reads to {}...".format(genome_index_name))
 	subprocess.call(map_cmd, shell = True)

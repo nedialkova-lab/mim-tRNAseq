@@ -55,12 +55,12 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
  			output_prefix = fq.split("/")[-1].split(".")[0] + "_SNP"
  			map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
  			+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
- 			" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --max-mismatches " + str(mismatches) + " " + \
+ 			" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 1 --max-mismatches " + str(mismatches) + " " + \
  			fq + " &>> " + out_dir + "align.log"
  		else:
  			output_prefix = fq.split("/")[-1].split(".")[0] + "_noSNP"
  			map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
- 			" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --max-mismatches " + \
+ 			" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --ignore-trim-in-filtering 1 --max-mismatches " + \
  			str(mismatches) + " " + fq + " &>> " + out_dir + "align.log"
 
 	else:
@@ -68,12 +68,12 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
  			output_prefix = fq.split("/")[-1].split(".")[0] + "_SNP"
  			map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
  			+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
- 			" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  " + \
+ 			" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 1 " + \
  			fq + " &>> " + out_dir + "align.log"
  		else:
  			output_prefix = fq.split("/")[-1].split(".")[0] + "_noSNP"
  			map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
- 			" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp " + \
+ 			" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --ignore-trim-in-filtering 1 " + \
  			fq + " &>> " + out_dir + "align.log"
 
 	log.info("Aligning reads to {}...".format(genome_index_name))

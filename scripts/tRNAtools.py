@@ -43,17 +43,20 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 	for seq in temp_dict:
 		# Get species of input tRNA seqs to subset full Modomics table
 		species.add(' '.join(seq.split('_')[0:2]))
-		tRNA_dict[seq] = {}
-		tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
-		tRNA_dict[seq]['sequence'] = tRNAseq
+		# only add to dictionary if not nmt or undetermined sequence
+		if not (re.search('nmt', seq) or re.search('Und', seq)):
+			tRNA_dict[seq] = {}
+			tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
+			tRNA_dict[seq]['sequence'] = tRNAseq
+			tRNA_dict[seq]['species'] = ' '.join(seq.split('_')[0:2])
 
-		if 'nmt' in seq:
-			tRNA_dict[seq]['type'] = 'mitochondrial'
-			new_seq = str(seq.split('-')[0]) + '_' + '-'.join(seq.split('-')[1:])
-			tRNA_dict[new_seq] = tRNA_dict[seq]
-			del tRNA_dict[seq]
-		else:
-			tRNA_dict[seq]['type'] = 'cytosolic'
+		# if 'nmt' in seq:
+		# 	tRNA_dict[seq]['type'] = 'mitochondrial'
+		# 	new_seq = str(seq.split('-')[0]) + '_' + '-'.join(seq.split('-')[1:])
+		# 	tRNA_dict[new_seq] = tRNA_dict[seq]
+		# 	del tRNA_dict[seq]
+		# else:
+		# 	tRNA_dict[seq]['type'] = 'cytosolic'
 
 
 	# Read in and parse modomics file to contain similar headers to tRNA_dict
@@ -206,7 +209,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 
 	tRNAbed.close()
 
-	log.info("{} total tRNA gene sequences".format(len(tRNA_dict)))
+	log.info("{} total tRNA gene sequences (nmt and undetermined sequences excluded)".format(len(tRNA_dict)))
 	log.info("{} sequences with a match to Modomics dataset".format(match_count))
 
 	with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
@@ -234,9 +237,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		# e.g. >rs111 Homo_sapiens_nmt_tRNA-Leu-TAA-1-1_exp0:29 GN
 		for seq in tRNA_dict:
 			isodecoder = "-".join(seq.split("-")[1:3])
-			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder}
+			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder and tRNA_dict[seq]['species'] in v['species']}
 			if additionalMods_sub:
-				tRNA_dict[seq]['modified'] = list(set(tRNA_dict[seq]['modified'] + additionalMods_sub[isodecoder]))
+				tRNA_dict[seq]['modified'] = list(set(tRNA_dict[seq]['modified'] + additionalMods_sub[isodecoder]['mods']))
 			for (index, pos) in enumerate(tRNA_dict[seq]['modified']):
 				# Build snp_records with chromosomes equal to transcript names
 				# Position is 1-based for iit_store i.e. pos + 1
@@ -409,9 +412,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 
 		for cluster in mod_lists:
 			isodecoder = "-".join(cluster.split("-")[1:3])
-			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder}
+			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder and tRNA_dict[cluster]['species'] in v['species']}
 			if additionalMods_sub:
-				mod_lists[cluster] = list(set(mod_lists[cluster] + additionalMods_sub[isodecoder]))
+				mod_lists[cluster] = list(set(mod_lists[cluster] + additionalMods_sub[isodecoder]['mods']))
 
 			total_snps += len(mod_lists[cluster])
 
@@ -440,14 +443,15 @@ def additionalModsParser(input_species, out_dir):
 
 	mods ='/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1]) + '/data/additionalMods.txt'
 	mods = open(mods, 'r')
-	additionalMods = defaultdict(list)
+	additionalMods = defaultdict(lambda: defaultdict(list))
 
 	# build dict of additional mods
 	for line in mods:
 		line = line.strip()
 		species, tRNA, mods = line.split("\t")
 		if species in input_species:
-			additionalMods[tRNA] = mods.split(";")
+			additionalMods[tRNA]['mods'] = mods.split(";")
+			additionalMods[tRNA]['species'] = species
 
 	# initialise dictionaries of structure (with and without gapped numbering) and anticodon positions to define canonical mod sites
 	tRNA_struct = ssAlign.tRNAclassifier(out_dir)
@@ -455,36 +459,42 @@ def additionalModsParser(input_species, out_dir):
 	cons_anticodon = ssAlign.getAnticodon()
 
 	# dictionary storing additional mods per tRNA cluster with corrected positions
-	additionalMods_parse = defaultdict(list)
+	additionalMods_parse = defaultdict(lambda: defaultdict(list))
 
 	# for each additional modification in dictionary, define mod site based on conserved location relative to structural features
-	for isodecoder, mods in additionalMods.items():
+	for isodecoder, data in additionalMods.items():
 		struct = [value for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key][0] # assume same structure for all members of an isodecoder/cluster and therefore just use first one
 		cluster = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key][0]
 		anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
-		for mod in mods:
+		for mod in data['mods']:
 			if mod == "m1A58":
 				section = [pos for pos, value in struct.items() if value == "T stem-loop"]
 				mod_site = section[-8]
-				additionalMods_parse[isodecoder].append(mod_site)
+				additionalMods_parse[isodecoder]['mods'].append(mod_site)
+				additionalMods_parse[isodecoder]['species'].append(data['species'])
 			if mod == "m2,2G26":
 				section	= [pos for pos, value in struct.items() if value == 'bulge2']
 				mod_site = section[0]
-				additionalMods_parse[isodecoder].append(mod_site)
+				additionalMods_parse[isodecoder]['mods'].append(mod_site)
+				additionalMods_parse[isodecoder]['species'].append(data['species'])
 			if mod == "m1G9":
 				section = [pos for pos, value in struct.items() if value == 'bulge1']
 				mod_site = section[-1]
-				additionalMods_parse[isodecoder].append(mod_site)
+				additionalMods_parse[isodecoder]['mods'].append(mod_site)
+				additionalMods_parse[isodecoder]['species'].append(data['species'])
 			if mod == "m1G37":
 				mod_site = max(anticodon) + 1
-				additionalMods_parse[isodecoder].append(mod_site)
+				additionalMods_parse[isodecoder]['mods'].append(mod_site)
+				additionalMods_parse[isodecoder]['species'].append(data['species'])
 			if mod == 'm3C32':
 				mod_site = min(anticodon) - 2
-				additionalMods_parse[isodecoder].append(mod_site)
+				additionalMods_parse[isodecoder]['mods'].append(mod_site)
+				additionalMods_parse[isodecoder]['species'].append(data['species'])
 			if mod == 'm3C47':
 				section = [pos for pos, value in struct.items() if value == 'Variable loop']
 				mod_site = section[-2]
-				additionalMods_parse[isodecoder].append(mod_site)
+				additionalMods_parse[isodecoder]['mods'].append(mod_site)
+				additionalMods_parse[isodecoder]['species'].append(data['species'])
 			#if mod == 'm3C20':
 
 	return(additionalMods_parse)

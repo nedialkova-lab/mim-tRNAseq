@@ -15,9 +15,8 @@ import sys, os, subprocess, logging, datetime
 import argparse
 from pyfiglet import figlet_format
 
-
-## Method for restricting cluster_id argument to float between 0 and 1
 def restrictedFloat(x):
+## Method for restricting cluster_id argument to float between 0 and 1
 	try:
 		x = float(x)
 		if x < 0.0 or x > 1.0:
@@ -27,7 +26,7 @@ def restrictedFloat(x):
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
 def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, mode, cca, min_cov, mismatches, sample_data):
+	keep_temp, mode, cca, min_cov, mismatches, remap, misinc_thresh, sample_data):
 	
 # Main wrapper
 
@@ -64,18 +63,30 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance, mismatch_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance, mismatch_dict, mod_lists, tRNA_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 	ssAlign.structureParser()
-	# Generate GSNAP indeces
+	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, snp_tolerance, cluster)
 
 	# Align
+	map_round = 1 #first round of mapping
 	bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
-		snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, mismatches)
+		snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, mismatches, map_round)
 
 	# Coverage and plots
 	cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
 	getCoverage.plotCoverage(out)
+
+	# if remap is enabled, skip further analyses, find new mods, and redo alignment and coverage
+	if remap:
+		new_mods = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh)
+		tRNAtools.newModsParser(out, name, new_mods, mod_lists, tRNA_dict)
+		tRNAtools.generateSNPIndex(name, out, snp_tolerance)
+		map_round = 2
+		bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
+			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, mismatches, map_round)
+		cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
+		getCoverage.plotCoverage(out)
 
 	# featureCounts
 	tRNAmap.countReads(bams_list, mode, threads, out)
@@ -94,7 +105,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))
 
 	# Misincorporation analysis
-	mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca)
+	mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh)
 
 	# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 	if cca:
@@ -169,6 +180,14 @@ if __name__ == '__main__':
 		available memory, too many files processed at once can cause termination of mim-tRNAseq due to insufficient memory. If\
 		mim-tRNAseq fails during coverage calculation, lower this number. Increase at your own discretion. Default is 3.')
 
+	remapping = parser.add_argument_group("Analysis of unannotated modifications and realignment")
+	remapping.add_argument('--remap', required = False, dest = 'remap', action = 'store_true',\
+		help = 'Enable detection of unannotated (potential) modifications from misincorporation data. These are defined as having a total misincorporation rate\
+		higher than the threshold set with --misinc_thresh. These modifications are then appended to already known ones, and read alignment is reperformed.\
+		Very useful for poorly annotated species in Modomics. Due to realignment and misincorporation parsing, enabling this option slows the analysis down considerably.')
+	remapping.add_argument('--misinc_thresh', metavar = 'threshold for unannotated mods', dest = 'misinc_thresh', type = restrictedFloat, nargs = '?', default = 0.1,\
+		required = False, help = 'Threshold of total misincorporation rate at a position in a cluster used to call unannotated modifications. Value between 0 and 1, default is 0.1  (10%% misincorporation).')
+
 	parser.add_argument('sample_data', help = 'Sample data sheet in text format, tab-separated. Column 1: full path to fastq (or fastq.gz). Column 2: condition/group.')
 
 	parser.set_defaults(threads=1, out="./", mode = 'none', max_multi = 3, min_cov = 0)
@@ -204,4 +223,4 @@ if __name__ == '__main__':
 		else:
 			mimseq(args.trnas, args.trnaout, args.name, args.out, args.cluster, args.cluster_id, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
-				args.keep_temp, args.mode, args.cca, args.min_cov, args.mismatches, args.sample_data)
+				args.keep_temp, args.mode, args.cca, args.min_cov, args.mismatches, args.remap, args.misinc_thresh, args.sample_data)

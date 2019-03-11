@@ -65,8 +65,8 @@ if (length(args)==0) {
   		scale_y_continuous(breaks = seq(0,1,0.25)) + theme(axis.title.x=element_blank(), 
                                                      axis.text.y=element_text(colour="black",size=8),
                                                      axis.text.x=element_blank(), strip.text.y = element_text(angle=0, size = 6),
-                                                     strip.text.x = element_text(angle=0, size = 4))
-  		+ theme_bw()
+                                                     strip.text.x = element_text(angle=0, size = 4)) +
+  		theme_bw()
 
   	plots = dlply(cov_bygene , "Cluster", `%+%`, e1 = plot_func)
   	multi = marrangeGrob(plots, nrow = 3, ncol = 1)

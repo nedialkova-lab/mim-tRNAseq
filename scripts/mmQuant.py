@@ -18,7 +18,19 @@ import ssAlign
 
 log = logging.getLogger(__name__)
 
-def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tRNA_struct, inputs):
+def unknownMods(inputs, knownTable, modTable, misinc_thresh):
+# find unknown modifications with a total misincorporation threshold >= misinc_thresh
+
+	log.info('Finding potential unannotated mods for {}'.format(inputs))
+	new_mods =  defaultdict(list)
+	for cluster, data in modTable.items():
+		for pos, type in data.items():
+			if (sum(modTable[cluster][pos].values()) >= misinc_thresh and knownTable[cluster][pos] == 0):
+				new_mods[cluster].append(pos)
+
+	return(new_mods)
+
+def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tRNA_struct, remap, misinc_thresh, inputs):
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -87,9 +99,9 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 					if (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and identity.islower()):
 						modTable[reference][ref_pos+1][identity] += 1 # log the identity of the misincorporated base
 						if interval == interval.lower():
-							modTable[reference][ref_pos]['known'] = True # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
+							modTable[reference][ref_pos]['known'] = 1 # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
 						else:
-							modTable[reference][ref_pos]['known'] = False
+							modTable[reference][ref_pos]['known'] = 0
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -105,9 +117,9 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 					if (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and identity.islower()):
 						modTable[reference][ref_pos+1][identity] += 1
 						if interval == interval.lower():
-							modTable[reference][ref_pos]['known'] = True
+							modTable[reference][ref_pos]['known'] = 1
 						else:
-							modTable[reference][ref_pos]['known'] = False
+							modTable[reference][ref_pos]['known'] = 0
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -165,6 +177,12 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		for cluster, values in stopTable.items()
 				}
 
+	# if remapping is enabled, find uknown mod sites
+	if remap:
+		new_mods = unknownMods(inputs, knownTable, modTable_prop, misinc_thresh)
+	else:
+		new_mods = {}
+
 	# reformat modTable, add gaps and structure, and save to temp file
 	reform = {(outerKey, innerKey): values for outerKey, innerDict in modTable_prop.items() for innerKey, values in innerDict.items()}
 	modTable_prop_df = pd.DataFrame.from_dict(reform)
@@ -219,7 +237,9 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
-def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, filtered_list, cca):
+	return(new_mods)
+
+def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -228,8 +248,11 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 		\n| Analysing misincorporations and stops to RT, and analysing 3' ends |\
 		\n+--------------------------------------------------------------------+")
 
-		os.mkdir(out_dir + "CCAanalysis")
-		os.mkdir(out_dir + "mods")
+		try:
+			os.mkdir(out_dir + "CCAanalysis")
+			os.mkdir(out_dir + "mods")
+		except FileExistsError:
+			log.warning("Rewriting over old mods and CCA files...")
 
 	else:
 
@@ -237,7 +260,13 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 		\n| Analysing misincorporations and stops to RT |\
 		\n+---------------------------------------------+")
 
-		os.mkdir(out_dir + "mods")
+		try:
+			os.mkdir(out_dir + "mods")
+		except FileExistsError:
+				log.warning("Rewriting over old mods files...")
+
+	if remap:
+		log.info("** Discovering unannotated modifications for realignment **")
 
 	# Get bam info using function in getCoverage
 	baminfo, bamlist = getBamList(sampleGroups)
@@ -254,8 +283,8 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 
 	# initiate multiprocessing pool and run with bam names
 	pool = Pool(multi)
-	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca, filtered_list, tRNA_struct_df)
-	pool.map(func, bamlist)
+	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca, filtered_list, tRNA_struct_df, remap, misinc_thresh)
+	new_mods = pool.map(func, bamlist)
 	pool.close()
 	pool.join()
 
@@ -301,5 +330,6 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 		#CCAvsCC_table = CCAvsCC_table.pivot_table(index = 'gene', columns = 'sample', values = 'count', fill_value = 0)
 		CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
+	return(new_mods)
 
 			

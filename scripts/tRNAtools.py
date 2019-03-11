@@ -218,10 +218,12 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	# if clustering is not activated then write full gff and report on total SNPs written 
 	if not cluster:
 		coverage_bed = tRNAbed.name
+		mod_lists = dict()
 		with open(out_dir + experiment_name + "_tRNA.gff","w") as tRNAgff, open(out_dir + experiment_name + "isoacceptorInfo.txt","w") as isoacceptorInfo:	
 			isoacceptor_dict = defaultdict(int)
 			isoacceptorInfo.write("Isoacceptor\tsize\n")
 			for seq in tRNA_dict:
+				mod_lists[seq] = tRNA_dict[seq]['modified']
 				tRNAgff.write(seq + "\ttRNAseq\texon\t1\t" + str(len(tRNA_dict[seq]['sequence'])) + "\t.\t+\t0\tgene_id '" + seq + "'\n")
 				isoacceptor_group = '-'.join(seq.split("-")[:-2])
 				isoacceptor_dict[isoacceptor_group] += 1
@@ -436,10 +438,32 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance, mismatch_dict)
+	return(coverage_bed, snp_tolerance, mismatch_dict, mod_lists, tRNA_dict)
+
+def newModsParser(out_dir, experiment_name, new_mods_list, mod_lists, tRNA_dict):
+# Parses new mods (from remap) into mod_lists, rewrites SNP index
+
+	log.info("\n+------------------+ \
+		\n| Parsing new mods |\
+		\n+------------------+")	
+
+
+	for l in new_mods_list:
+		for cluster, mods in l.items():
+			mod_lists[cluster] = list(set(mod_lists[cluster] + l[cluster]))
+
+	total_snps = 0
+
+	with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
+		for cluster in mod_lists:
+			total_snps += len(mod_lists[cluster])
+			for (index, pos) in enumerate(mod_lists[cluster]):
+				snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N\n")
+
+	log.info("{:,} modifications written to SNP index".format(total_snps))	
 
 def additionalModsParser(input_species, out_dir):
-	# Reads in manual addition of modifcations in /data/additionalMods.txt
+# Reads in manual addition of modifcations in /data/additionalMods.txt
 
 	mods ='/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1]) + '/data/additionalMods.txt'
 	mods = open(mods, 'r')
@@ -501,7 +525,7 @@ def additionalModsParser(input_species, out_dir):
 
 
 def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluster = False):
-	# Builds genome and snp index files required by GSNAP
+# Builds genome and snp index files required by GSNAP
 
 	log.info("\n+--------------------------+ \
 		 \n| Generating GSNAP indices |\
@@ -532,7 +556,7 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 		try:
 			os.mkdir(snp_index_path)
 		except FileExistsError:
-			log.warning("SNP index folder found! Building indices anyway...\n")
+			log.warning("SNP index folder found! Building indices anyway...")
 
 		snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
 		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
@@ -542,13 +566,44 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 					" -v " + experiment_name + "_modificationSNPs " + snp_index_path + "/" + experiment_name + \
 					"_modificationSNPs.iit &>> " + out_dir + "snpindex.log"
 		subprocess.call(index_cmd, shell = True)
-		log.info("SNP indices done...\n")
+		log.info("SNP indices done...")
 		return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
 
 	elif not snp_tolerance:
 		log.warning("SNP-tolerant alignment turned off or no modifications found for input tRNAs: SNP indices not built...\n")
 		snp_index_name = ""
 		return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
+
+def generateSNPIndex(experiment_name, out_dir, snp_tolerance = False):
+# Build SNP index only
+
+	log.info("\n+------------------------------+ \
+		 \n| Regenerating GSNAP SNP index |\
+		 \n+------------------------------+")
+
+	snp_index_path = out_dir + experiment_name + "snp_index"
+	genome_index_path = out_dir + experiment_name + "_tRNAgenome"
+
+	if snp_tolerance:
+
+		try:
+			os.mkdir(snp_index_path)
+		except FileExistsError:
+			log.warning("Rewriting SNP index...")
+
+		snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
+		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
+		index_cmd = "cat " + snp_file + " | iit_store -o " + snp_index_path + "/" + snp_index_name + " &> " + out_dir + "snpindex.log"
+		subprocess.call(index_cmd, shell = True)
+		index_cmd = "snpindex -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
+					" -v " + experiment_name + "_modificationSNPs " + snp_index_path + "/" + experiment_name + \
+					"_modificationSNPs.iit &>> " + out_dir + "snpindex.log"
+		subprocess.call(index_cmd, shell = True)
+		log.info("SNP indices done...")
+
+	elif not snp_tolerance:
+		log.warning("SNP-tolerant alignment turned off or no modifications found for input tRNAs: SNP indices not built...\n")
+		snp_index_name = ""
 
 def modificationParser(modifications_table):
 	# Read in modifications and build dictionary

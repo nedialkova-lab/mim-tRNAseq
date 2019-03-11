@@ -13,7 +13,7 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name, snp_index_path, \
-	snp_index_name, out_dir, threads, snp_tolerance, keep_temp, mismatches):
+	snp_index_name, out_dir, threads, snp_tolerance, keep_temp, mismatches, map_round):
 
 	log.info("\n+-----------+ \
 	\n| Alignment |\
@@ -33,7 +33,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 				group = line.split("\t")[1]
 
 				# align
-				unique_bam, librarySize = mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches)
+				unique_bam, librarySize = mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches, map_round)
 				unique_bam_list.append(unique_bam)
 				coverageData.write(unique_bam + "\t" + group + "\t" + str(librarySize) + "\n")
 
@@ -42,7 +42,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 	return(unique_bam_list, coverageData.name)
 
 def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, \
-	out_dir,snp_tolerance, keep_temp, mismatches):
+	out_dir,snp_tolerance, keep_temp, mismatches, map_round):
 # map with or without SNP index and report initial map statistics
 
 	# check zip status of input reads for command building
@@ -88,9 +88,11 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 	# write mapping stats and compress to bam - remove mutlimapping and unmapped unless keep_temp = True
 	log.info("Compressing SAM files, sorting, and computing mapping stats...")
 	with open(out_dir + "mapping_stats.txt","a") as stats_out:
+		if map_round > 1:
+			stats_out.write("** NEW ALIGNMENT STATS **\n\n")
 		align_pathlist = Path(out_dir).glob(output_prefix + "*")
 		for file in align_pathlist:
-			if re.search("mult",file.name):
+			if re.search("mult",file.name) and not re.search("bam", file.name):
 				cmd = "samtools view -@ " + str(threads) + " -F 0x904 -c " + out_dir + file.name
 				multi_count = int(subprocess.check_output(cmd, shell = True))
 				if keep_temp:
@@ -99,14 +101,14 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 					os.remove(out_dir + file.name)
 				elif not keep_temp:
 					os.remove(out_dir + file.name)
-			elif re.search("uniq",file.name):
+			elif re.search("uniq",file.name) and not re.search("bam", file.name):
 				cmd = "samtools view -@ " + str(threads) + " -c " + out_dir + file.name
 				unique_count = int(subprocess.check_output(cmd, shell = True))
 				unique_bam = out_dir + file.name + ".bam"
 				cmd = "samtools view -@ " + str(threads) + " -bh " + out_dir + file.name + " | samtools sort -@ " + str(threads) + " -o " + unique_bam + " - "
 				subprocess.call(cmd, shell = True)
 				os.remove(out_dir + file.name)
-			elif re.search("nomapping",file.name):
+			elif re.search("nomapping",file.name) and not re.search("bam", file.name):
 				cmd = "samtools view -@ " + str(threads) + " -c " + out_dir + file.name
 				unmapped_count = int(subprocess.check_output(cmd, shell = True))
 				if keep_temp:
@@ -118,9 +120,14 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 
 		total_count = unique_count + multi_count + unmapped_count
 
-		stats_out.write("{}\nUniqely mapped reads: {:d} ({:.0%}) \nMulti-mapping reads: {:d} ({:.0%}) \nUnmapped reads: {:d} ({:.0%}) \nTotal: {:d}\n\n"\
-			.format(fq.split("/")[-1], unique_count, (unique_count/total_count),multi_count, (multi_count/total_count), unmapped_count, (unmapped_count/total_count), total_count))
+		if map_round == 1:
+			stats_out.write("{}\nUniqely mapped reads: {:d} ({:.0%}) \nMulti-mapping reads: {:d} ({:.0%}) \nUnmapped reads: {:d} ({:.0%}) \nTotal: {:d}\n\n"\
+				.format(fq.split("/")[-1], unique_count, (unique_count/total_count),multi_count, (multi_count/total_count), unmapped_count, (unmapped_count/total_count), total_count))
 	
+		else:
+			stats_out.write("{}\nUniqely mapped reads: {:d} ({:.0%}) \nMulti-mapping reads: {:d} ({:.0%}) \nUnmapped reads: {:d} ({:.0%}) \nTotal: {:d}\n\n"\
+				.format(fq.split("/")[-1], unique_count, (unique_count/total_count),multi_count, (multi_count/total_count), unmapped_count, (unmapped_count/total_count), total_count))
+
 	return(unique_bam, total_count)
 
 def countReads(unique_bam_list, mode, threads, out_dir):

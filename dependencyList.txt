@@ -3,13 +3,14 @@ pandas 0.22.0
 numpy 1.14.0 
 pyfiglet 0.7.5
 pybedtools 0.7.10
-pysam 0.14.1 
+pysam 0.14.1
+INFERNAL 1.1.2 (July 2016) 
 Subread package (for featureCounts) v1.6.2
 GMAP-GSNAP version 2018-05-30
 samtools version 1.6
 usearch v10.0.240
 bedtools v2.26.0
-R v3.4
+R v3.5.2
 R packages:
 	- ggplot2 v2.2.1
 	- DESeq2 v1.14.1

@@ -54,13 +54,13 @@ def tRNAclassifier(out):
 	 	gap_test = False
 
 	# write structure and corrected pos labels to files for plots
-	with open(out + 'struct.txt', 'w') as struct_out:
-		for item in struct_dict.values():
-			struct_out.write(item + "\n")
+	# with open(out + 'struct.txt', 'w') as struct_out:
+	# 	for item in struct_dict.values():
+	# 		struct_out.write(item + "\n")
 
-	with open(out + 'labels.txt', 'w') as labels_out:
-		for item in gapseq:
-			labels_out.write(item + "\n")
+	# with open(out + 'labels.txt', 'w') as labels_out:
+	# 	for item in gapseq:
+	# 		labels_out.write(item + "\n")
 
 	return(tRNA_struct)
 

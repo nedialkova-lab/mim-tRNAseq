@@ -77,9 +77,9 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
 	getCoverage.plotCoverage(out)
 
-	# if remap is enabled, skip further analyses, find new mods, and redo alignment and coverage
-	if remap:
-		new_mods = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh)
+	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
+	if remap and snp_tolerance:
+		new_mods = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists)
 		tRNAtools.newModsParser(out, name, new_mods, mod_lists, tRNA_dict)
 		tRNAtools.generateSNPIndex(name, out, snp_tolerance)
 		map_round = 2
@@ -87,6 +87,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, mismatches, map_round)
 		cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
 		getCoverage.plotCoverage(out)
+		remap = False
 
 	# featureCounts
 	tRNAmap.countReads(bams_list, mode, threads, out)
@@ -105,7 +106,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))
 
 	# Misincorporation analysis
-	mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh)
+	mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists)
 
 	# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 	if cca:

@@ -18,19 +18,25 @@ import ssAlign
 
 log = logging.getLogger(__name__)
 
-def unknownMods(inputs, knownTable, modTable, misinc_thresh):
+def unknownMods(inputs, out_dir, knownTable, modTable, misinc_thresh):
 # find unknown modifications with a total misincorporation threshold >= misinc_thresh
 
 	log.info('Finding potential unannotated mods for {}'.format(inputs))
 	new_mods =  defaultdict(list)
 	for cluster, data in modTable.items():
 		for pos, type in data.items():
-			if (sum(modTable[cluster][pos].values()) >= misinc_thresh and knownTable[cluster][pos] == 0):
-				new_mods[cluster].append(pos)
+			if (sum(modTable[cluster][pos].values()) >= misinc_thresh and pos-1 not in knownTable[cluster]):
+				new_mods[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
+
+	with open(out_dir + "mods/predictedMods.csv", "w") as predMods:
+		predMods.write("cluster\tpos\tmisinc\n")
+		for cluster, data in new_mods.items():
+			for pos in data:
+				predMods.write(cluster + "\t" + str(pos) + "\t" + str(sum(modTable[cluster][pos+1].values())) + "\n")
 
 	return(new_mods)
 
-def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tRNA_struct, remap, misinc_thresh, inputs):
+def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tRNA_struct, remap, misinc_thresh, knownTable, inputs):
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -98,10 +104,10 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 					# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
 					if (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and identity.islower()):
 						modTable[reference][ref_pos+1][identity] += 1 # log the identity of the misincorporated base
-						if interval == interval.lower():
-							modTable[reference][ref_pos]['known'] = 1 # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
-						else:
-							modTable[reference][ref_pos]['known'] = 0
+						# if interval == interval.lower():
+						# 	modTable[reference][ref_pos]['known'] = 1 # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
+						# else:
+						# 	modTable[reference][ref_pos]['known'] = 0
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -116,10 +122,10 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 					# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
 					if (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and identity.islower()):
 						modTable[reference][ref_pos+1][identity] += 1
-						if interval == interval.lower():
-							modTable[reference][ref_pos]['known'] = 1
-						else:
-							modTable[reference][ref_pos]['known'] = 0
+						# if interval == interval.lower():
+						# 	modTable[reference][ref_pos]['known'] = 1
+						# else:
+						# 	modTable[reference][ref_pos]['known'] = 0
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -164,11 +170,11 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		for cluster, values in modTable.items()
 					}
 
-	knownTable = {cluster: {pos: test['known']
-			for pos, test in values.items()
-						}
-		for cluster, values in modTable.items()
-				}
+	# knownTable = {cluster: {pos: test['known']
+	# 		for pos, test in values.items()
+	# 					}
+	# 	for cluster, values in modTable.items()
+	# 			}
 
 	stopTable_prop = {cluster: {
 			pos: count / geneCov[cluster]
@@ -179,7 +185,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 
 	# if remapping is enabled, find uknown mod sites
 	if remap:
-		new_mods = unknownMods(inputs, knownTable, modTable_prop, misinc_thresh)
+		new_mods = unknownMods(inputs, out_dir, knownTable, modTable_prop, misinc_thresh)
 	else:
 		new_mods = {}
 
@@ -206,13 +212,13 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 	modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 	# reformat knownTable and save to temp file
-	knownTable_df = pd.DataFrame.from_dict(knownTable)
-	knownTable_df['pos'] = knownTable_df.index
-	knownTable_df_melt = knownTable_df.melt(id_vars='pos', var_name='cluster', value_name='known')
-	knownTable_df_melt['condition'] = condition
-	knownTable_df_melt['bam'] = inputs
-	knownTable_df_melt = knownTable_df_melt[['cluster', 'pos', 'known', 'condition', 'bam']]
-	knownTable_df_melt.to_csv(inputs + "knownModSites.csv", sep = "\t", index = False, na_rep = 'NA')
+	# knownTable_df = pd.DataFrame.from_dict(knownTable)
+	# knownTable_df['pos'] = knownTable_df.index
+	# knownTable_df_melt = knownTable_df.melt(id_vars='pos', var_name='cluster', value_name='known')
+	# knownTable_df_melt['condition'] = condition
+	# knownTable_df_melt['bam'] = inputs
+	# knownTable_df_melt = knownTable_df_melt[['cluster', 'pos', 'known', 'condition', 'bam']]
+	# knownTable_df_melt.to_csv(inputs + "knownModSites.csv", sep = "\t", index = False, na_rep = 'NA')
 
 	# reformat stopTable, add gaps and structure, and save to temp file
 	stopTable_prop_df = pd.DataFrame.from_dict(stopTable_prop)
@@ -239,7 +245,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 
 	return(new_mods)
 
-def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh):
+def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, knownTable):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -283,13 +289,13 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 
 	# initiate multiprocessing pool and run with bam names
 	pool = Pool(multi)
-	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca, filtered_list, tRNA_struct_df, remap, misinc_thresh)
+	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca, filtered_list, tRNA_struct_df, remap, misinc_thresh, knownTable)
 	new_mods = pool.map(func, bamlist)
 	pool.close()
 	pool.join()
 
 	modTable_total = pd.DataFrame()
-	knownTable_total = pd.DataFrame()
+	#knownTable_total = pd.DataFrame()
 	stopTable_total = pd.DataFrame()
 
 	dinuc_table = pd.DataFrame()
@@ -299,14 +305,14 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 		# read in temp files and then delete
 		modTable = pd.read_table(bam + "mismatchTable.csv", header = 0)
 		os.remove(bam + "mismatchTable.csv")
-		knownTable = pd.read_table(bam + "knownModSites.csv", header = 0)
-		os.remove(bam + "knownModSites.csv")
+		#knownTable = pd.read_table(bam + "knownModSites.csv", header = 0)
+		#os.remove(bam + "knownModSites.csv")
 		stopTable = pd.read_table(bam + "RTstopTable.csv", header = 0)
 		os.remove(bam + "RTstopTable.csv")
 
 		# add individual temp files to main big table and save
 		modTable_total = modTable_total.append(modTable)
-		knownTable_total = knownTable_total.append(knownTable)
+		#knownTable_total = knownTable_total.append(knownTable)
 		stopTable_total = stopTable_total.append(stopTable)
 
 		if cca:
@@ -320,7 +326,12 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 			CCAvsCC_table = CCAvsCC_table.append(CCA)
 
 	modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
-	knownTable_total.to_csv(out_dir + "mods/knownModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
+	with open(out_dir + "mods/knownModsTable.csv", "w") as known:
+		known.write("cluster\tpos\n")
+		for cluster, data in knownTable.items():
+			for pos in data:
+				known.write(cluster + "\t" + str(pos) + "\n")
+	#knownTable_total.to_csv(out_dir + "mods/knownModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
 	stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')	
 
 	if cca:

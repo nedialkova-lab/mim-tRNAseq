@@ -19,7 +19,7 @@ import ssAlign
 
 log = logging.getLogger(__name__)
 
-def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
+def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off):
 # tRNA sequence files parser and dictionary building
 
 	# Generate modification reference table
@@ -33,7 +33,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 	log.info("Processing tRNA sequences...")
 
 	# Build dictionary of sequences from gtRNAdb fasta
-	tRNA_dict = {}
+	tRNA_dict = defaultdict(lambda: defaultdict())
 	temp_dict = SeqIO.to_dict(SeqIO.parse(gtRNAdb,"fasta"))
 
 	# Initialise intron dictionary
@@ -45,10 +45,31 @@ def tRNAparser (gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off):
 		species.add(' '.join(seq.split('_')[0:2]))
 		# only add to dictionary if not nmt or undetermined sequence
 		if not (re.search('nmt', seq) or re.search('Und', seq)):
-			tRNA_dict[seq] = {}
 			tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
 			tRNA_dict[seq]['sequence'] = tRNAseq
 			tRNA_dict[seq]['species'] = ' '.join(seq.split('_')[0:2])
+			tRNA_dict[seq]['type'] = 'cytosolic'
+
+	# add mitochondrial tRNAs if given
+	if mitotRNAs:
+		temp_dict = SeqIO.to_dict(SeqIO.parse(mitotRNAs,"fasta"))
+		mito_count = defaultdict(int)
+		# read each mito tRNA, edit sequence header to match nuclear genes as above and add to tRNA_dict
+		for seq in temp_dict:
+			seq_parts = seq.split("|")
+			species = ' '.join(seq_parts[1].split("_")[0:])
+			anticodon = seq_parts[4]
+			mito_count[anticodon] += 1
+			new_seq = seq_parts[1] + "_mito_tRNA-" + seq_parts[3] + "-" + seq_parts[4] + "-1-" + str(mito_count[anticodon])
+			tRNAseq = str(temp_dict[seq].seq) + "CCA"
+			tRNA_dict[new_seq]['sequence'] = tRNAseq
+			tRNA_dict[new_seq]['type'] = 'mitochondrial'
+			tRNA_dict[new_seq]['species'] = ' '.join(seq.split('_')[0:2])
+
+		num_cytosilic = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "cytosolic"])
+		num_mito = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "mitochondrial"])
+
+		log.info("{} cytosolic and {} mitochondrial tRNA sequences imported".format(num_cytosilic, num_mito))
 
 		# if 'nmt' in seq:
 		# 	tRNA_dict[seq]['type'] = 'mitochondrial'
@@ -134,7 +155,7 @@ def getModomics():
 	return modomics
 
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False):
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0
@@ -145,7 +166,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
-	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, modifications_table, posttrans_mod_off)
+	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off)
 	temp_dir = out_dir + "/tmp/"
 
 	try:
@@ -172,7 +193,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, modifications_table, experiment_name, 
 		tRNA_dict[seq]['anticodon'] = anticodon = re.search('.*tRNA-.*?-(.*?)-', seq).group(1)
 		if not anticodon in anticodon_list:
 			anticodon_list.append(anticodon)
-		match = {k:v for k,v in modomics_dict.items() if anticodon in v['anticodon']}
+		match = {k:v for k,v in modomics_dict.items() if anticodon in v['anticodon'] and tRNA_dict[seq]['type'] == v['type']}
 		if len(match) >= 1:
 			temp_matchFasta = open(temp_dir + "modomicsMatch.fasta","w")
 			for i in match:	
@@ -705,7 +726,7 @@ def tidyFiles (out_dir, cca):
 			shutil.move(full_file, out_dir + "annotation")
 		if (file.endswith("tRNAgenome") or file.endswith("index") or "index.log" in file):
 			shutil.move(full_file, out_dir + "indices")
-		if (file.endswith("bam") or file == "align.log" or file == "mapping_stats.txt"):
+		if (file.endswith("bam") or "align.log" in file or file == "mapping_stats.txt"):
 			shutil.move(full_file, out_dir + "align")
 		if ("cov" in file):
 			shutil.move(full_file, out_dir + "cov")

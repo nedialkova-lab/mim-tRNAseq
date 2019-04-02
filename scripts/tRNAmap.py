@@ -45,7 +45,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 				elif map_round == 2:
 					with open(out_dir + "mapping_stats.txt","a") as stats_out:
 						stats_out.write("** NEW ALIGNMENT **\n\n")
-					unique_bam, librarySize = remap(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp)
+					unique_bam, librarySize = remap(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches)
 				
 				unique_bam_list.append(unique_bam)
 				coverageData.write(unique_bam + "\t" + group + "\t" + str(librarySize) + "\n")
@@ -56,7 +56,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 	return(unique_bam_list, coverageData.name)
 
 def remap(fq, genome_index_path, genome_index_name, snp_index_path, \
-	snp_index_name, threads, out_dir, snp_tolerance, keep_temp):
+	snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches):
 # remapping of multi and unmapped reads from round 1
 	nomap = out_dir + fq.split("/")[-1].split(".")[0] + ".nomapping.bam"
 	nomap_bed = BedTool(nomap)
@@ -79,11 +79,11 @@ def remap(fq, genome_index_path, genome_index_name, snp_index_path, \
 	if snp_tolerance:
  		map_cmd = "gsnap " + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
  		+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
- 		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 1 --force-single-end " + \
+ 		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 1 --force-single-end --max-mismatches " + str(mismatches) + " " +\
  		nomap_fastq + " " + multi_fastq + " &>> " + out_dir + "remap_align.log"
 	else:
  		map_cmd = "gsnap " + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
- 		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --ignore-trim-in-filtering 1 --force-single-end " + \
+ 		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --ignore-trim-in-filtering 1 --force-single-end --max-mismatches " + str(mismatches) + " " + \
  		nomap_fastq + " " + multi_fastq + " &>> " + out_dir + "remap_align.log"
 
 	log.info("Realigning multi-mapped and unmapped reads to {} with updated SNP index...".format(genome_index_name))

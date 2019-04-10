@@ -59,8 +59,9 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 			seq_parts = seq.split("|")
 			species = ' '.join(seq_parts[1].split("_")[0:])
 			anticodon = seq_parts[4]
+			amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
 			mito_count[anticodon] += 1
-			new_seq = seq_parts[1] + "_mito_tRNA-" + seq_parts[3] + "-" + seq_parts[4] + "-1-" + str(mito_count[anticodon])
+			new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-1-" + str(mito_count[anticodon])
 			tRNAseq = str(temp_dict[seq].seq) + "CCA"
 			tRNA_dict[new_seq]['sequence'] = tRNAseq
 			tRNA_dict[new_seq]['type'] = 'mitochondrial'
@@ -474,6 +475,15 @@ def newModsParser(out_dir, experiment_name, new_mods_list, mod_lists, tRNA_dict)
 			mod_lists[cluster] = list(set(mod_lists[cluster] + l[cluster]))
 
 	total_snps = 0
+
+	predictedMods = open(out_dir + "mods/predictedMods.csv", "w")
+	predictedMods.write("cluster\tpos\tidentity\tmisinc\n")
+	with open(out_dir + "mods/predictedModstemp.csv", "r") as predictedTemp:
+		for line in predictedTemp:
+			cluster, pos, misinc = line.split("\t")
+			identity = str(tRNA_dict[cluster]['sequence'][int(pos)])
+			predictedMods.write(cluster + "\t" + str(pos) + "\t" + identity + "\t" + str(misinc) + "\n")
+	os.remove(out_dir + "mods/predictedModstemp.csv")
 
 	with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
 		for cluster in mod_lists:

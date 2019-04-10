@@ -25,3 +25,5 @@ R packages:
 			}
 			devtools::install_github('erocoar/ggpol') 
 	- ComplexHeatmap
+			library(devtools)
+			install_github("jokergoo/ComplexHeatmap")

@@ -28,11 +28,12 @@ def unknownMods(inputs, out_dir, knownTable, modTable, misinc_thresh):
 			if (sum(modTable[cluster][pos].values()) >= misinc_thresh and pos-1 not in knownTable[cluster]):
 				new_mods[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
 
-	with open(out_dir + "mods/predictedMods.csv", "w") as predMods:
-		predMods.write("cluster\tpos\tmisinc\n")
+	with open(out_dir + "mods/predictedModstemp.csv", "w") as predMods:
 		for cluster, data in new_mods.items():
 			for pos in data:
-				predMods.write(cluster + "\t" + str(pos) + "\t" + str(sum(modTable[cluster][pos+1].values())) + "\n")
+				predMods.write(cluster + "\t" + \
+					str(pos) + "\t" + \
+					str(sum(modTable[cluster][pos+1].values())) + "\n")
 
 	return(new_mods)
 
@@ -205,6 +206,10 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 				modTable_prop_melt.loc[(modTable_prop_melt.cluster == name) & (modTable_prop_melt.pos >= pos), 'pos'] += 1
 				new = pd.DataFrame({'cluster':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]})
 				modTable_prop_melt = modTable_prop_melt.append(new)
+			if not any(modTable_prop_melt.loc[modTable_prop_melt.cluster == name].pos == pos):
+				new = pd.DataFrame({'cluster':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]})
+				modTable_prop_melt = modTable_prop_melt.append(new)
+
 
 	modTable_prop_melt = modTable_prop_melt[['cluster','pos', 'type','proportion','condition', 'bam']]
 	modTable_prop_melt = modTable_prop_melt.join(tRNA_struct, on=['cluster', 'pos'])
@@ -233,6 +238,9 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		for pos in tRNA_struct.loc[name].index:
 			if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
 				stopTable_prop_melt.loc[(stopTable_prop_melt.cluster == name) & (stopTable_prop_melt.pos >= pos), 'pos'] += 1
+				new = pd.DataFrame({'cluster':name, 'pos':pos, 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]}, index=[0])
+				stopTable_prop_melt = stopTable_prop_melt.append(new)
+			if not any(stopTable_prop_melt.loc[stopTable_prop_melt.cluster == name].pos == pos):
 				new = pd.DataFrame({'cluster':name, 'pos':pos, 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]}, index=[0])
 				stopTable_prop_melt = stopTable_prop_melt.append(new)
 

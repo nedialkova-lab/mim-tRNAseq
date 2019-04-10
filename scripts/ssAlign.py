@@ -5,7 +5,7 @@
 import subprocess, os, re
 from Bio import AlignIO
 from Bio.Alphabet import generic_rna
-from collections import defaultdict
+from collections import defaultdict, Counter
 from itertools import groupby
 from operator import itemgetter
 
@@ -96,6 +96,18 @@ def getAnticodon():
 
 	return(anticodon)
 
+def getAnticodon_1base():
+	# return anticodon position from conserved alignment in 1-based positions - specifically for modContext()
+
+	anticodon = list()
+	rf_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC RF")])
+	# use '*' in rf_cons from stk to delimit the anticodon positions
+	for pos, char in enumerate(rf_cons, 1):
+	 	if char == "*":
+	 		anticodon.append(pos)
+
+	return(anticodon)
+
 def clusterAnticodon(cons_anticodon, cluster):
 	# return anticodon position without gaps for specific cluster
 
@@ -112,6 +124,89 @@ def clusterAnticodon(cons_anticodon, cluster):
 				cluster_anticodon.append(pos - gapcount)
 
 	return(cluster_anticodon)
+
+def modContext(out):
+# outputs file of defined mods of interest pos, identity and context sequence for each cluster
+
+	tRNA_struct = tRNAclassifier(out)
+	anticodon = getAnticodon_1base()
+
+	# Define positions of conserved mod sites in gapped alignment for each tRNA
+	sites_dict = defaultdict(dict)
+	for tRNA in tRNA_struct:
+		# 58
+		section = [pos for gene, data in tRNA_struct.items() for pos, value in data.items() if value == "T stem-loop" and gene == tRNA]
+		section.sort()
+		if section and len(section) >= 8:
+			sites_dict[tRNA]['58'] = section[-8]
+		# 26
+		section	= [pos for gene, data in tRNA_struct.items() for pos, value in data.items() if value == 'bulge2' and gene == tRNA]
+		section.sort()
+		if section:
+			sites_dict[tRNA]['26'] = section[0]
+		# 9
+		section = [pos for gene, data in tRNA_struct.items() for pos, value in data.items() if value == 'bulge1' and gene == tRNA]
+		section.sort()
+		if section:
+			sites_dict[tRNA]['9'] = section[-1]
+		# 37
+		anti_37 = max(anticodon) + 1
+		while tRNA_struct[tRNA][anti_37] == 'gap':
+			anti_37 += 1
+		sites_dict[tRNA]['37'] = anti_37
+		# 32
+		anti_32 = min(anticodon) -2
+		while tRNA_struct[tRNA][anti_32] == 'gap':
+			anti_32 -= 1
+		sites_dict[tRNA]['32'] = anti_32
+		#47
+		section	= [pos for gene, data in tRNA_struct.items() for pos, value in data.items() if value == 'Variable loop' and gene == tRNA]
+		section.sort()
+		if section and len(section) >= 2:
+			sites_dict[tRNA]['47'] = section[-2]
+		#34
+		anti_34 = min(anticodon)
+		sites_dict[tRNA]['34'] = anti_34
+
+	upstream_dict = defaultdict(lambda: defaultdict(list))
+
+	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna) 
+	for record in stk:
+		gene = record.id
+		seq = record.seq
+		for tRNA, data in sites_dict.items():
+			for site in data.keys():
+				if gene == tRNA:
+					pos = sites_dict[tRNA][site]
+					up = pos - 2 # pos is 1 based from struct, therefore -1 to make 0 based and -1 to get upstream nucl
+					down = pos
+					while seq[up].upper() not in ['A','C','G','U','T']:
+						up -= 1
+					while seq[down].upper() not in ['A','C','G','U','T']:
+						down += 1
+					upstream_dict[tRNA][pos].append(seq[pos-1]) # identity of base at modification position
+					upstream_dict[tRNA][pos].append(seq[up]) # upstream base
+					upstream_dict[tRNA][pos].append(seq[down]) # downstream base
+
+
+	with open(out + "modContext.txt", 'w') as outfile:
+		outfile.write("cluster\tpos\tidentity\tupstream\tdownstream\n")
+		for cluster, data in upstream_dict.items():
+			for pos, base in data.items():
+				outfile.write(cluster + "\t" + str(pos) + "\t" + base[0] + "\t" + base[1] + "\t" + base[2] + "\n")
+
+	# return 7 most abundant (gapped) positions in upstream_dict as consensus positions for 7 modifications retrieved above
+	# pass these positions out to plotting script to facet plots by positions of modifications 
+
+	counter = Counter()
+	for cluster in upstream_dict:
+		counter.update(upstream_dict[cluster].keys())
+
+	cons_mod_pos = list()
+	for pos, count in c.most_common(7):
+		cons_mod_pos.append(pos)
+
+	return(cons_mod_pos)
 
 def structureParser():
 # read in stk file generated above and define structural regions for each tRNA input

@@ -50,6 +50,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 				unique_bam_list.append(unique_bam)
 				coverageData.write(unique_bam + "\t" + group + "\t" + str(librarySize) + "\n")
 
+	log.info('Alignment statistics written to {}align/mapping_stats.txt'.format(out_dir))
 
 	coverageData.close()
 

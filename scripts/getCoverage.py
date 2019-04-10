@@ -88,9 +88,10 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov):
 
 	for bam, info in baminfo.items():
 
-		coverage = pd.read_table(out_dir + bam.split("/")[-1] + "_coverage.txt", header = None, index_col = 0)[[6,7]]
+		coverage = pd.read_table(out_dir + bam.split("/")[-1] + "_coverage.txt", header = None, index_col = 0)[[6,7]] 
 		coverage['aa'] = coverage.index.format()
-		coverage['aa'] = coverage['aa'].str.split("-").str[-4]
+		coverage.loc[coverage.aa.str.contains('mito'), 'aa'] = "mito" + coverage[coverage.aa.str.contains('mito')].aa.str.split("-").str[-4]
+		coverage.loc[~coverage.aa.str.contains('mito'), 'aa'] = coverage[~coverage.aa.str.contains('mito')].aa.str.split("-").str[-4]
 		coverage.columns = ['pos','cov','aa']
 		coverage['condition'] = info[0]
 		coverage['cov_norm'] = coverage['cov'] / info[1]
@@ -104,19 +105,23 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov):
 		os.remove(out_dir + bam.split("/")[-1] + "_coverage.txt")	 
 
 	# concatenate all tables together, groupby + mean
-	cov_mean = 	pd.concat(cov_mean, axis = 0)
+	cov_mean = pd.concat(cov_mean, axis = 0)
 	cov_mean = cov_mean[~cov_mean.index.isin(filtered)]
 	cov_mean_gene = cov_mean.copy()
-	cov_mean_gene.index = cov_mean_gene.index.str.split("-").str[1:].str.join('-')
-	cov_mean_gene = cov_mean_gene.groupby([cov_mean_gene.index, 'bin', 'bam']).mean()
+	cov_mean_gene['Cluster'] = cov_mean_gene.index.format()
+	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("mito"), "Cluster"] = "mito" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("mito")].Cluster.str.split("-").str[1:].str.join('-')
+	cov_mean_gene.loc[~cov_mean_gene.Cluster.str.contains("mito"), "Cluster"] = cov_mean_gene[~cov_mean_gene.Cluster.str.contains("mito")].Cluster.str.split("-").str[1:].str.join('-')
+	cov_mean_gene = cov_mean_gene[['Cluster','pos','cov','aa','condition','cov_norm','bin','bam']]
+	cov_mean_gene = cov_mean_gene.groupby(['Cluster', 'bin', 'bam']).mean()
 	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t")
 	cov_mean_aa = cov_mean.groupby(['aa', 'bin', 'bam']).mean()	
 	cov_mean_aa.to_csv(out_dir + "coverage_byaa.txt", sep = "\t")
 
 	return(cov_mean, filtered)
 
-def plotCoverage(out_dir):
+def plotCoverage(out_dir, mito_trnas):
+	
 	script_path = os.path.dirname(os.path.realpath(__file__))
-	command = "Rscript " + script_path + "/coveragePlot.R " + out_dir + "coverage_bygene.txt " + out_dir + "coverage_byaa.txt " + out_dir 
+	command = "Rscript " + script_path + "/coveragePlot.R " + out_dir + "coverage_bygene.txt " + out_dir + "coverage_byaa.txt " + out_dir + " " + mito_trnas 
 	subprocess.call(command, shell = True)
 

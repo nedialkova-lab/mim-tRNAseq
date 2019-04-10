@@ -19,21 +19,31 @@ if (length(args)==0) {
 } else if (length(args)>0) {
 
 	out_dir = args[3]
+	mito_trnas = args[4]
 
 	## Aggregated coverage plots for all Isoacceptors
 	cov_byaa = read.table(args[2], header=TRUE, sep = "\t")
 	cov_byaa$bam = gsub(".unpaired_uniq.bam","",cov_byaa$bam)
 	cov_byaa$bam = gsub("(.*/).*?","\\2",cov_byaa$bam)
-	colourCount = length(unique(cov_byaa$aa))
+	cyt_colourCount = length(unique(subset(cov_byaa$aa, !grepl("mito", cov_byaa$aa))))
+	mit_colourCount = length(unique(subset(cov_byaa$aa, grepl("mito", cov_byaa$aa))))
 	facetCount = length(unique(cov_byaa$bam))
 	getPalette = colorRampPalette(brewer.pal(10, 'Paired'))
-	cov_byaa_norm = ggplot(cov_byaa, aes(x = bin, y = cov_norm, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
-	xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(fill = "Isoacceptor") + scale_fill_manual(values = getPalette(colourCount)) + 
+	
+	cov_byaa_norm = ggplot(subset(cov_byaa, !grepl("mito", cov_byaa$aa)), aes(x = bin, y = cov_norm, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
+	xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(fill = "Isoacceptor") + scale_fill_manual(values = getPalette(cyt_colourCount)) + 
 	theme_bw()
 	ggsave(paste(out_dir, "coverage_byaa_norm.pdf", sep = ''), cov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
 
+	if (!is.na(mito_trnas)){
+		mitocov_byaa_norm = ggplot(subset(cov_byaa, grepl("mito", cov_byaa$aa)), aes(x = bin, y = cov_norm, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
+		xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(fill = "Isoacceptor") + scale_fill_manual(values = getPalette(mit_colourCount)) + 
+		theme_bw()
+		ggsave(paste(out_dir, "mitocoverage_byaa_norm.pdf", sep = ''), mitocov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
+	}
+
 	cov_byaa_sum = aggregate(x = cov_byaa$cov_norm, by = list(bin = cov_byaa$bin, bam = cov_byaa$bam), FUN = sum)
-	scale_factors = cov_byaa_sum[which(cov_byaa_sum$bin == 96),]
+	scale_factors = cov_byaa_sum[which(cov_byaa_sum$bin == 96),] # 96 is second last bin of 4%
 	cov_byaa_scaled = cov_byaa
 	cov_byaa_scaled$cov_norm_scaled = NA
 
@@ -42,11 +52,17 @@ if (length(args)==0) {
 	}
 	
 	
-	cov_byaa_norm_scaled = ggplot(cov_byaa_scaled, aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
-	xlab("Gene (%)") + ylab("Scaled normalised coverage") + labs(fill = "Isoacceptor") + scale_y_continuous(breaks = seq(0,1,0.25)) + scale_fill_manual(values = getPalette(colourCount)) + 
+	cov_byaa_norm_scaled = ggplot(subset(cov_byaa_scaled, !grepl("mito", cov_byaa_scaled$aa)), aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
+	xlab("Gene (%)") + ylab("Scaled normalised coverage") + labs(fill = "Isoacceptor") + scale_y_continuous(breaks = seq(0,1,0.25)) + scale_fill_manual(values = getPalette(cyt_colourCount)) + 
 	theme_bw()
 	ggsave(paste(out_dir, "coverage_byaa_norm_scaled.pdf", sep = ''), cov_byaa_norm_scaled, height = ceiling(facetCount/4) * 4, width = 14)
 
+	if (!is.na(mito_trnas)){
+		mitocov_byaa_norm_scaled = ggplot(subset(cov_byaa_scaled, grepl("mito", cov_byaa_scaled$aa)), aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
+		xlab("Gene (%)") + ylab("Scaled normalised coverage") + labs(fill = "Isoacceptor") + scale_fill_manual(values = getPalette(mit_colourCount)) + 
+		theme_bw()
+		ggsave(paste(out_dir, "mitocoverage_byaa_norm_scaled.pdf", sep = ''), mitocov_byaa_norm_scaled, height = ceiling(facetCount/4) * 4, width = 14)
+	}
 
 	cov_byaa$aa_groups = aa_groups[match(cov_byaa$aa, aa_groups$aa),2]
 

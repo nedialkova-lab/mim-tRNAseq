@@ -30,7 +30,7 @@ if (length(args)==0) {
 	ggsave(paste(out, "dinuc_plot.pdf", sep = ''), dinuc_plot, height=5, width=10)
 
 	cca_counts = read.table(args[2], header = TRUE, sep = "\t")
-	cca_counts$gene = sub(".*_tRNA-","",cca_counts$gene)
+	cca_counts$gene = ifelse(grepl("mito", cca_counts$gene), sub(".*_mito_tRNA-","mito",cca_counts$gene), sub(".*_tRNA-","",cca_counts$gene))
 	cca_counts$gene = ifelse(cca_counts$gene == 'eColiLys-TTT-1-1', 'eColiLys', cca_counts$gene)
 
 	cca_prop = cca_counts %>% group_by(gene,sample) %>% 
@@ -63,7 +63,7 @@ if (length(args)==0) {
 				geom_text(data = subset(avg_cca, end == 'CA'), aes(label = paste(abs(round(x,1)), '%'), x = Inf, y = x), size = 3.3, vjust = 1, color = '#3E606F', fontface='bold') +
   				facet_share(~condition, dir = "h", scales = "free", reverse_num = TRUE) +
  				coord_flip() + 
-  				scale_fill_manual(name = "", values = alpha(c(CA = "#446774", CC = "#8C381C"), 0.8), labels = c("3'-CCA", "3'-CC")) +
+  				scale_fill_manual(name = "", values = alpha(c(CA = "#1A6394", CC = "#A1392D"), 0.8), labels = c("3'-CCA", "3'-CC")) +
   				scale_y_continuous(breaks = c(c(-100, -75, -50, -25, 0), c(0, 25, 50, 75, 100)))+
   				scale_x_discrete(expand = c(0.03, 0)) +
   				theme_minimal() + 

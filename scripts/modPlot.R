@@ -1,21 +1,30 @@
-library(ggplot2)
-library(reshape2)
-library(gridExtra)
-library(plyr)
-library(tidyverse)
-library(ComplexHeatmap)
-library(circlize)
-library(dplyr)
-library(RColorBrewer)
+#!/usr/bin/Rscript
+#!/usr/bin/env Rscript
+
+suppressMessages(library(ggplot2))
+suppressMessages(library(reshape2))
+suppressMessages(library(gridExtra))
+suppressMessages(library(plyr))
+suppressMessages(library(tidyverse))
+suppressMessages(library(ComplexHeatmap))
+suppressMessages(library(circlize))
+suppressMessages(library(dplyr))
+suppressMessages(library(RColorBrewer))
 
 # Plotting of modification and stops heatmaps, and misincorporation scatter plots
 
 args = commandArgs(trailingOnly = TRUE)
 out = args[1]
 cons_mods = args[2]
+cons_mods = unlist(strsplit(cons_mods, "_"))
+cons_mods = cons_mods[order(as.numeric(cons_mods))]
+mod_sites = args[3]
+mod_sites = unlist(strsplit(mod_sites, "_"))
+mod_sites = mod_sites[order(as.numeric(mod_sites))]
+col_fun = colorRamp2(c(0, 0.5, 1), c("#f7fcf0", "#7bccc4", "#084081"))
+cols = brewer.pal(9, "GnBu")[-(1:2)]
 
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
-col_fun = colorRamp2(c(0, 0.5, 1), c("#f7fcf0", "#7bccc4", "#084081"))
 mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep = "\t", quote = '')
 mods$proportion[is.na(mods$proportion)] = 0
 mods$cluster = gsub(".*?_tRNA-", "", mods$cluster)
@@ -30,7 +39,7 @@ stops$cluster = gsub(".*?_tRNA-", "", stops$cluster)
 stops_agg = aggregate(stops$proportion, by = list(cluster=stops$cluster, pos=stops$pos, condition=stops$condition, struct=stops$struct), FUN = mean)
 
 # read in context info created by ssAlign module
-context_info = read.table(paste(out, "modContext.txt", sep = ''), header = TRUE)
+context_info = read.table(paste(out, "mods/modContext.txt", sep = ''), header = TRUE)
 context_info$cluster = sub(".*?_tRNA-","", context_info$cluster)
 
 # for each condition make a misincorporation and stops heatmap as a combined figure using ComplexHeatmap
@@ -63,18 +72,58 @@ for (i in unique(mods_agg$condition)) {
 
 	# combined heatmap
 	heatmap_list = mods_hm %v% stops_hm
-	pdf(paste(out, 'mods/', paste(i, "comb_heatmap.pdf", sep = "_"), sep = ''), width = 16, height = 14)
-	draw(heatmap_list, ht_gap = unit(10, "mm"))
+	pdf(paste(out, 'mods/', paste(i, "comb_heatmap.pdf", sep = "_"), sep = ''), width = 18, height = 16)
+	print(draw(heatmap_list, ht_gap = unit(10, "mm")))
 	dev.off()
 
 	# scatter plots
 	sub_mods_pos = subset(sub_mods_agg, pos %in% cons_mods)
+	sub_mods_pos[which(sub_mods_pos$x > 1), 'x'] = 1
 	sub_mods_pos = merge(sub_mods_pos, context_info, by = c('cluster', 'pos'))
-	
-	ggplot(sub_mods_agg, aes(x=as.character(pos), y = x, color = x)) + geom_jitter(width = 0.1, size = 3) +
-	theme_bw() + facet_grid(identity~pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(colours = cols) +
-	geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4)
+	names(sub_mods_pos)[names(sub_mods_pos) == 'x'] = 'Proportion'
 
+	for (n in 1:length(cons_mods)){
+		sub_mods_pos[which(sub_mods_pos$pos == cons_mods[n]), 'pos'] = mod_sites[n]
+	}
+
+	sub_mods_pos$pos = factor(sub_mods_pos$pos, levels = c('9','26','32','34','37','47','58'))
+
+	mods_scatter = ggplot(sub_mods_pos, aes(x=as.character(pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
+	  theme_bw() + facet_grid(identity~pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(colours = cols) +
+	  geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
+	  theme(
+	  	axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()
+	  )
+	
+	ggsave(paste(out, "mods/", paste(i, 'misincProps.pdf', sep = '_'), sep = ''), mods_scatter, height=10, width=10)
+
+	# Misinc signatures
+	# create filter list of rows where total misinc. rate < 0.1 
+	filter_0.1 = subset(sub_mods_agg, x < 0.1)
+	# subset mods table for condition
+	sub_mods_aggtype = subset(mods, condition == i)
+	# use filter to filter rows from this table
+	sub_mods_aggtype = anti_join(sub_mods_aggtype, filter_0.1, by=c("cluster","pos"))
+	# add in context info
+	sub_mods_aggtype = merge(sub_mods_aggtype, context_info, by = c("cluster","pos"))
+	sub_mods_aggtype_all = aggregate(sub_mods_aggtype$proportion, by = list(identity = sub_mods_aggtype$identity, type = sub_mods_aggtype$type, upstream = sub_mods_aggtype$upstream, pos = sub_mods_aggtype$pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
+	sub_mods_aggtype_all = do.call("data.frame", sub_mods_aggtype_all)
+
+	for (n in 1:length(cons_mods)){
+		sub_mods_aggtype_all[which(sub_mods_aggtype_all$pos == cons_mods[n]), 'pos'] = mod_sites[n]
+	}
+
+	sub_mods_aggtype_all$pos = factor(sub_mods_aggtype_all$pos, levels = c('9','26','32','34','37','47','58'))
+
+	signature_plot = ggplot(sub_mods_aggtype_all, aes(x = type, y = x.mean, fill = type)) + 
+	geom_bar(stat="identity", width = 0.8, position =position_dodge(width=0.9), alpha = 0.9) + 
+	facet_grid(upstream~pos+identity , scales = "free_x", labeller = label_both) + 
+  	geom_errorbar(aes(ymin = x.mean , ymax = x.mean + x.sd), width = 0.1, position = position_dodge(width=0.9)) + 
+  	theme_bw() +
+  	scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#8B9EB7"))
+
+  	ggsave(paste(out, "mods/", paste(i, 'misincSignatures.pdf', sep = '_'), sep = ''), signature_plot, height=10, width=10)
 
 }
 

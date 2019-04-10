@@ -168,6 +168,8 @@ def modContext(out):
 		anti_34 = min(anticodon)
 		sites_dict[tRNA]['34'] = anti_34
 
+	mod_sites = ['9', '26', '32', '34', '37', '47', '58']
+
 	upstream_dict = defaultdict(lambda: defaultdict(list))
 
 	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna) 
@@ -189,7 +191,7 @@ def modContext(out):
 					upstream_dict[tRNA][pos].append(seq[down]) # downstream base
 
 
-	with open(out + "modContext.txt", 'w') as outfile:
+	with open(out + "mods/modContext.txt", 'w') as outfile:
 		outfile.write("cluster\tpos\tidentity\tupstream\tdownstream\n")
 		for cluster, data in upstream_dict.items():
 			for pos, base in data.items():
@@ -203,10 +205,13 @@ def modContext(out):
 		counter.update(upstream_dict[cluster].keys())
 
 	cons_mod_pos = list()
-	for pos, count in c.most_common(7):
+	for pos, count in counter.most_common(7):
 		cons_mod_pos.append(pos)
 
-	return(cons_mod_pos)
+	cons_mod_pos = str("_".join(str(e) for e in cons_mod_pos))
+	mod_sites = str("_".join(str(e) for e in mod_sites))
+
+	return(cons_mod_pos, mod_sites)
 
 def structureParser():
 # read in stk file generated above and define structural regions for each tRNA input

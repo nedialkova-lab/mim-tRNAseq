@@ -19,7 +19,7 @@ if (length(args)==0) {
 
 	dinuc = read.table(args[1], header = TRUE, sep = "\t", na.strings="")
 	dinuc = dinuc[!grepl("N", dinuc$dinuc),]
-	dinuc = dinuc[-which(is.na(dinuc$dinuc)),]
+	#dinuc = dinuc[-which(is.na(dinuc$dinuc)),]
 	dinuc$color = "grey"
 	dinuc$color[dinuc$dinuc == "CC"] = "red"
 	dinuc$color[dinuc$dinuc == "CA"] = "green"

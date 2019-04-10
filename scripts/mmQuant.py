@@ -325,7 +325,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 
 		if cca:
 			# same for CCA analysis files
-			dinuc = pd.read_table(bam + "_dinuc.csv", header = None)
+			dinuc = pd.read_table(bam + "_dinuc.csv", header = None, keep_default_na=False)
 			os.remove(bam + "_dinuc.csv")
 			CCA = pd.read_table(bam + "_CCAcounts.csv", header = None)
 			os.remove(bam + "_CCAcounts.csv")
@@ -344,7 +344,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 
 	if cca:
 		dinuc_table.columns = ['dinuc', 'proportion', 'sample']
-		dinuc_table.to_csv(out_dir + "CCAanalysis/AlignedDinucProportions.csv", sep = "\t", index = False)
+		dinuc_table.to_csv(out_dir + "CCAanalysis/AlignedDinucProportions.csv", sep = "\t", index = False, na_rep = 'NA')
 		CCAvsCC_table.columns = ['gene', 'end', 'sample', 'condition', 'count']
 		#CCAvsCC_table = CCAvsCC_table.pivot_table(index = 'gene', columns = 'sample', values = 'count', fill_value = 0)
 		CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)

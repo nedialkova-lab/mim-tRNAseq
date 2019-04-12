@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+  #!/usr/bin/Rscript
 
 ## RNA-seq analysis with DESeq2
 ## based on Stephen Turner's script, @genetics_blog
@@ -259,6 +259,8 @@ if (length(unique(coldata$condition)) == 1) {
 
     cluster_lin_mod = lm(baseMeanPerLvl_cluster[,combinations[[i]][1]] ~ baseMeanPerLvl_cluster[,combinations[[i]][2]])
     anticodon_lin_mod = lm(baseMeanPerLvl_anticodon[,combinations[[i]][1]] ~ baseMeanPerLvl_anticodon[,combinations[[i]][2]])
+    cluster_cor = format(cor(baseMeanPerLvl_cluster[,combinations[[i]][1]], baseMeanPerLvl_cluster[,combinations[[i]][2]]), digits = 2)
+    anticodon_cor = format(cor(baseMeanPerLvl_anticodon[,combinations[[i]][1]], baseMeanPerLvl_anticodon[,combinations[[i]][2]]), digits = 2)
 
     cluster_dot = ggplot(subset(baseMeanPerLvl_cluster, select = c(combinations[[i]], "sig", "comb")), aes_string(x = combinations[[i]][2], y = combinations[[i]][1])) +
       geom_point(aes(color = comb, shape = comb, size = sig)) +
@@ -269,7 +271,7 @@ if (length(unique(coldata$condition)) == 1) {
       scale_shape_manual('Differential expression', labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
       scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() + 
       labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
-      annotate("label", 0, Inf, hjust = 0, vjust = 1, label = lm_eqn(cluster_lin_mod), parse = TRUE)
+      annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", cluster_cor), parse = TRUE)
 
     anticodon_dot = ggplot(subset(baseMeanPerLvl_anticodon, select = c(combinations[[i]], "sig", "comb")), aes_string(x = combinations[[i]][2], y = combinations[[i]][1])) +
       geom_point(aes(color = comb, shape = comb, size = sig)) +
@@ -280,7 +282,7 @@ if (length(unique(coldata$condition)) == 1) {
       scale_shape_manual('Differential expression', labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
       scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
       labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
-      annotate("label", 0, Inf, hjust = 0, vjust = 1, label = lm_eqn(anticodon_lin_mod), parse = TRUE)
+      annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", anticodon_cor), parse = TRUE)
 
     ggsave(paste(subdir_cluster, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-countplot.pdf", sep="_"), sep="/"), cluster_dot, height = 5, width = 8)
     ggsave(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-countplot.pdf", sep="_"), sep="/"), anticodon_dot, height = 5, width = 8)

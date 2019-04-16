@@ -37,32 +37,73 @@ def tRNAclassifier(out):
 			else:
 				tRNA_struct[tRNA][i] = 'gap'
 
-	# Get non-redundant list of gaps in all tRNAs and adjust position info accordingly. Useful to retain cononical numbering of tRNA positions (i.e. anticodon at 34 - 36, m1A 58 etc...)
+	# Get canonical tRNA position numbering (cons_pos_list). Useful to retain cononical numbering of tRNA positions (i.e. anticodon at 34 - 36, m1A 58 etc...)
 	# Return list of characters with pos or '-'. To be used in all plots with positional data such as heatmaps for stops or modifications.
-	gaps = sorted(set([i for data in tRNA_struct.values() for i, struct in data.items() if struct == 'gap' ]))
-	gapseq = list()
-	gap_test = False
-	gap_adjust = 0
-	for i, char in enumerate(record.seq, 1):
-	 	for gap in gaps:
-	 		if gap == i:
-	 			gap_adjust += 1
-	 			gapseq.append('-')
-	 			gap_test = True
-	 	if gap_test == False:
-	 		gapseq.append(str(i-gap_adjust))
-	 	gap_test = False
+	# cons_pos_dict is a dictionary of 1 based positions and canonical positions to create extra column in mods tables (mismatchTable and RTstopTable) mapping ungapped positions to canonical ones
+	ss_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC SS_cons")])
+	cons_pos = 0
+	cons_pos_list = list()
+	cons_pos_dict = defaultdict()
+	openstem_count = 0
+	closestem_count = 0
+	for pos, char in enumerate(ss_cons):
+		if not ss_cons[pos] == ".":
+			if cons_pos < 46:
+				if (not cons_pos == 17) and (not cons_pos == 20):
+					cons_pos_list.append(str(cons_pos))
+					cons_pos_dict[pos+1] = str(cons_pos)
+					cons_pos += 1
+				elif (cons_pos == 17) and not ('17' in cons_pos_list):
+					cons_pos_dict[pos+1] = '17'
+					cons_pos_list.append('17')
+				elif (cons_pos == 17) and ('17' in cons_pos_list):
+					cons_pos_dict[pos+1] = '17a'
+					cons_pos_list.append('17a')
+					cons_pos += 1
 
-	# write structure and corrected pos labels to files for plots
-	# with open(out + 'struct.txt', 'w') as struct_out:
-	# 	for item in struct_dict.values():
-	# 		struct_out.write(item + "\n")
+				elif cons_pos == 20: 
+					if not '20' in cons_pos_list:
+						cons_pos_dict[pos+1] = '20'
+						cons_pos_list.append('20')
+					elif not '20a' in cons_pos_list:
+						cons_pos_dict[pos+1] = '20a'
+						cons_pos_list.append('20a')
+					elif not '20b' in cons_pos_list:
+						cons_pos_dict[pos+1] = '20b'
+						cons_pos_list.append('20b')
+						cons_pos += 1
 
-	# with open(out + 'labels.txt', 'w') as labels_out:
-	# 	for item in gapseq:
-	# 		labels_out.write(item + "\n")
+			elif cons_pos == 46:
+				if (not closestem_count == openstem_count) or (closestem_count == 0 or openstem_count == 0):
+					if ss_cons[pos] == "<":
+						openstem_count += 1
+						cons_pos_dict[pos+1] = 'e'
+						cons_pos_list.append("e")
+					elif ss_cons[pos] == ">":
+						closestem_count += 1
+						cons_pos_dict[pos+1] = 'e'
+						cons_pos_list.append("e")
+					elif ss_cons[pos] == "_":
+						cons_pos_dict[pos+1] = 'e'
+						cons_pos_list.append("e")
 
-	return(tRNA_struct)
+				elif (closestem_count == openstem_count) and (not closestem_count == 0 or not openstem_count == 0):
+					cons_pos_dict[pos+1] = str(cons_pos)
+					cons_pos_list.append(str(cons_pos))
+					cons_pos += 1
+
+			elif cons_pos > 46:
+				cons_pos_dict[pos+1] = str(cons_pos)
+				cons_pos_list.append(str(cons_pos))
+				cons_pos += 1
+
+		elif ss_cons[pos] == ".":
+			cons_pos_dict[pos+1] = '-'
+			cons_pos_list.append("-")
+
+	cons_pos_list = "_".join(cons_pos_list)
+
+	return(tRNA_struct, cons_pos_list, cons_pos_dict)
 
 def tRNAclassifier_nogaps():
 
@@ -128,7 +169,7 @@ def clusterAnticodon(cons_anticodon, cluster):
 def modContext(out):
 # outputs file of defined mods of interest pos, identity and context sequence for each cluster
 
-	tRNA_struct = tRNAclassifier(out)
+	tRNA_struct, cons_pos_list, cons_pos_dict = tRNAclassifier(out)
 	anticodon = getAnticodon_1base()
 
 	# Define positions of conserved mod sites in gapped alignment for each tRNA
@@ -211,7 +252,9 @@ def modContext(out):
 	cons_mod_pos = str("_".join(str(e) for e in cons_mod_pos))
 	mod_sites = str("_".join(str(e) for e in mod_sites))
 
-	return(cons_mod_pos, mod_sites)
+	# cons_mod_pos are ungapped positions of modification sites of interest, mod_sites are canonical numberings of these positions
+	# cons_pos_list is the full list of tRNA positions numbered according to canonical numbering scheme obtained from multiple seq alignments
+	return(cons_mod_pos, mod_sites, cons_pos_list, cons_pos_dict)
 
 def structureParser():
 # read in stk file generated above and define structural regions for each tRNA input

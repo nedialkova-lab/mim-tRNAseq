@@ -23,7 +23,9 @@ mod_sites = unlist(strsplit(mod_sites, "_"))
 mod_sites = mod_sites[order(as.numeric(mod_sites))]
 col_fun = colorRamp2(c(0, 0.5, 1), c("#f7fcf0", "#7bccc4", "#084081"))
 cols = brewer.pal(9, "GnBu")[-(1:2)]
-mito_trnas = args[4]
+mito_trnas = args[5]
+cons_pos = args[4]
+cons_pos = unlist(strsplit(cons_pos, "_"))
 
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
 mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep = "\t", quote = '')
@@ -62,7 +64,7 @@ for (i in unique(mods_agg$condition)) {
   col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_mods_agg$x, by = list(pos = sub_mods_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
   count_mods = sub_mods_agg %>% group_by(cluster) %>% summarise(count = sum(x > 0.1))
   row_anno = rowAnnotation(Count = row_anno_barplot(count_mods$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
-  mods_hm = Heatmap(sub_mods_mat, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
+  mods_hm = Heatmap(sub_mods_mat, column_labels = cons_pos, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
   
   # stops
   sub_stops_agg = subset(stops_agg, condition == i)
@@ -74,12 +76,12 @@ for (i in unique(mods_agg$condition)) {
   col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_stops_agg$x, by = list(pos = sub_stops_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
   count_stops = sub_stops_agg %>% group_by(cluster) %>% summarise(count = sum(x > 0.1))
   row_anno = rowAnnotation(Count = row_anno_barplot(count_stops$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
-  stops_hm = Heatmap(sub_stops_mat, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
+  stops_hm = Heatmap(sub_stops_mat, column_labels = cons_pos, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
   
   # combined heatmap
-  heatmap_list = mods_hm %v% stops_hm
+  heatmap_list = stops_hm %v% mods_hm
   pdf(paste(out, 'mods/', paste(i, "comb_heatmap.pdf", sep = "_"), sep = ''), width = 18, height = 16)
-  print(draw(heatmap_list, ht_gap = unit(10, "mm")))
+  draw(heatmap_list, ht_gap = unit(10, "mm"))
   dev.off()
   
   # scatter plots
@@ -127,36 +129,38 @@ for (i in unique(mods_agg$condition)) {
   # add in context info
   sub_mods_aggtype = merge(sub_mods_aggtype, context_info, by = c("cluster","pos"))
   sub_mods_aggtype_cyt = subset(sub_mods_aggtype, !grepl("mito", sub_mods_aggtype$cluster))
-  sub_mods_aggtype_mito = subset(sub_mods_aggtype, grepl("mito", sub_mods_aggtype$cluster))
   sub_mods_aggtype_cyt = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, upstream = sub_mods_aggtype_cyt$upstream, pos = sub_mods_aggtype_cyt$pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
   sub_mods_aggtype_cyt = do.call("data.frame", sub_mods_aggtype_cyt)
-  sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, pos = sub_mods_aggtype_mito$pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
-  sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
   
   for (n in 1:length(cons_mods)){
     sub_mods_aggtype_cyt[which(sub_mods_aggtype_cyt$pos == cons_mods[n]), 'pos'] = mod_sites[n]
-    sub_mods_aggtype_mito[which(sub_mods_aggtype_mito$pos == cons_mods[n]), 'pos'] = mod_sites[n]
   }
   
   sub_mods_aggtype_cyt$pos = factor(sub_mods_aggtype_cyt$pos, levels = c('9','26','32','34','37','47','58'))
-  sub_mods_aggtype_mito$pos = factor(sub_mods_aggtype_mito$pos, levels = c('9','26','32','34','37','47','58'))
   
   signature_plot = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = x.mean, fill = type)) + 
     geom_bar(stat="identity", width = 0.8, position =position_dodge(width=0.9), alpha = 0.9) + 
     facet_grid(upstream~pos+identity , scales = "free_x", labeller = label_both) + 
     geom_errorbar(aes(ymin = x.mean , ymax = x.mean + x.sd), width = 0.1, position = position_dodge(width=0.9)) + 
     theme_bw() +
-    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#8B9EB7"))
+    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
   
   ggsave(paste(out, "mods/", paste(i, 'misincSignatures.pdf', sep = '_'), sep = ''), signature_plot, height=10, width=10)
   
   if (!is.na(mito_trnas)){
+    sub_mods_aggtype_mito = subset(sub_mods_aggtype, grepl("mito", sub_mods_aggtype$cluster))
+    sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, pos = sub_mods_aggtype_mito$pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
+    sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
+    for (n in 1:length(cons_mods)){
+    sub_mods_aggtype_mito[which(sub_mods_aggtype_mito$pos == cons_mods[n]), 'pos'] = mod_sites[n]
+    }
+    sub_mods_aggtype_mito$pos = factor(sub_mods_aggtype_mito$pos, levels = c('9','26','32','34','37','47','58'))
     mito_signature_plot = ggplot(sub_mods_aggtype_mito, aes(x = type, y = x.mean, fill = type)) + 
       geom_bar(stat="identity", width = 0.8, position =position_dodge(width=0.9), alpha = 0.9) + 
       facet_grid(upstream~pos+identity , scales = "free_x", labeller = label_both) + 
       geom_errorbar(aes(ymin = x.mean , ymax = x.mean + x.sd), width = 0.1, position = position_dodge(width=0.9)) + 
       theme_bw() +
-      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#8B9EB7"))
+      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
     
     ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures.pdf', sep = '_'), sep = ''), mito_signature_plot, height=10, width=10)
     

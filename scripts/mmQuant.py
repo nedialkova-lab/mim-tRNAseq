@@ -291,7 +291,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 		multi = len(baminfo)
 
 	# get tRNA struct info from ssAlign
-	tRNA_struct = ssAlign.tRNAclassifier(out_dir)
+	tRNA_struct, cons_pos_list, cons_pos_dict = ssAlign.tRNAclassifier(out_dir)
 	tRNA_struct_df = pd.DataFrame(tRNA_struct).unstack().rename_axis(('cluster', 'pos')).rename('struct')
 	tRNA_struct_df = pd.DataFrame(tRNA_struct_df)
 
@@ -312,10 +312,12 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 	for bam in bamlist:
 		# read in temp files and then delete
 		modTable = pd.read_table(bam + "mismatchTable.csv", header = 0)
+		modTable['canon_pos'] = modTable['pos'].map(cons_pos_dict)
 		os.remove(bam + "mismatchTable.csv")
 		#knownTable = pd.read_table(bam + "knownModSites.csv", header = 0)
 		#os.remove(bam + "knownModSites.csv")
 		stopTable = pd.read_table(bam + "RTstopTable.csv", header = 0)
+		stopTable['canon_pos'] = stopTable['pos'].map(cons_pos_dict)
 		os.remove(bam + "RTstopTable.csv")
 
 		# add individual temp files to main big table and save

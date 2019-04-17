@@ -15,16 +15,12 @@ suppressMessages(library(RColorBrewer))
 
 args = commandArgs(trailingOnly = TRUE)
 out = args[1]
-cons_mods = args[2]
-cons_mods = unlist(strsplit(cons_mods, "_"))
-cons_mods = cons_mods[order(as.numeric(cons_mods))]
-mod_sites = args[3]
+mod_sites = args[2]
 mod_sites = unlist(strsplit(mod_sites, "_"))
-mod_sites = mod_sites[order(as.numeric(mod_sites))]
 col_fun = colorRamp2(c(0, 0.5, 1), c("#f7fcf0", "#7bccc4", "#084081"))
 cols = brewer.pal(9, "GnBu")[-(1:2)]
-mito_trnas = args[5]
-cons_pos = args[4]
+mito_trnas = args[4]
+cons_pos = args[3]
 cons_pos = unlist(strsplit(cons_pos, "_"))
 
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
@@ -32,8 +28,8 @@ mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep 
 mods$proportion[is.na(mods$proportion)] = 0
 mods$cluster = ifelse(grepl("mito", mods$cluster), sub(".*_mito_tRNA-","mito",mods$cluster), sub(".*_tRNA-","",mods$cluster))
 mods$cluster = ifelse(mods$cluster == 'eColiLys-TTT-1-1', 'eColiLys', mods$cluster)
-mods_agg = aggregate(mods$proportion, by = list(cluster=mods$cluster, pos=mods$pos, bam=mods$bam, struct=mods$struct, condition=mods$condition), FUN = sum)
-mods_agg = aggregate(mods_agg$x, by = list(cluster=mods_agg$cluster, pos=mods_agg$pos, struct=mods_agg$struct, condition=mods_agg$condition), FUN = mean)
+mods_agg = aggregate(mods$proportion, by = list(cluster=mods$cluster, pos=mods$pos, bam=mods$bam, struct=mods$struct, condition=mods$condition, canon_pos=mods$canon_pos), FUN = sum)
+mods_agg = aggregate(mods_agg$x, by = list(cluster=mods_agg$cluster, pos=mods_agg$pos, struct=mods_agg$struct, condition=mods_agg$condition, canon_pos=mods_agg$canon_pos), FUN = mean)
 
 # read in stops table and process as above for mods
 stops = read.table(paste(out, "mods/RTstopTable.csv", sep = ''), header = T, sep = "\t", quote = '')
@@ -43,7 +39,7 @@ stops$cluster = ifelse(grepl("mito", stops$cluster), sub(".*_mito_tRNA-","mito",
 stops$cluster = ifelse(stops$cluster == 'eColiLys-TTT-1-1', 'eColiLys', stops$cluster)
 
 #stops = stops[-5396, ] ## NB!! This cluster had info for pos 122 which doesn't exist - removed manually. Must be changed for other libraries ##
-stops_agg = aggregate(stops$proportion, by = list(cluster=stops$cluster, pos=stops$pos, condition=stops$condition, struct=stops$struct), FUN = mean)
+stops_agg = aggregate(stops$proportion, by = list(cluster=stops$cluster, pos=stops$pos, condition=stops$condition, struct=stops$struct, canon_pos=stops$canon_pos), FUN = mean)
 
 # read in context info created by ssAlign module
 context_info = read.table(paste(out, "mods/modContext.txt", sep = ''), header = TRUE)
@@ -85,37 +81,33 @@ for (i in unique(mods_agg$condition)) {
   dev.off()
   
   # scatter plots
-  sub_mods_pos = subset(sub_mods_agg, pos %in% cons_mods)
+  sub_mods_pos = subset(sub_mods_agg, canon_pos %in% mod_sites)
   sub_mods_pos[which(sub_mods_pos$x > 1), 'x'] = 1
   sub_mods_pos = merge(sub_mods_pos, context_info, by = c('cluster', 'pos'))
   names(sub_mods_pos)[names(sub_mods_pos) == 'x'] = 'Proportion'
   
-  for (n in 1:length(cons_mods)){
-    sub_mods_pos[which(sub_mods_pos$pos == cons_mods[n]), 'pos'] = mod_sites[n]
-  }
+  sub_mods_pos$canon_pos = factor(sub_mods_pos$canon_pos, levels = c('9','20', '20a', '26', '32','34','37','58'))
   
-  sub_mods_pos$pos = factor(sub_mods_pos$pos, levels = c('9','26','32','34','37','47','58'))
-  
-  mods_scatter = ggplot(subset(sub_mods_pos, !grepl("mito", sub_mods_pos$cluster)), aes(x=as.character(pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
-    theme_bw() + facet_grid(identity~pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(colours = cols) +
+  mods_scatter = ggplot(subset(sub_mods_pos, !grepl("mito", sub_mods_pos$cluster)), aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
+    theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(colours = cols) +
     geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
     theme(
       axis.text.x=element_blank(),
       axis.ticks.x=element_blank()
     )
   
-  ggsave(paste(out, "mods/", paste(i, 'misincProps.pdf', sep = '_'), sep = ''), mods_scatter, height=10, width=10)
+  ggsave(paste(out, "mods/", paste(i, 'misincProps.pdf', sep = '_'), sep = ''), mods_scatter, height=10, width=14)
   
   if (!is.na(mito_trnas)){
-    mito_mods_scatter = ggplot(subset(sub_mods_pos, grepl("mito", sub_mods_pos$cluster)), aes(x=as.character(pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
-      theme_bw() + facet_grid(identity~pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(colours = cols) +
+    mito_mods_scatter = ggplot(subset(sub_mods_pos, grepl("mito", sub_mods_pos$cluster)), aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
+      theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(colours = cols) +
       geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
       theme(
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()
       )
     
-    ggsave(paste(out, "mods/", paste('mito', i, 'misincProps.pdf', sep = '_'), sep = ''), mito_mods_scatter, height=10, width=10)
+    ggsave(paste(out, "mods/", paste('mito', i, 'misincProps.pdf', sep = '_'), sep = ''), mito_mods_scatter, height=10, width=14)
     
   }
   
@@ -129,40 +121,33 @@ for (i in unique(mods_agg$condition)) {
   # add in context info
   sub_mods_aggtype = merge(sub_mods_aggtype, context_info, by = c("cluster","pos"))
   sub_mods_aggtype_cyt = subset(sub_mods_aggtype, !grepl("mito", sub_mods_aggtype$cluster))
-  sub_mods_aggtype_cyt = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, upstream = sub_mods_aggtype_cyt$upstream, pos = sub_mods_aggtype_cyt$pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
+  sub_mods_aggtype_cyt = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, upstream = sub_mods_aggtype_cyt$upstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
   sub_mods_aggtype_cyt = do.call("data.frame", sub_mods_aggtype_cyt)
   
-  for (n in 1:length(cons_mods)){
-    sub_mods_aggtype_cyt[which(sub_mods_aggtype_cyt$pos == cons_mods[n]), 'pos'] = mod_sites[n]
-  }
-  
-  sub_mods_aggtype_cyt$pos = factor(sub_mods_aggtype_cyt$pos, levels = c('9','26','32','34','37','47','58'))
+  sub_mods_aggtype_cyt$canon_pos = factor(sub_mods_aggtype_cyt$canon_pos, levels = c('9', '20', '20a','26','32','34','37','58'))
   
   signature_plot = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = x.mean, fill = type)) + 
     geom_bar(stat="identity", width = 0.8, position =position_dodge(width=0.9), alpha = 0.9) + 
-    facet_grid(upstream~pos+identity , scales = "free_x", labeller = label_both) + 
+    facet_grid(upstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
     geom_errorbar(aes(ymin = x.mean , ymax = x.mean + x.sd), width = 0.1, position = position_dodge(width=0.9)) + 
     theme_bw() +
     scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
   
-  ggsave(paste(out, "mods/", paste(i, 'misincSignatures.pdf', sep = '_'), sep = ''), signature_plot, height=10, width=10)
+  ggsave(paste(out, "mods/", paste(i, 'misincSignatures.pdf', sep = '_'), sep = ''), signature_plot, height=10, width=14)
   
   if (!is.na(mito_trnas)){
     sub_mods_aggtype_mito = subset(sub_mods_aggtype, grepl("mito", sub_mods_aggtype$cluster))
-    sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, pos = sub_mods_aggtype_mito$pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
+    sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
     sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
-    for (n in 1:length(cons_mods)){
-    sub_mods_aggtype_mito[which(sub_mods_aggtype_mito$pos == cons_mods[n]), 'pos'] = mod_sites[n]
-    }
-    sub_mods_aggtype_mito$pos = factor(sub_mods_aggtype_mito$pos, levels = c('9','26','32','34','37','47','58'))
+    sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))
     mito_signature_plot = ggplot(sub_mods_aggtype_mito, aes(x = type, y = x.mean, fill = type)) + 
       geom_bar(stat="identity", width = 0.8, position =position_dodge(width=0.9), alpha = 0.9) + 
-      facet_grid(upstream~pos+identity , scales = "free_x", labeller = label_both) + 
+      facet_grid(upstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
       geom_errorbar(aes(ymin = x.mean , ymax = x.mean + x.sd), width = 0.1, position = position_dodge(width=0.9)) + 
       theme_bw() +
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
     
-    ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures.pdf', sep = '_'), sep = ''), mito_signature_plot, height=10, width=10)
+    ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures.pdf', sep = '_'), sep = ''), mito_signature_plot, height=10, width=14)
     
   }
   

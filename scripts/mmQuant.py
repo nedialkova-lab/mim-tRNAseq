@@ -213,17 +213,9 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 
 	modTable_prop_melt = modTable_prop_melt[['cluster','pos', 'type','proportion','condition', 'bam']]
 	modTable_prop_melt = modTable_prop_melt.join(tRNA_struct, on=['cluster', 'pos'])
+	modTable_prop_melt = modTable_prop_melt.dropna(subset=['struct'])
 
 	modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
-
-	# reformat knownTable and save to temp file
-	# knownTable_df = pd.DataFrame.from_dict(knownTable)
-	# knownTable_df['pos'] = knownTable_df.index
-	# knownTable_df_melt = knownTable_df.melt(id_vars='pos', var_name='cluster', value_name='known')
-	# knownTable_df_melt['condition'] = condition
-	# knownTable_df_melt['bam'] = inputs
-	# knownTable_df_melt = knownTable_df_melt[['cluster', 'pos', 'known', 'condition', 'bam']]
-	# knownTable_df_melt.to_csv(inputs + "knownModSites.csv", sep = "\t", index = False, na_rep = 'NA')
 
 	# reformat stopTable, add gaps and structure, and save to temp file
 	stopTable_prop_df = pd.DataFrame.from_dict(stopTable_prop)
@@ -246,6 +238,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 
 	stopTable_prop_melt = stopTable_prop_melt[['cluster', 'pos', 'proportion', 'condition', 'bam']]
 	stopTable_prop_melt = stopTable_prop_melt.join(tRNA_struct, on = ['cluster', 'pos'])
+	stopTable_prop_melt = stopTable_prop_melt.dropna(subset=['struct'])
 
 	stopTable_prop_melt.to_csv(inputs + "RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')
 

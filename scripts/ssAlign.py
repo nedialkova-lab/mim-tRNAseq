@@ -173,43 +173,11 @@ def modContext(out):
 	anticodon = getAnticodon_1base()
 
 	# Define positions of conserved mod sites in gapped alignment for each tRNA
-	sites_dict = defaultdict(dict)
-	for tRNA in tRNA_struct:
-		# 58
-		section = [pos for gene, data in tRNA_struct.items() for pos, value in data.items() if value == "T stem-loop" and gene == tRNA]
-		section.sort()
-		if section and len(section) >= 8:
-			sites_dict[tRNA]['58'] = section[-8]
-		# 26
-		section	= [pos for gene, data in tRNA_struct.items() for pos, value in data.items() if value == 'bulge2' and gene == tRNA]
-		section.sort()
-		if section:
-			sites_dict[tRNA]['26'] = section[0]
-		# 9
-		section = [pos for gene, data in tRNA_struct.items() for pos, value in data.items() if value == 'bulge1' and gene == tRNA]
-		section.sort()
-		if section:
-			sites_dict[tRNA]['9'] = section[-1]
-		# 37
-		anti_37 = max(anticodon) + 1
-		while tRNA_struct[tRNA][anti_37] == 'gap':
-			anti_37 += 1
-		sites_dict[tRNA]['37'] = anti_37
-		# 32
-		anti_32 = min(anticodon) -2
-		while tRNA_struct[tRNA][anti_32] == 'gap':
-			anti_32 -= 1
-		sites_dict[tRNA]['32'] = anti_32
-		#47
-		section	= [pos for gene, data in tRNA_struct.items() for pos, value in data.items() if value == 'Variable loop' and gene == tRNA]
-		section.sort()
-		if section and len(section) >= 2:
-			sites_dict[tRNA]['47'] = section[-2]
-		#34
-		anti_34 = min(anticodon)
-		sites_dict[tRNA]['34'] = anti_34
-
-	mod_sites = ['9', '26', '32', '34', '37', '47', '58']
+	sites_dict = defaultdict()
+	mod_sites = ['9', '20', '20a', '26', '32', '34', '37', '58']
+	
+	for mod in mod_sites:
+		sites_dict[mod] = list(cons_pos_dict.keys())[list(cons_pos_dict.values()).index(mod)]
 
 	upstream_dict = defaultdict(lambda: defaultdict(list))
 
@@ -217,19 +185,19 @@ def modContext(out):
 	for record in stk:
 		gene = record.id
 		seq = record.seq
-		for tRNA, data in sites_dict.items():
-			for site in data.keys():
-				if gene == tRNA:
-					pos = sites_dict[tRNA][site]
-					up = pos - 2 # pos is 1 based from struct, therefore -1 to make 0 based and -1 to get upstream nucl
-					down = pos
-					while seq[up].upper() not in ['A','C','G','U','T']:
-						up -= 1
-					while seq[down].upper() not in ['A','C','G','U','T']:
-						down += 1
-					upstream_dict[tRNA][pos].append(seq[pos-1]) # identity of base at modification position
-					upstream_dict[tRNA][pos].append(seq[up]) # upstream base
-					upstream_dict[tRNA][pos].append(seq[down]) # downstream base
+		for site in sites_dict.keys():
+			pos = sites_dict[site]
+			identity = seq[pos-1] # identity of base at modification position
+			if identity in ['A','C','G','U','T']:
+				up = pos - 2 # pos is 1 based from struct, therefore -1 to make 0 based and -1 to get upstream nucl
+				down = pos
+				while seq[up].upper() not in ['A','C','G','U','T']:
+					up -= 1
+				while seq[down].upper() not in ['A','C','G','U','T']:
+					down += 1
+				upstream_dict[gene][pos].append(identity) 
+				upstream_dict[gene][pos].append(seq[up]) # upstream base
+				upstream_dict[gene][pos].append(seq[down]) # downstream base
 
 
 	with open(out + "mods/modContext.txt", 'w') as outfile:
@@ -238,23 +206,12 @@ def modContext(out):
 			for pos, base in data.items():
 				outfile.write(cluster + "\t" + str(pos) + "\t" + base[0] + "\t" + base[1] + "\t" + base[2] + "\n")
 
-	# return 7 most abundant (gapped) positions in upstream_dict as consensus positions for 7 modifications retrieved above
-	# pass these positions out to plotting script to facet plots by positions of modifications 
-
-	counter = Counter()
-	for cluster in upstream_dict:
-		counter.update(upstream_dict[cluster].keys())
-
-	cons_mod_pos = list()
-	for pos, count in counter.most_common(7):
-		cons_mod_pos.append(pos)
-
-	cons_mod_pos = str("_".join(str(e) for e in cons_mod_pos))
 	mod_sites = str("_".join(str(e) for e in mod_sites))
 
-	# cons_mod_pos are ungapped positions of modification sites of interest, mod_sites are canonical numberings of these positions
+	# mod_sites are canonical numberings of these positions
 	# cons_pos_list is the full list of tRNA positions numbered according to canonical numbering scheme obtained from multiple seq alignments
-	return(cons_mod_pos, mod_sites, cons_pos_list, cons_pos_dict)
+	# cons_pos_dict is the same as list but a dictionary with matching gapped tRNA positions to each canonically numbered position
+	return(mod_sites, cons_pos_list, cons_pos_dict)
 
 def structureParser():
 # read in stk file generated above and define structural regions for each tRNA input
@@ -352,4 +309,3 @@ def structureParser():
 				struct_dict[pos] = 'bulge' + str(bulge_count)
 
 	return(struct_dict)
-

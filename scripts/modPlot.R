@@ -34,7 +34,6 @@ mods_agg = aggregate(mods_agg$x, by = list(cluster=mods_agg$cluster, pos=mods_ag
 # read in stops table and process as above for mods
 stops = read.table(paste(out, "mods/RTstopTable.csv", sep = ''), header = T, sep = "\t", quote = '')
 stops$proportion[is.na(stops$proportion)] = 0
-stops$cluster = gsub(".*?_tRNA-", "", stops$cluster)
 stops$cluster = ifelse(grepl("mito", stops$cluster), sub(".*_mito_tRNA-","mito", stops$cluster), sub(".*_tRNA-","",stops$cluster))
 stops$cluster = ifelse(stops$cluster == 'eColiLys-TTT-1-1', 'eColiLys', stops$cluster)
 

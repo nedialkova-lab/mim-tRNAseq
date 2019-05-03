@@ -30,15 +30,24 @@ if (length(args)==0) {
 	facetCount = length(unique(cov_byaa$bam))
 	getPalette = colorRampPalette(brewer.pal(10, 'Paired'))
 	
-	cov_byaa_norm = ggplot(subset(cov_byaa, !grepl("mito", cov_byaa$aa)), aes(x = bin, y = cov_norm, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
-	xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(fill = "Isoacceptor") + scale_fill_manual(values = getPalette(cyt_colourCount)) + 
-	theme_bw()
+	cov_byaa_norm = ggplot(subset(cov_byaa, !grepl("mito", cov_byaa$aa)), aes(x = bin, y = cov_norm, fill = aa, group = aa)) + 
+		geom_bar(stat = "identity", alpha = 0.8) + 
+		facet_wrap(~bam, ncol = 4) + 
+		xlab("Gene (%)") + 
+		ylab("Normalised coverage (coverage/library size)") + 
+		labs(fill = "Isoacceptor") + 
+		scale_fill_manual(values = getPalette(cyt_colourCount)) + 
+		theme_bw()
 	ggsave(paste(out_dir, "coverage_byaa_norm.pdf", sep = ''), cov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
 
 	if (!is.na(mito_trnas)){
-		mitocov_byaa_norm = ggplot(subset(cov_byaa, grepl("mito", cov_byaa$aa)), aes(x = bin, y = cov_norm, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
-		xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(fill = "Isoacceptor") + scale_fill_manual(values = getPalette(mit_colourCount)) + 
-		theme_bw()
+		mitocov_byaa_norm = ggplot(subset(cov_byaa, grepl("mito", cov_byaa$aa)), aes(x = bin, y = cov_norm, fill = aa, group = aa)) + 
+			geom_bar(stat = "identity", alpha = 0.8) + 
+			facet_wrap(~bam, ncol = 4) + 
+			xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + 
+			labs(fill = "Isoacceptor") + 
+			scale_fill_manual(values = getPalette(mit_colourCount)) + 
+			theme_bw()
 		ggsave(paste(out_dir, "mitocoverage_byaa_norm.pdf", sep = ''), mitocov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
 	}
 
@@ -52,23 +61,37 @@ if (length(args)==0) {
 	}
 	
 	
-	cov_byaa_norm_scaled = ggplot(subset(cov_byaa_scaled, !grepl("mito", cov_byaa_scaled$aa)), aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
-	xlab("Gene (%)") + ylab("Scaled normalised coverage") + labs(fill = "Isoacceptor") + scale_y_continuous(breaks = seq(0,1,0.25)) + scale_fill_manual(values = getPalette(cyt_colourCount)) + 
-	theme_bw()
+	cov_byaa_norm_scaled = ggplot(subset(cov_byaa_scaled, !grepl("mito", cov_byaa_scaled$aa)), aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + 
+		geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
+		xlab("Gene (%)") + 
+		ylab("Scaled normalised coverage") + 
+		labs(fill = "Isoacceptor") + 
+		#scale_y_continuous(breaks = seq(0,max(cov_byaa_norm_scaled),0.25)) + 
+		scale_fill_manual(values = getPalette(cyt_colourCount)) + 
+		theme_bw()
 	ggsave(paste(out_dir, "coverage_byaa_norm_scaled.pdf", sep = ''), cov_byaa_norm_scaled, height = ceiling(facetCount/4) * 4, width = 14)
 
 	if (!is.na(mito_trnas)){
-		mitocov_byaa_norm_scaled = ggplot(subset(cov_byaa_scaled, grepl("mito", cov_byaa_scaled$aa)), aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
-		xlab("Gene (%)") + ylab("Scaled normalised coverage") + labs(fill = "Isoacceptor") + scale_fill_manual(values = getPalette(mit_colourCount)) + 
-		theme_bw()
+		mitocov_byaa_norm_scaled = ggplot(subset(cov_byaa_scaled, grepl("mito", cov_byaa_scaled$aa)), aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + 
+			geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
+			xlab("Gene (%)") + 
+			ylab("Scaled normalised coverage") + 
+			labs(fill = "Isoacceptor") + 
+			scale_fill_manual(values = getPalette(mit_colourCount)) + 
+			theme_bw()
 		ggsave(paste(out_dir, "mitocoverage_byaa_norm_scaled.pdf", sep = ''), mitocov_byaa_norm_scaled, height = ceiling(facetCount/4) * 4, width = 14)
 	}
 
 	cov_byaa$aa_groups = aa_groups[match(cov_byaa$aa, aa_groups$aa),2]
 
 	cov_byaa_agg = aggregate(x = cov_byaa$cov_norm, by = list(bam = cov_byaa$bam, bin = cov_byaa$bin, aa_groups = cov_byaa$aa_groups), FUN = mean)
-	cov_byaa_line = ggplot(cov_byaa_agg, aes(x = bin, y = x, color = aa_groups, group = aa_groups)) + geom_line() + facet_wrap(~bam, ncol = 4) +
-	xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + labs(color = "Amino acid group") + theme_bw()
+	cov_byaa_line = ggplot(cov_byaa_agg, aes(x = bin, y = x, color = aa_groups, group = aa_groups)) + 
+		geom_line() + 
+		facet_wrap(~bam, ncol = 4) +
+		xlab("Gene (%)") + 
+		ylab("Normalised coverage (coverage/library size)") + 
+		labs(color = "Amino acid group") + 
+		theme_bw()
 	ggsave(paste(out_dir, "coverage_byaa_line.pdf", sep = ''), cov_byaa_line, height = ceiling(facetCount/4) * 4, width = 14)
 
 	## Coverage plots per cluster multipage

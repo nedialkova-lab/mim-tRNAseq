@@ -63,7 +63,7 @@ if (length(args)==0) {
 				geom_text(data = subset(avg_cca, end == 'CA'), aes(label = paste(abs(round(x,1)), '%'), x = Inf, y = x), size = 3.3, vjust = 1, color = '#3E606F', fontface='bold') +
   				facet_share(~condition, dir = "h", scales = "free", reverse_num = TRUE) +
  				coord_flip() + 
-  				scale_fill_manual(name = "", values = alpha(c(CA = "#1A6394", CC = "#A1392D"), 0.8), labels = c("3'-CCA", "3'-CC")) +
+  				scale_fill_manual(name = "", values = alpha(c(CA = "#F0F9ED", CC = "#0D4282"), 0.8), labels = c("3'-CCA", "3'-CC")) +
   				scale_y_continuous(breaks = c(c(-100, -75, -50, -25, 0), c(0, 25, 50, 75, 100)))+
   				scale_x_discrete(expand = c(0.03, 0)) +
   				theme_minimal() + 
@@ -88,7 +88,7 @@ if (length(args)==0) {
 			geom_hline(data = subset(avg_cca, end == 'CA'), aes(yintercept=x), color = "white", alpha = 0.9) + 
 			geom_text(data = subset(avg_cca, end == 'CA'), aes(label = paste(abs(round(x,1)), '%'), x = Inf, y = x), size = 3.3, vjust = 1, color = '#3E606F', fontface='bold') +
  			coord_flip() + 
-  			scale_fill_manual(name = "", values = alpha(c(CA = "#446774", CC = "#8C381C"), 0.8), labels = c("3'-CCA", "3'-CC")) +
+  			scale_fill_manual(name = "", values = alpha(c(CA = "#F0F9ED", CC = "#0D4282"), 0.8), labels = c("3'-CCA", "3'-CC")) +
   			scale_y_continuous(breaks = c(c(-100, -75, -50, -25, 0), c(0, 25, 50, 75, 100)))+
   			scale_x_discrete(expand = c(0.03, 0)) +
   			theme_minimal() + 

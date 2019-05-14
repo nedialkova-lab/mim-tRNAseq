@@ -75,12 +75,16 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		cigar_list = re.split('(.*?)([A-Za-z]|[\^][A-Za-z]+)', cigar)
 		cigar_list = list(filter(None, cigar_list))
 
-		# check cigar for softclipping at 5' of read (usually because of terminal transferase of RT) - if so remove soft-clipped bases from sequence
+		# check cigar for softclipping at 5' and 3' of read (usually because of terminal transferase of RT) - if so remove soft-clipped bases from sequence
 		if cigar_list[1].upper() == "S".upper():
 			soft_clip = int(cigar_list[0])
 			read_seq = read.query_sequence[soft_clip:]
 		else:
 			read_seq = read.query_sequence 
+
+		if cigar_list[-1].upper() == "S".upper():
+			soft_clip = int(cigar_list[-2])
+			read_seq = read_seq[:-soft_clip]
 
 		# get offset of read mapping position to reference start in order to adjust mismatch position 
 		# (offset is simply start position of read alignment realtive to reference)
@@ -141,8 +145,17 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		if cca:
 			aln_count += 1
 			dinuc = read.query_sequence[-2:]
-			cca_dict[reference][dinuc] += 1
 			dinuc_dict[dinuc] += 1
+
+			ref_length = bam_file.get_reference_length(reference)
+			if ref_pos in [ref_length, ref_length - 1]:
+				cca_dict[reference][dinuc] += 1
+			elif ref_pos == ref_length - 2:
+				dinuc = read.query_sequence[-1:]
+				cca_dict[reference][dinuc] += 1
+			# elif ref_pos == ref_length - 3:
+			# 	dinuc = "None"
+			# 	cca_dict[reference][dinuc] += 1
 
 	if cca:
 		# write dinuc proportions for current bam
@@ -152,7 +165,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		# write CCA outputs for current bam
 		for cluster, data in cca_dict.items():
 			for dinuc, count in data.items():
-				if (dinuc.upper() == "CC") or (dinuc.upper() == "CA"):
+				if (dinuc.upper() == "CC") or (dinuc.upper() == "CA") or (dinuc.upper() == "C"):
 					CCAvsCC_counts.write(cluster + "\t" + dinuc + "\t" + inputs + "\t" + condition + "\t" + str(count) + "\n")
 
 		dinuc_prop.close()
@@ -270,7 +283,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 		try:
 			os.mkdir(out_dir + "mods")
 		except FileExistsError:
-				log.warning("Rewriting over old mods files...")
+			log.warning("Rewriting over old mods files...")
 
 	if remap:
 		log.info("** Discovering unannotated modifications for realignment **")

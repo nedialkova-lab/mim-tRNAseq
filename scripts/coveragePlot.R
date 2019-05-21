@@ -51,13 +51,29 @@ if (length(args)==0) {
 		ggsave(paste(out_dir, "mitocoverage_byaa_norm.pdf", sep = ''), mitocov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
 	}
 
-	cov_byaa_sum = aggregate(x = cov_byaa$cov_norm, by = list(bin = cov_byaa$bin, bam = cov_byaa$bam), FUN = sum)
-	scale_factors = cov_byaa_sum[which(cov_byaa_sum$bin == 96),] # 96 is second last bin of 4%
-	cov_byaa_scaled = cov_byaa
-	cov_byaa_scaled$cov_norm_scaled = NA
+	
+	
 
-	for (i in 1:nrow(cov_byaa_scaled)){
-		cov_byaa_scaled[i,'cov_norm_scaled'] = cov_byaa_scaled[i,'cov_norm']/scale_factors[which(cov_byaa_scaled[i,'bam'] == scale_factors$bam),3]
+	cyto_cov_byaa = subset(cov_byaa, !grepl("mito", cov_byaa$aa))
+	cyto_cov_byaa_sum = aggregate(x = cyto_cov_byaa$cov_norm, by = list(bin = cyto_cov_byaa$bin, bam = cyto_cov_byaa$bam), FUN = sum)
+	cyto_scale_factors = cyto_cov_byaa_sum[which(cyto_cov_byaa_sum$bin == 96),] # 96 is second last bin of 4%
+	cyto_cov_byaa$cov_norm_scaled = NA
+	for (i in 1:nrow(cyto_cov_byaa)){
+		cyto_cov_byaa[i,'cov_norm_scaled'] = cyto_cov_byaa[i,'cov_norm']/cyto_scale_factors[which(cyto_cov_byaa[i,'bam'] == cyto_scale_factors$bam),3]
+	}
+
+	if (!is.na(mito_trnas)){
+		mito_cov_byaa = subset(cov_byaa, grepl("mito", cov_byaa$aa))
+		mito_cov_byaa_sum = aggregate(x = mito_cov_byaa$cov_norm, by = list(bin = mito_cov_byaa$bin, bam = mito_cov_byaa$bam), FUN = sum)
+		mito_scale_factors = mito_cov_byaa_sum[which(mito_cov_byaa_sum$bin == 96),] # 96 is second last bin of 4%
+		mito_cov_byaa$cov_norm_scaled = NA
+		for (i in 1:nrow(mito_cov_byaa)){
+			mito_cov_byaa[i,'cov_norm_scaled'] = mito_cov_byaa[i,'cov_norm']/mito_scale_factors[which(mito_cov_byaa[i,'bam'] == mito_scale_factors$bam),3]
+		}
+		cov_byaa_scaled = rbind(cyto_cov_byaa, mito_cov_byaa)
+	}
+	else {
+		cov_byaa_scaled = cyto_cov_byaa
 	}
 	
 	

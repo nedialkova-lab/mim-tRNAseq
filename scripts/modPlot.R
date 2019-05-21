@@ -49,8 +49,8 @@ context_info$cluster = ifelse(context_info$cluster == 'eColiLys-TTT-1-1', 'eColi
 # ... make a scatter plot of misincorporation rates faceted by positions in cons_mods (selected known mod sites of interest) and by identity of nucleotide
 for (i in unique(mods_agg$condition)) {
   
-  # mods
-  sub_mods_agg = subset(mods_agg, condition == i)
+  # cyto mods
+  sub_mods_agg = mods_agg[mods_agg$condition == i & !grepl("mito", mods_agg$cluster),]
   sub_mods_wide = dcast(sub_mods_agg[,c('cluster','pos', 'x')], list(.(cluster), .(pos)), value.var = 'x', fun.aggregate = mean)
   sub_mods_wide[is.na(sub_mods_wide)] = 0
   rownames(sub_mods_wide) = sub_mods_wide$cluster
@@ -59,10 +59,10 @@ for (i in unique(mods_agg$condition)) {
   col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_mods_agg$x, by = list(pos = sub_mods_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
   count_mods = sub_mods_agg %>% group_by(cluster) %>% summarise(count = sum(x > 0.1))
   row_anno = rowAnnotation(Count = row_anno_barplot(count_mods$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
-  mods_hm = Heatmap(sub_mods_mat, column_labels = cons_pos, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
+  cyto_mods_hm = Heatmap(sub_mods_mat, column_labels = cons_pos, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
   
-  # stops
-  sub_stops_agg = subset(stops_agg, condition == i)
+  # cyto stops
+  sub_stops_agg = stops_agg[stops_agg$condition == i & !grepl("mito", stops_agg$cluster),]
   sub_stops_wide = dcast(sub_stops_agg[,c('cluster','pos', 'x')], list(.(cluster), .(pos)), value.var = 'x', fun.aggregate = mean)
   sub_stops_wide[is.na(sub_stops_wide)] = 0
   rownames(sub_stops_wide) = sub_stops_wide$cluster
@@ -71,23 +71,59 @@ for (i in unique(mods_agg$condition)) {
   col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_stops_agg$x, by = list(pos = sub_stops_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
   count_stops = sub_stops_agg %>% group_by(cluster) %>% summarise(count = sum(x > 0.1))
   row_anno = rowAnnotation(Count = row_anno_barplot(count_stops$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
-  stops_hm = Heatmap(sub_stops_mat, column_labels = cons_pos, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
+  cyto_stops_hm = Heatmap(sub_stops_mat, column_labels = cons_pos, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
   
-  # combined heatmap
-  heatmap_list = stops_hm %v% mods_hm
+  # combined cyto heatmap
+  heatmap_list = cyto_stops_hm %v% cyto_mods_hm
   pdf(paste(out, 'mods/', paste(i, "comb_heatmap.pdf", sep = "_"), sep = ''), width = 18, height = 16)
-  draw(heatmap_list, ht_gap = unit(10, "mm"))
-  dev.off()
+  draw(heatmap_list, ht_gap = unit(10, "mm"), column_title = "Cytoplasmic clusters")
+
+  if (!is.na(mito_trnas)){
+    # mito mods
+    sub_mods_agg = mods_agg[mods_agg$condition == i & grepl("mito", mods_agg$cluster),]
+    sub_mods_wide = dcast(sub_mods_agg[,c('cluster','pos', 'x')], list(.(cluster), .(pos)), value.var = 'x', fun.aggregate = mean)
+    sub_mods_wide[is.na(sub_mods_wide)] = 0
+    rownames(sub_mods_wide) = sub_mods_wide$cluster
+    sub_mods_wide = sub_mods_wide[, -1]
+    sub_mods_mat = as.matrix(sub_mods_wide)
+    col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_mods_agg$x, by = list(pos = sub_mods_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
+    count_mods = sub_mods_agg %>% group_by(cluster) %>% summarise(count = sum(x > 0.1))
+    row_anno = rowAnnotation(Count = row_anno_barplot(count_mods$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
+    mito_mods_hm = Heatmap(sub_mods_mat, column_labels = cons_pos, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
+    
+    # mito stops
+    sub_stops_agg = stops_agg[stops_agg$condition == i & grepl("mito", stops_agg$cluster),]
+    sub_stops_wide = dcast(sub_stops_agg[,c('cluster','pos', 'x')], list(.(cluster), .(pos)), value.var = 'x', fun.aggregate = mean)
+    sub_stops_wide[is.na(sub_stops_wide)] = 0
+    rownames(sub_stops_wide) = sub_stops_wide$cluster
+    sub_stops_wide = sub_stops_wide[, -1]
+    sub_stops_mat = as.matrix(sub_stops_wide)
+    col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_stops_agg$x, by = list(pos = sub_stops_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
+    count_stops = sub_stops_agg %>% group_by(cluster) %>% summarise(count = sum(x > 0.1))
+    row_anno = rowAnnotation(Count = row_anno_barplot(count_stops$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
+    mito_stops_hm = Heatmap(sub_stops_mat, column_labels = cons_pos, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
+    
+    # combined mito heatmap
+    heatmap_list = mito_stops_hm %v% mito_mods_hm
+    draw(heatmap_list, ht_gap = unit(10, "mm"), column_title = "Mitochondrial clusters")
+    dev.off()
+
+  }
+  
+  else {
+    dev.off()
+  }
   
   # scatter plots
-  sub_mods_pos = subset(sub_mods_agg, canon_pos %in% mod_sites)
+  sub_mods_agg = mods_agg[mods_agg$condition == i,]
+  sub_mods_pos = sub_mods_agg[sub_mods_agg$canon_pos %in% mod_sites,]
   sub_mods_pos[which(sub_mods_pos$x > 1), 'x'] = 1
   sub_mods_pos = merge(sub_mods_pos, context_info, by = c('cluster', 'pos'))
   names(sub_mods_pos)[names(sub_mods_pos) == 'x'] = 'Proportion'
   
   sub_mods_pos$canon_pos = factor(sub_mods_pos$canon_pos, levels = c('9','20', '20a', '26', '32','34','37','58'))
   
-  mods_scatter = ggplot(subset(sub_mods_pos, !grepl("mito", sub_mods_pos$cluster)), aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
+  mods_scatter = ggplot(sub_mods_pos[!grepl("mito", sub_mods_pos$cluster), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
     theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(colours = cols) +
     geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
     theme(
@@ -98,7 +134,7 @@ for (i in unique(mods_agg$condition)) {
   ggsave(paste(out, "mods/", paste(i, 'misincProps.pdf', sep = '_'), sep = ''), mods_scatter, height=10, width=14)
   
   if (!is.na(mito_trnas)){
-    mito_mods_scatter = ggplot(subset(sub_mods_pos, grepl("mito", sub_mods_pos$cluster)), aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
+    mito_mods_scatter = ggplot(sub_mods_pos[grepl("mito", sub_mods_pos$cluster), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
       theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(colours = cols) +
       geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
       theme(
@@ -112,14 +148,14 @@ for (i in unique(mods_agg$condition)) {
   
   # Misinc signatures
   # create filter list of rows where total misinc. rate < 0.1 
-  filter_0.1 = subset(sub_mods_agg, x < 0.1)
+  filter_0.1 = sub_mods_agg[sub_mods_agg$x < 0.1, ]
   # subset mods table for condition
-  sub_mods_aggtype = subset(mods, condition == i)
+  sub_mods_aggtype = mods[mods$condition == i, ]
   # use filter to filter rows from this table
   sub_mods_aggtype = anti_join(sub_mods_aggtype, filter_0.1, by=c("cluster","pos"))
   # add in context info
   sub_mods_aggtype = merge(sub_mods_aggtype, context_info, by = c("cluster","pos"))
-  sub_mods_aggtype_cyt = subset(sub_mods_aggtype, !grepl("mito", sub_mods_aggtype$cluster))
+  sub_mods_aggtype_cyt = sub_mods_aggtype[!grepl("mito", sub_mods_aggtype$cluster), ]
   sub_mods_aggtype_cyt = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, upstream = sub_mods_aggtype_cyt$upstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
   sub_mods_aggtype_cyt = do.call("data.frame", sub_mods_aggtype_cyt)
   
@@ -135,7 +171,7 @@ for (i in unique(mods_agg$condition)) {
   ggsave(paste(out, "mods/", paste(i, 'misincSignatures.pdf', sep = '_'), sep = ''), signature_plot, height=10, width=14)
   
   if (!is.na(mito_trnas)){
-    sub_mods_aggtype_mito = subset(sub_mods_aggtype, grepl("mito", sub_mods_aggtype$cluster))
+    sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$cluster), ]
     sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
     sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
     sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))

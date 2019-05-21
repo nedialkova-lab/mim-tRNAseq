@@ -50,14 +50,17 @@ if (length(args)==0) {
       cca_summary_sub = subset(cca_summary, condition %in% combinations[[i]])
       cca_summary_sub = cca_summary_sub %>% mutate(x.mean = ifelse(condition == cca_summary_sub$condition[1], x.mean * -1, x.mean))
       cca_summary_sub$bar_pos = NA
-      cca_summary_sub$bar_pos[cca_summary_sub$end == "C"] = cca_summary_sub$x.mean[cca_summary_sub$end == "C"]
-      cca_summary_sub$bar_pos[cca_summary_sub$end == "CC"] = cca_summary_sub$x.mean[cca_summary_sub$end == "CC"] + 
+      cca_summary_sub$bar_pos[cca_summary_sub$end == "Absent"] = cca_summary_sub$x.mean[cca_summary_sub$end == "Absent"]
+      cca_summary_sub$bar_pos[cca_summary_sub$end == "C"] = cca_summary_sub$x.mean[cca_summary_sub$end == "Absent"]+ 
         cca_summary_sub$x.mean[cca_summary_sub$end == "C"]
-      cca_summary_sub$bar_pos[cca_summary_sub$end == "CA"] = cca_summary_sub$x.mean[cca_summary_sub$end == "CA"] +
+      cca_summary_sub$bar_pos[cca_summary_sub$end == "CC"] = cca_summary_sub$x.mean[cca_summary_sub$end == "Absent"]+ 
         cca_summary_sub$x.mean[cca_summary_sub$end == "CC"] + cca_summary_sub$x.mean[cca_summary_sub$end == "C"]
+      cca_summary_sub$bar_pos[cca_summary_sub$end == "CA"] = cca_summary_sub$x.mean[cca_summary_sub$end == "Absent"] + 
+        cca_summary_sub$x.mean[cca_summary_sub$end == "CA"] + cca_summary_sub$x.mean[cca_summary_sub$end == "CC"] + 
+        cca_summary_sub$x.mean[cca_summary_sub$end == "C"]
       
       avg_cca = aggregate(cca_summary_sub$x.mean, by = list(condition = cca_summary_sub$condition, end = cca_summary_sub$end), mean)
-      cca_summary_sub$end = factor(cca_summary_sub$end, levels = c('CA', 'CC', 'C'))
+      cca_summary_sub$end = factor(cca_summary_sub$end, levels = c('CA', 'CC', 'C', 'Absent'))
       
       cca_plot = ggplot(cca_summary_sub, aes(x = gene, y = x.mean, fill = end)) + 
         geom_bar(stat = 'identity', width = 0.8) +
@@ -66,7 +69,7 @@ if (length(args)==0) {
         geom_text(data = subset(avg_cca, end == 'CA'), aes(label = paste(abs(round(x,1)), '%'), x = Inf, y = x), size = 3.3, vjust = 1, color = '#3E606F', fontface='bold') +
         facet_share(~condition, dir = "h", scales = "free", reverse_num = TRUE) +
         coord_flip() + 
-        scale_fill_manual(name = "", values = alpha(c(CA = "#F0F9ED", CC = "#427AA1", C = "#0D4282"), 0.8), labels = c("3'-CCA", "3'-CC", "3'-C")) +
+        scale_fill_manual(name = "", values = alpha(c(CA = "#F0F9ED", CC = "#427AA1", C = "#0D4282", Absent = "#133C55"), 0.8), labels = c("3'-CCA", "3'-CC", "3'-C", "Absent")) +
         scale_y_continuous(breaks = c(c(-100, -75, -50, -25, 0), c(0, 25, 50, 75, 100)))+
         scale_x_discrete(expand = c(0.03, 0)) +
         theme_minimal() + 
@@ -79,14 +82,17 @@ if (length(args)==0) {
   } else {
     cca_summary_sub = cca_summary
     cca_summary_sub$bar_pos = NA
-    cca_summary_sub$bar_pos[cca_summary_sub$end == "C"] = cca_summary_sub$x.mean[cca_summary_sub$end == "C"]
-    cca_summary_sub$bar_pos[cca_summary_sub$end == "CC"] = cca_summary_sub$x.mean[cca_summary_sub$end == "CC"] + 
-      cca_summary_sub$x.mean[cca_summary_sub$end == "C"] 
-    cca_summary_sub$bar_pos[cca_summary_sub$end == "CA"] = cca_summary_sub$x.mean[cca_summary_sub$end == "CA"] +
+    cca_summary_sub$bar_pos[cca_summary_sub$end == "Absent"] = cca_summary_sub$x.mean[cca_summary_sub$end == "Absent"]
+    cca_summary_sub$bar_pos[cca_summary_sub$end == "C"] = cca_summary_sub$x.mean[cca_summary_sub$end == "Absent"]+ 
+      cca_summary_sub$x.mean[cca_summary_sub$end == "C"]
+    cca_summary_sub$bar_pos[cca_summary_sub$end == "CC"] = cca_summary_sub$x.mean[cca_summary_sub$end == "Absent"]+ 
       cca_summary_sub$x.mean[cca_summary_sub$end == "CC"] + cca_summary_sub$x.mean[cca_summary_sub$end == "C"]
-      
+    cca_summary_sub$bar_pos[cca_summary_sub$end == "CA"] = cca_summary_sub$x.mean[cca_summary_sub$end == "Absent"] + 
+      cca_summary_sub$x.mean[cca_summary_sub$end == "CA"] + cca_summary_sub$x.mean[cca_summary_sub$end == "CC"] + 
+      cca_summary_sub$x.mean[cca_summary_sub$end == "C"]
+         
     avg_cca = aggregate(cca_summary_sub$x.mean, by = list(condition = cca_summary_sub$condition, end = cca_summary_sub$end), mean)
-    cca_summary_sub$end = factor(cca_summary_sub$end, levels = c('CA', 'CC', 'C'))
+    cca_summary_sub$end = factor(cca_summary_sub$end, levels = c('CA', 'CC', 'C', 'Absent'))
     
     cca_plot = ggplot(cca_summary_sub, aes(x = gene, y = x.mean, fill = end)) + 
       geom_bar(stat = 'identity', width = 0.8) +
@@ -94,7 +100,7 @@ if (length(args)==0) {
       geom_hline(data = subset(avg_cca, end == 'CA'), aes(yintercept=x), color = "white", alpha = 0.9) + 
       geom_text(data = subset(avg_cca, end == 'CA'), aes(label = paste(abs(round(x,1)), '%'), x = Inf, y = x), size = 3.3, vjust = 1, color = '#3E606F', fontface='bold') +
       coord_flip() + 
-      scale_fill_manual(name = "", values = alpha(c(CA = "#F0F9ED", CC = "#427AA1", C = "#0D4282"), 0.8), labels = c("3'-CCA", "3'-CC", "3'-C")) +
+      scale_fill_manual(name = "", values = alpha(c(CA = "#F0F9ED", CC = "#427AA1", C = "#0D4282", Absent = "#133C55"), 0.8), labels = c("3'-CCA", "3'-CC", "3'-C", "Absent")) +
       scale_y_continuous(breaks = c(c(-100, -75, -50, -25, 0), c(0, 25, 50, 75, 100)))+
       scale_x_discrete(expand = c(0.03, 0)) +
       theme_minimal() + 

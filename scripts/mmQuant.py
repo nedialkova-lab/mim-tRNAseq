@@ -153,9 +153,9 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 			elif ref_pos == ref_length - 2:
 				dinuc = read.query_sequence[-1:]
 				cca_dict[reference][dinuc] += 1
-			# elif ref_pos == ref_length - 3:
-			# 	dinuc = "None"
-			# 	cca_dict[reference][dinuc] += 1
+			elif ref_pos == ref_length - 3:
+				dinuc = "Absent"
+				cca_dict[reference][dinuc] += 1
 
 	if cca:
 		# write dinuc proportions for current bam
@@ -165,7 +165,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		# write CCA outputs for current bam
 		for cluster, data in cca_dict.items():
 			for dinuc, count in data.items():
-				if (dinuc.upper() == "CC") or (dinuc.upper() == "CA") or (dinuc.upper() == "C"):
+				if (dinuc.upper() == "CC") or (dinuc.upper() == "CA") or (dinuc.upper() == "C") or (dinuc == "Absent"):
 					CCAvsCC_counts.write(cluster + "\t" + dinuc + "\t" + inputs + "\t" + condition + "\t" + str(count) + "\n")
 
 		dinuc_prop.close()

@@ -81,7 +81,7 @@ def remap(fq, genome_index_path, genome_index_name, snp_index_path, \
 	elif mismatches == None:
 		mismatch_string = "" 
 
-	output_prefix = "remap"
+	output_prefix = fq.split("/")[-1].split(".")[0] + "_remap"
 	if snp_tolerance:
  		map_cmd = "gsnap " + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
  		+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
@@ -162,14 +162,14 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 	elif mismatches == None:
 		mismatch_string = ""
 
+	output_prefix = fq.split("/")[-1].split(".")[0]
+
 	if snp_tolerance:
-		output_prefix = fq.split("/")[-1].split(".")[0]
 		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
 		+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
 		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 1 " + mismatch_string + \
 		fq + " &>> " + out_dir + "align.log"
 	else:
-		output_prefix = fq.split("/")[-1].split(".")[0]
 		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
 		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --ignore-trim-in-filtering 1 " + mismatch_string\
 		+ fq + " &>> " + out_dir + "align.log"

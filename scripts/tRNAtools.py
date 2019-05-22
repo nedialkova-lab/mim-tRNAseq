@@ -179,6 +179,21 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	## Main code for matching and SNP index building ##
 	###################################################
 
+	# remove spurious CCA seen in some sequences (i.e. genomically encoded or artifact from gtRNAdb or tRNAScan-SE prediction)
+	# to do this, remove previously added CCA (intronRemoves()) that falls out of canonical structure using ssAlign module
+
+	with open(out_dir + 'temptRNAseqs.fa', 'w') as tempSeqs:
+		for seq in tRNA_dict:
+			tempSeqs.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
+
+	ssAlign.aligntRNA(tempSeqs.name, out_dir)
+	extra_cca = ssAlign.extraCCA()
+
+	for record in extra_cca:
+		tRNA_dict[record]['sequence'] = tRNA_dict[record]['sequence'][:-3]
+
+	os.remove(tempSeqs.name)
+
 	# match each sequence in tRNA_dict to value in modomics_dict using BLAST
 
 	log.info("\n+------------------------+ \
@@ -252,7 +267,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			for key, value in isoacceptor_dict.items():
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 		# generate Stockholm alignment file for all tRNA transcripts and parse additional mods file
-		ssAlign.aligntRNA(temptRNATranscripts.name)
+		ssAlign.aligntRNA(temptRNATranscripts.name, out_dir)
 		additionalMods = additionalModsParser(species, out_dir)
 		# add additional SNPs from extra file to list of modified positions, and ensure non-redundancy with set()
 		# index SNPs
@@ -429,7 +444,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			SeqIO.write(final_centroids, clusterTranscripts, "fasta")
 
 		# generate Stockholm alignment file for cluster transcripts and process additional mods file
-		ssAlign.aligntRNA(clusterTranscripts.name)
+		ssAlign.aligntRNA(clusterTranscripts.name, out_dir)
 		additionalMods = additionalModsParser(species, out_dir)
 
 		log.info("{} clusters created from {} tRNA sequences".format(cluster_num,len(tRNA_dict)))
@@ -732,7 +747,7 @@ def tidyFiles (out_dir, cca):
 
 	for file in files:
 		full_file = out_dir + file
-		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "clusterInfo" in file or "isoacceptorInfo" in file or "modificationSNPs" in file):
+		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "cmalign.log" in file or "clusterInfo" in file or "isoacceptorInfo" in file or "modificationSNPs" in file):
 			shutil.move(full_file, out_dir + "annotation")
 		if (file.endswith("tRNAgenome") or file.endswith("index") or "index.log" in file):
 			shutil.move(full_file, out_dir + "indices")

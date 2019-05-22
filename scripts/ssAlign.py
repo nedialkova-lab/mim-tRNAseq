@@ -11,13 +11,26 @@ from operator import itemgetter
 
 stkname = ''
 
-def aligntRNA(tRNAseqs):
+def aligntRNA(tRNAseqs, out):
 # run cmalign to generate Stockholm file for tRNA sequences
 	global stkname
 	stkname = tRNAseqs.split(".fa")[0] + '_align.stk'
 	cmfile ='/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1]) + '/data/tRNAmatureseq.cm'
-	cmcommand = 'cmalign -o ' + stkname + ' --nonbanded -g ' + cmfile + ' ' + tRNAseqs
+	cmcommand = 'cmalign -o ' + stkname + ' --nonbanded -g ' + cmfile + ' ' + tRNAseqs + ' &>> ' + out + 'cmalign.log'
 	subprocess.call(cmcommand, shell = True)
+
+def extraCCA():
+	# look for extra CCA's added spuriously that fall outside of canonical tRNA structure
+	# Seems to be a problem in certain sequences in mouse - either an artifact from gtRNAdb or tRNAScan, or CCA is genomically encoded for these tRNAs?
+	extra_cca = list()
+	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
+	for record in stk:
+		if record.seq[-3:] == 'cca':
+			extra_cca.append(record.name)
+
+	os.remove(stkname)
+
+	return(extra_cca)
 
 def tRNAclassifier(out):
 

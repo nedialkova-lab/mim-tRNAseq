@@ -16,3 +16,10 @@ Homo sapiens	Ser-TGA	m2,2G26;m3C32;m3C47
 Homo sapiens	Thr-CGT	m1A58;m2,2G26;m1G9;m3C32
 Homo sapiens	Thr-TGT	m1A58;m2,2G26;m1G9;m3C32
 Homo sapiens	Val-TAC	m1A58
+Homo sapiens	Arg-ACG	I34
+Homo sapiens	Ile-AAT	I34
+Homo sapiens	Leu-AAG	I34
+Homo sapiens	Pro-AGG	I34
+Homo sapiens	Ser-AGA	I34
+Homo sapiens	Thr-AGT	I34
+Homo sapiens	Val-AAC	I34

@@ -162,6 +162,12 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		for dinuc, count in dinuc_dict.items():
 			dinuc_prop.write(dinuc + "\t" + str(count/aln_count) + "\t" + inputs.split("/")[-1] + "\n")
 
+		# add missing ends to dict to prevent issues with plotting in R
+		for end in ["CA", "CC", "C", "Absent"]:
+			for cluster, data in cca_dict.items():
+				if not end in data.keys():
+					cca_dict[cluster][end] = 0
+
 		# write CCA outputs for current bam
 		for cluster, data in cca_dict.items():
 			for dinuc, count in data.items():
@@ -174,7 +180,6 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 	## Edit misincorportation and stop data before writing
 
 	# build dictionaries for mismatches, known modification sites, and stops, normalizing to total coverage per nucleotide
-
 	modTable_prop = {cluster: {pos: {
 				group: count / cov_table[(cov_table.pos == pos) & (cov_table.condition == condition) & (cov_table.bam == inputs)].loc[cluster]['cov']
 				  for group, count in data.items() if group in ['A','C','G','T']

@@ -4,12 +4,16 @@
 # Wrapper functions for read aligmnent and placement #
 ######################################################
 
-import subprocess, os, sys, re, logging
+import subprocess, os, sys, re, logging, copy
 from pybedtools import BedTool
 from collections import defaultdict
 from pathlib import Path
 import glob
 import pandas as pd
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt 
+import seaborn as sns
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +33,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 	# Read sampleData 
 	sampleDict = defaultdict()
 	unique_bam_list = list()
+	alignstats_total = defaultdict(list)
 	coverageData = open(out_dir + sampleData.split(".")[0] + "_cov." + sampleData.split(".")[-1], "w")
 	with open(sampleData, "r") as sampleData:
 		for line in sampleData:
@@ -41,16 +46,37 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 
 				# align
 				if map_round == 1:
-					unique_bam, librarySize = mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches, map_round, remap)
+					unique_bam, librarySize, alignstats = mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches, remap)
 				elif map_round == 2:
 					with open(out_dir + "mapping_stats.txt","a") as stats_out:
 						stats_out.write("** NEW ALIGNMENT **\n\n")
-					unique_bam, librarySize = remap(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches)
+					unique_bam, librarySize, alignstats = remap(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches)
 				
 				unique_bam_list.append(unique_bam)
 				coverageData.write(unique_bam + "\t" + group + "\t" + str(librarySize) + "\n")
 
-	log.info('Alignment statistics written to {}align/mapping_stats.txt'.format(out_dir))
+				if len(alignstats_total) == 0:
+					alignstats_total = copy.deepcopy(alignstats)
+				else:
+					for key, value in alignstats.items():
+						for item in value:
+							alignstats_total[key].append(item)
+
+	# alignstats plot and save
+	alignstats_df = pd.DataFrame.from_dict(alignstats_total)
+	alignstats_df["Proportion"] = alignstats_df.groupby(["Lib"])["Count"].apply(lambda x: x.astype(float)/x.sum())
+	g = sns.barplot(data = alignstats_df, x = "Lib", y = "Proportion", hue = "Type", palette = "Set2")
+	plt.xticks(rotation = 90)
+	plt.tight_layout()
+	fig = g.get_figure()
+	if map_round ==1:
+		alignstats_version = "Primary_"
+	elif map_round == 2:
+		alignstats_version = "Remap_"
+	fig.savefig(out_dir + alignstats_version + "alignstats.pdf")
+	plt.close(fig)
+
+	log.info('Alignment statistics and plot saved to {}align/mapping_stats.txt'.format(out_dir))
 
 	coverageData.close()
 
@@ -59,18 +85,22 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 def remap(fq, genome_index_path, genome_index_name, snp_index_path, \
 	snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches):
 # remapping of multi and unmapped reads from round 1
+
+	# generate fastq from unmaped reads
 	nomap = out_dir + fq.split("/")[-1].split(".")[0] + ".nomapping.bam"
 	nomap_bed = BedTool(nomap)
-	nomap_fastq = "".join(nomap.split(".")[:-1]) + ".fastq"
+	nomap_fastq = "".join(nomap.split(".bam")[:-1]) + ".fastq"
 	nomap_bed.bam_to_fastq(fq = nomap_fastq)
-	
+
+	# generate fastq from multi-mapping reads
+	# first generate sam of primary alignments from multi-mappers
 	multi = out_dir + fq.split("/")[-1].split(".")[0] + ".unpaired_mult.bam"
-	cmd = "samtools view -@ " + str(threads) + " -F 0x904 -o temp_multi.bam " + multi
+	cmd = "samtools view -@ " + str(threads) + " -F 0x904 -o " + out_dir + "temp_multi.bam " + multi
 	subprocess.call(cmd, shell = True)
-	multi_bed = BedTool("temp_multi.bam")
-	multi_fastq = "".join(multi.split(".")[:-1]) + ".fastq"
+	multi_bed = BedTool(out_dir + "temp_multi.bam")
+	multi_fastq = "".join(multi.split(".bam")[:-1]) + ".fastq"
 	multi_bed.bam_to_fastq(fq = multi_fastq)
-	os.remove("temp_multi.bam")
+	os.remove(out_dir + "temp_multi.bam")
 
 	if not keep_temp:
 		os.remove(nomap)
@@ -146,10 +176,17 @@ def remap(fq, genome_index_path, genome_index_name, snp_index_path, \
 		stats_out.write("{}\nUniquely mapped reads: {:d} ({:.0%}) \nMulti-mapping reads: {:d} ({:.0%}) \nUnmapped reads: {:d} ({:.0%}) \nTotal: {:d}\n\n"\
 			.format(fq.split("/")[-1], unique_count, (unique_count/total_count),multi_count, (multi_count/total_count), unmapped_count, (unmapped_count/total_count), total_count))
 
-	return(unique_bam, total_count)
+	alignstats_dict = defaultdict(list)
+	type_list = ["Uniquely mapped", "Multi-mapped", "Unmapped"]
+	for i, count in enumerate([unique_count, multi_count, unmapped_count]):
+		alignstats_dict["Lib"].append(fq.split("/")[-1].split(".")[0])
+		alignstats_dict["Type"].append(type_list[i])
+		alignstats_dict["Count"].append(count)
+
+	return(unique_bam, total_count, alignstats_dict)
 
 def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, \
-	out_dir,snp_tolerance, keep_temp, mismatches, map_round, remap):
+	out_dir,snp_tolerance, keep_temp, mismatches, remap):
 # map with or without SNP index and report initial map statistics
 
 	# check zip status of input reads for command building
@@ -219,7 +256,14 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 		stats_out.write("{}\nUniquely mapped reads: {:d} ({:.0%}) \nMulti-mapping reads: {:d} ({:.0%}) \nUnmapped reads: {:d} ({:.0%}) \nTotal: {:d}\n\n"\
 			.format(fq.split("/")[-1], unique_count, (unique_count/total_count),multi_count, (multi_count/total_count), unmapped_count, (unmapped_count/total_count), total_count))
 	
-	return(unique_bam, total_count)
+	alignstats_dict = defaultdict(list)
+	type_list = ["Uniquely mapped", "Multi-mapped", "Unmapped"]
+	for i, count in enumerate([unique_count, multi_count, unmapped_count]):
+		alignstats_dict["Lib"].append(fq.split("/")[-1].split(".")[0])
+		alignstats_dict["Type"].append(type_list[i])
+		alignstats_dict["Count"].append(count)
+
+	return(unique_bam, total_count, alignstats_dict)
 
 def countReads(unique_bam_list, mode, threads, out_dir):
 

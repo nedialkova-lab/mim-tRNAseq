@@ -31,6 +31,7 @@ if (length(args)==0) {
   
   cca_counts = read.table(args[2], header = TRUE, sep = "\t")
   cca_counts$gene = ifelse(grepl("mito", cca_counts$gene), sub(".*_mito_tRNA-","mito",cca_counts$gene), sub(".*_tRNA-","",cca_counts$gene))
+  cca_counts$gene = ifelse(grepl("nmt", cca_counts$gene), sub(".*_nmt_tRNA-","nmt",cca_counts$gene), sub(".*_tRNA-","",cca_counts$gene))
   cca_counts$gene = ifelse(cca_counts$gene == 'eColiLys-TTT-1-1', 'eColiLys', cca_counts$gene)
   
   cca_prop = cca_counts %>% group_by(gene,sample) %>% 

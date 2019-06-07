@@ -91,7 +91,8 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov):
 		coverage = pd.read_table(out_dir + bam.split("/")[-1] + "_coverage.txt", header = None, index_col = 0)[[6,7]] 
 		coverage['aa'] = coverage.index.format()
 		coverage.loc[coverage.aa.str.contains('mito'), 'aa'] = "mito" + coverage[coverage.aa.str.contains('mito')].aa.str.split("-").str[-4]
-		coverage.loc[~coverage.aa.str.contains('mito'), 'aa'] = coverage[~coverage.aa.str.contains('mito')].aa.str.split("-").str[-4]
+		coverage.loc[coverage.aa.str.contains('nmt'), 'aa'] = "nmt" + coverage[coverage.aa.str.contains('nmt')].aa.str.split("-").str[-4]
+		coverage.loc[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('nmt'), 'aa'] = coverage[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('nmt')].aa.str.split("-").str[-4]
 		coverage.columns = ['pos','cov','aa']
 		coverage['condition'] = info[0]
 		coverage['cov_norm'] = coverage['cov'] / info[1]
@@ -110,7 +111,8 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov):
 	cov_mean_gene = cov_mean.copy()
 	cov_mean_gene['Cluster'] = cov_mean_gene.index.format()
 	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("mito"), "Cluster"] = "mito" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("mito")].Cluster.str.split("-").str[1:].str.join('-')
-	cov_mean_gene.loc[~cov_mean_gene.Cluster.str.contains("mito"), "Cluster"] = cov_mean_gene[~cov_mean_gene.Cluster.str.contains("mito")].Cluster.str.split("-").str[1:].str.join('-')
+	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = "nmt" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
+	cov_mean_gene.loc[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = cov_mean_gene[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
 	cov_mean_gene = cov_mean_gene[['Cluster','pos','cov','aa','condition','cov_norm','bin','bam']]
 	cov_mean_gene = cov_mean_gene.groupby(['Cluster', 'bin', 'bam']).mean()
 	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t")

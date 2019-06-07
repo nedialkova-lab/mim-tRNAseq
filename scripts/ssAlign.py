@@ -16,7 +16,7 @@ def aligntRNA(tRNAseqs, out):
 	global stkname
 	stkname = tRNAseqs.split(".fa")[0] + '_align.stk'
 	cmfile ='/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1]) + '/data/tRNAmatureseq.cm'
-	cmcommand = 'cmalign -o ' + stkname + ' --nonbanded -g ' + cmfile + ' ' + tRNAseqs + ' &>> ' + out + 'cmalign.log'
+	cmcommand = 'cmalign -o ' + stkname + ' --nonbanded -g ' + cmfile + ' ' + tRNAseqs + ' &>> ' + out + 'cm.log'
 	subprocess.call(cmcommand, shell = True)
 
 def extraCCA():
@@ -212,6 +212,10 @@ def modContext(out):
 				upstream_dict[gene][pos].append(seq[up]) # upstream base
 				upstream_dict[gene][pos].append(seq[down]) # downstream base
 
+	try:
+		os.mkdir(out + "mods")
+	except FileExistsError:
+		pass
 
 	with open(out + "mods/modContext.txt", 'w') as outfile:
 		outfile.write("cluster\tpos\tidentity\tupstream\tdownstream\n")

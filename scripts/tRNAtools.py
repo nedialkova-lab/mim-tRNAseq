@@ -44,11 +44,16 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 		# Get species of input tRNA seqs to subset full Modomics table
 		species.add(' '.join(seq.split('_')[0:2]))
 		# only add to dictionary if not nmt or undetermined sequence
-		if not (re.search('nmt', seq) or re.search('Und', seq)):
+		if not re.search('Und', seq):
 			tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
+			if re.search('nmt', seq):
+				seq = seq.split("-")[0] + "_" + "-".join(seq.split("-")[1:])
+				loc_type = "mitochondrial"
+			else:
+				loc_type = "cytosolic"
 			tRNA_dict[seq]['sequence'] = tRNAseq
 			tRNA_dict[seq]['species'] = ' '.join(seq.split('_')[0:2])
-			tRNA_dict[seq]['type'] = 'cytosolic'
+			tRNA_dict[seq]['type'] = loc_type
 
 	# add mitochondrial tRNAs if given
 	if mitotRNAs:
@@ -246,7 +251,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 	tRNAbed.close()
 
-	log.info("{} total tRNA gene sequences (nmt and undetermined sequences excluded)".format(len(tRNA_dict)))
+	log.info("{} total tRNA gene sequences (undetermined sequences excluded)".format(len(tRNA_dict)))
 	log.info("{} sequences with a match to Modomics dataset".format(match_count))
 
 	with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
@@ -565,8 +570,13 @@ def additionalModsParser(input_species, out_dir):
 				mod_site = section[-2]
 				additionalMods_parse[isodecoder]['mods'].append(mod_site)
 				additionalMods_parse[isodecoder]['species'].append(data['species'])
-			#if mod == 'm3C20':
+			if mod == 'I34':
+				mod_site = min(anticodon)
+				additionalMods_parse[isodecoder]['mods'].append(mod_site)
+				additionalMods_parse[isodecoder]['species'].append(data['species'])
 
+			#if mod == 'm3C20':
+			
 	return(additionalMods_parse)
 
 
@@ -747,11 +757,11 @@ def tidyFiles (out_dir, cca):
 
 	for file in files:
 		full_file = out_dir + file
-		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "cmalign.log" in file or "clusterInfo" in file or "isoacceptorInfo" in file or "modificationSNPs" in file):
+		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "cm.log" in file or "clusterInfo" in file or "isoacceptorInfo" in file or "modificationSNPs" in file):
 			shutil.move(full_file, out_dir + "annotation")
 		if (file.endswith("tRNAgenome") or file.endswith("index") or "index.log" in file):
 			shutil.move(full_file, out_dir + "indices")
-		if (file.endswith("bam") or "align.log" in file or file == "mapping_stats.txt"):
+		if (file.endswith("bam") or "align.log" in file or file == "mapping_stats.txt" or "alignstats.pdf" in file):
 			shutil.move(full_file, out_dir + "align")
 		if ("cov" in file):
 			shutil.move(full_file, out_dir + "cov")

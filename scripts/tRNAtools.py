@@ -634,7 +634,7 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 	else:
 		genome_file = out_dir + experiment_name + "_tRNATranscripts.fa"
 
-	index_cmd = "gmap_build -D " + out_dir + " -d " + experiment_name + "_tRNAgenome " + genome_file + \
+	index_cmd = "gmap_build -q 1 -D " + out_dir + " -d " + experiment_name + "_tRNAgenome " + genome_file + \
 				" &> " + out_dir + "genomeindex.log"
 	subprocess.call(index_cmd, shell = True) 
 	log.info("Genome indices done...")

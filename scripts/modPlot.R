@@ -192,7 +192,7 @@ for (i in unique(mods_agg$condition)) {
       labs(y = "Proportion") + 
       theme(
         axis.title.x = element_blank()
-        )
+        ) +
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
     
     ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures.pdf', sep = '_'), sep = ''), mito_signature_plot, height=10, width=14)

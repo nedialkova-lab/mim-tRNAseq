@@ -26,8 +26,9 @@ cons_pos = unlist(strsplit(cons_pos, "_"))
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
 mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep = "\t", quote = '')
 mods$proportion[is.na(mods$proportion)] = 0
-mods$cluster = ifelse(grepl("mito", mods$cluster), sub(".*_mito_tRNA-","mito",mods$cluster), sub(".*_tRNA-","",mods$cluster))
-mods$cluster = ifelse(grepl("nmt", mods$cluster), sub(".*_nmt_tRNA-","nmt",mods$cluster), sub(".*_tRNA-","",mods$cluster))
+mods$cluster = sub(".*_mito_tRNA-","mito",mods$cluster)
+mods$cluster = sub(".*_nmt_tRNA-","nmt",mods$cluster)
+mods$cluster = sub(".*_tRNA-","",mods$cluster)
 mods$cluster = ifelse(mods$cluster == 'eColiLys-TTT-1-1', 'eColiLys', mods$cluster)
 mods_agg = aggregate(mods$proportion, by = list(cluster=mods$cluster, pos=mods$pos, bam=mods$bam, struct=mods$struct, condition=mods$condition, canon_pos=mods$canon_pos), FUN = sum)
 mods_agg = aggregate(mods_agg$x, by = list(cluster=mods_agg$cluster, pos=mods_agg$pos, struct=mods_agg$struct, condition=mods_agg$condition, canon_pos=mods_agg$canon_pos), FUN = mean)
@@ -35,8 +36,9 @@ mods_agg = aggregate(mods_agg$x, by = list(cluster=mods_agg$cluster, pos=mods_ag
 # read in stops table and process as above for mods
 stops = read.table(paste(out, "mods/RTstopTable.csv", sep = ''), header = T, sep = "\t", quote = '')
 stops$proportion[is.na(stops$proportion)] = 0
-stops$cluster = ifelse(grepl("mito", stops$cluster), sub(".*_mito_tRNA-","mito", stops$cluster), sub(".*_tRNA-","",stops$cluster))
-stops$cluster = ifelse(grepl("nmt", stops$cluster), sub(".*_nmt_tRNA-","nmt", stops$cluster), sub(".*_tRNA-","",stops$cluster))
+stops$cluster = sub(".*_mito_tRNA-","mito",stops$cluster)
+stops$cluster = sub(".*_nmt_tRNA-","nmt",stops$cluster)
+stops$cluster = sub(".*_tRNA-","",stops$cluster)
 stops$cluster = ifelse(stops$cluster == 'eColiLys-TTT-1-1', 'eColiLys', stops$cluster)
 
 #stops = stops[-5396, ] ## NB!! This cluster had info for pos 122 which doesn't exist - removed manually. Must be changed for other libraries ##
@@ -44,8 +46,9 @@ stops_agg = aggregate(stops$proportion, by = list(cluster=stops$cluster, pos=sto
 
 # read in context info created by ssAlign module
 context_info = read.table(paste(out, "mods/modContext.txt", sep = ''), header = TRUE)
-context_info$cluster = ifelse(grepl("mito", context_info$cluster), sub(".*_mito_tRNA-","mito", context_info$cluster), sub(".*_tRNA-","", context_info$cluster))
-context_info$cluster = ifelse(grepl("nmt", context_info$cluster), sub(".*_nmt_tRNA-","nmt", context_info$cluster), sub(".*_tRNA-","", context_info$cluster))
+context_info$cluster = sub(".*_mito_tRNA-","mito", context_info$cluster)
+context_info$cluster = sub(".*_nmt_tRNA-","nmt", context_info$cluster)
+context_info$cluster = sub(".*_tRNA-","", context_info$cluster)
 context_info$cluster = ifelse(context_info$cluster == 'eColiLys-TTT-1-1', 'eColiLys', context_info$cluster)
 
 # for each condition make a misincorporation and stops heatmap as a combined figure using ComplexHeatmap

@@ -122,7 +122,9 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 				modomics_dict[curr_id] = {'sequence':'','type':tRNA_type, 'anticodon':new_anticodon}
 		
 		else:
-			if mod_species in species:
+			if not mod_species in species:
+				continue
+			else:
 				sequence = line.strip().replace('U','T').replace('-','')
 				modomics_dict[curr_id]['sequence'] = sequence
 				unmod_sequence = getUnmodSeq(sequence, modifications)
@@ -131,10 +133,8 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 				# add unmodified seq to modomics_dict by lookup to modifications
 				nonMod = ['A','C','G','T','-']
 				modPos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x not in nonMod]
-				inosinePos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x == 'I']
 				modomics_dict[curr_id]['modified'] = modPos
 				modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
-				modomics_dict[curr_id]["InosinePos"] = inosinePos
 
 				# If 'N' in anticodon then duplicate entry 4 times for each possibility
 				anticodon = curr_id.split('-')[2]
@@ -142,10 +142,8 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 					for rep in ['A','C','G','T']:
 						duplicate_item = str(curr_id.split('-')[0]) + '-' + str(curr_id.split('-')[1]) + '-' + str(anticodon.replace('N', rep))
 						duplicate_unmod_seq = modomics_dict[curr_id]['unmod_sequence'].replace('N',rep)
-						duplicate_anticodon = modomics_dict[curr_id]['anticodon'].replace('N', rep)
 						modomics_dict[duplicate_item] = copy.deepcopy(modomics_dict[curr_id])
 						modomics_dict[duplicate_item]['unmod_sequence'] = duplicate_unmod_seq
-						modomics_dict[duplicate_item]['anticodon'] = duplicate_anticodon
 					del modomics_dict[curr_id]
 				else:
 					duplicate_item = curr_id
@@ -187,7 +185,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	###################################################
 
 	# remove spurious CCA seen in some sequences (i.e. genomically encoded or artifact from gtRNAdb or tRNAScan-SE prediction)
-	# to do this, remove previously added CCA (intronRemover()) that falls out of canonical structure using ssAlign module
+	# to do this, remove previously added CCA (intronRemoves()) that falls out of canonical structure using ssAlign module
 
 	with open(out_dir + 'temptRNAseqs.fa', 'w') as tempSeqs:
 		for seq in tRNA_dict:
@@ -210,14 +208,13 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	for seq in tRNA_dict:
 		# Initialise list of modified sites for each tRNA
 		tRNA_dict[seq]['modified'] = []
-		tRNA_dict[seq]['InosinePos'] = []
 		temp_tRNAFasta = open(temp_dir + seq + ".fa","w")
 		temp_tRNAFasta.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
 		temp_tRNAFasta.close()
 		tRNA_dict[seq]['anticodon'] = anticodon = re.search('.*tRNA-.*?-(.*?)-', seq).group(1)
 		if not anticodon in anticodon_list:
 			anticodon_list.append(anticodon)
-		match = {k:v for k, v in modomics_dict.items() if anticodon in v['anticodon'] and tRNA_dict[seq]['type'] == v['type']}
+		match = {k:v for k,v in modomics_dict.items() if anticodon in v['anticodon'] and tRNA_dict[seq]['type'] == v['type']}
 		if len(match) >= 1:
 			temp_matchFasta = open(temp_dir + "modomicsMatch.fasta","w")
 			for i in match:	
@@ -242,7 +239,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			if tophit:
 				match_count += 1
 				tRNA_dict[seq]['modified'] = match[tophit]['modified']
-				tRNA_dict[seq]['InosinePos'] = match[tophit]['InosinePos']
 			elif len(tophit) == 0:
 				nomatch_count += 1
 		if len(match) == 0:
@@ -277,7 +273,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 		# generate Stockholm alignment file for all tRNA transcripts and parse additional mods file
 		ssAlign.aligntRNA(temptRNATranscripts.name, out_dir)
-		additionalMods, additionalInosines = additionalModsParser(species, out_dir)
+		additionalMods = additionalModsParser(species, out_dir)
 		# add additional SNPs from extra file to list of modified positions, and ensure non-redundancy with set()
 		# index SNPs
 		# Format for SNP index (space separated):
@@ -286,21 +282,12 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		for seq in tRNA_dict:
 			isodecoder = "-".join(seq.split("-")[1:3])
 			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder and tRNA_dict[seq]['species'] in v['species']}
-			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == isodecoder and tRNA_dict[seq]['species'] in v['species']}
 			if additionalMods_sub:
 				tRNA_dict[seq]['modified'] = list(set(tRNA_dict[seq]['modified'] + additionalMods_sub[isodecoder]['mods']))
-			if additionalInosines_sub:
-				tRNA_dict[seq]['InosinePos'] = list(set(tRNA_dict[seq]['InosinePos'] + additionalInosines_sub[isodecoder]['InosinePos']))
 			for (index, pos) in enumerate(tRNA_dict[seq]['modified']):
 				# Build snp_records with chromosomes equal to transcript names
 				# Position is 1-based for iit_store i.e. pos + 1
-				if pos in tRNA_dict[seq]['InosinePos']:
-					if tRNA_dict[seq]['sequence'][pos] == 'A':
-						snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "G")
-					else:
-						continue
-				else:
-					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
+				snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
 			total_snps+= len(tRNA_dict[seq]['modified'])
 			if total_snps == 0:
 				snp_tolerance = False
@@ -334,7 +321,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		# read cluster files, get nonredudant set of mod positions of all members of a cluster, create snp_records for writing SNP index
 		cluster_pathlist = Path(temp_dir).glob("**/*_clusters.uc")
 		mod_lists = dict() # stores non-redundant sets of mismatches and mod positions for clusters
-		Inosine_lists = dict() # stores positions of inosines for clusters
 		snp_records = list()
 		cluster_dict = dict() # info about clusters
 		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for misincorporation analysis in mmQuant)
@@ -353,7 +339,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 						cluster_num += 1
 						cluster_name = line.split("\t")[8]
 						mod_lists[cluster_name] = tRNA_dict[cluster_name]["modified"]
-						Inosine_lists[cluster_name] = tRNA_dict[cluster_name]['InosinePos']
 						clusterbed.write(cluster_name + "\t0\t" + str(len(tRNA_dict[cluster_name]['sequence'])) + "\t" + cluster_name + "\t1000\t+\n" )
 						clustergff.write(cluster_name + "\ttRNAseq\texon\t1\t" + str(len(tRNA_dict[cluster_name]['sequence'])) + "\t.\t+\t0\tgene_id '" + cluster_name + "'\n")
 						cluster_dict[cluster_name] = cluster_num
@@ -366,7 +351,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 						# if member of cluster is 100% identical (i.e. "=" in 8th column of cluster file)
 						if compr_aln == "=":
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + tRNA_dict[member_name]["modified"]))
-							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + tRNA_dict[member_name]["InosinePos"]))
 							cluster_dict[member_name] = cluster_dict[cluster_name]
 						
 						# if there are insertions or deletions in the centroid, edit member or centroid sequences to ignore these positions
@@ -432,9 +416,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
-							member_Inosines = tRNA_dict[member_name]["InosinePos"]
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
-							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + member_Inosines))
 							cluster_dict[member_name] = cluster_dict[cluster_name]
 
 						# handle members that are not exact sequence matches but have no indels either
@@ -445,9 +427,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
-							member_Inosines = tRNA_dict[member_name]["InosinePos"]
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
-							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + member_Inosines))
 							cluster_dict[member_name] = cluster_dict[cluster_name]
 		
 		clusterbed.close()
@@ -470,34 +450,23 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 		# generate Stockholm alignment file for cluster transcripts and process additional mods file
 		ssAlign.aligntRNA(clusterTranscripts.name, out_dir)
-		additionalMods, additionalInosines = additionalModsParser(species, out_dir)
+		additionalMods = additionalModsParser(species, out_dir)
 
 		log.info("{} clusters created from {} tRNA sequences".format(cluster_num,len(tRNA_dict)))
 
 		for cluster in mod_lists:
 			isodecoder = "-".join(cluster.split("-")[1:3])
 			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder and tRNA_dict[cluster]['species'] in v['species']}
-			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == isodecoder and tRNA_dict[cluster]['species'] in v['species']}
 			if additionalMods_sub:
 				mod_lists[cluster] = list(set(mod_lists[cluster] + additionalMods_sub[isodecoder]['mods']))
-			if additionalInosines_sub:
-				Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + additionalInosines_sub[isodecoder]['InosinePos']))
 
 			total_snps += len(mod_lists[cluster])
 
-
 			for (index, pos) in enumerate(mod_lists[cluster]):
 				# Build snp_records as before but with cluster names and non-redundant sets of modifications
-				# Add 'G' as alternate allele for Inosine modification but only if reference nucleotide is an A
 				# Position is 1-based for iit_store i.e. pos + 1
-				if pos in Inosine_lists[cluster]:
-					if tRNA_dict[cluster]['sequence'][pos] == 'A':
-						snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G")
-					else:
-						continue
-				else:
-					snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
-
+				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
+ 
 		if total_snps == 0:
 			snp_tolerance = False		
 
@@ -566,7 +535,6 @@ def additionalModsParser(input_species, out_dir):
 
 	# dictionary storing additional mods per tRNA cluster with corrected positions
 	additionalMods_parse = defaultdict(lambda: defaultdict(list))
-	additionalInosines = defaultdict(lambda: defaultdict(list))
 
 	# for each additional modification in dictionary, define mod site based on conserved location relative to structural features
 	for isodecoder, data in additionalMods.items():
@@ -606,12 +574,10 @@ def additionalModsParser(input_species, out_dir):
 				mod_site = min(anticodon)
 				additionalMods_parse[isodecoder]['mods'].append(mod_site)
 				additionalMods_parse[isodecoder]['species'].append(data['species'])
-				additionalInosines[isodecoder]['InosinePos'].append(mod_site)
-				additionalInosines[isodecoder]['species'].append(data['species'])
 
 			#if mod == 'm3C20':
-
-	return(additionalMods_parse, additionalInosines)
+			
+	return(additionalMods_parse)
 
 
 def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluster = False):

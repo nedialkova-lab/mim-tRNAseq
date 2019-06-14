@@ -107,12 +107,8 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 					ref_pos += offset 
 					# check for position in mismatch dictionary from clustering
 					# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
-					if (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and identity.islower()):
+					if (ref_pos not in mismatch_dict[reference]): # or (ref_pos in mismatch_dict[reference] and identity.islower()):
 						modTable[reference][ref_pos+1][identity] += 1 # log the identity of the misincorporated base
-						# if interval == interval.lower():
-						# 	modTable[reference][ref_pos]['known'] = 1 # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
-						# else:
-						# 	modTable[reference][ref_pos]['known'] = 0
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -125,12 +121,8 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 					identity = read_seq[read_pos] # identity is misincorporated nucleotide
 					# check for position in mismatch dictionary from clustering
 					# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
-					if (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and identity.islower()):
+					if (ref_pos not in mismatch_dict[reference]): # or (ref_pos in mismatch_dict[reference] and identity.islower()):
 						modTable[reference][ref_pos+1][identity] += 1
-						# if interval == interval.lower():
-						# 	modTable[reference][ref_pos]['known'] = 1
-						# else:
-						# 	modTable[reference][ref_pos]['known'] = 0
 					# move forward
 					read_pos += 1
 					ref_pos += 1

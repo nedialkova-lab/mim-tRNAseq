@@ -113,12 +113,12 @@ def remap(fq, genome_index_path, genome_index_name, snp_index_path, \
 
 	output_prefix = fq.split("/")[-1].split(".")[0] + "_remap"
 	if snp_tolerance:
- 		map_cmd = "gsnap " + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
+ 		map_cmd = "gsnap -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
  		+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
  		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 1 --force-single-end " + mismatch_string +\
  		nomap_fastq + " " + multi_fastq + " &>> " + out_dir + "remap_align.log"
 	else:
- 		map_cmd = "gsnap " + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
+ 		map_cmd = "gsnap -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
  		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --ignore-trim-in-filtering 1 --force-single-end --max-mismatches " + str(mismatches) + " " + \
  		nomap_fastq + " " + multi_fastq + " &>> " + out_dir + "remap_align.log"
 
@@ -153,7 +153,7 @@ def remap(fq, genome_index_path, genome_index_name, snp_index_path, \
 				subprocess.call(cmd, shell = True)
 				os.remove(out_dir + file.name)
 				# merge 1st run bam and remapped bam
-				merged_bam = out_dir + fq.split("/")[-1].split(".")[0] + ".unpaired_uniq_remap.bam"
+				merged_bam = out_dir + fq.split("/")[-1].split(".")[0] + ".unpaired_uniq_remapMerge.bam"
 				cmd = "samtools merge " + merged_bam + " " + out_dir + file.name + ".bam " + out_dir + fq.split("/")[-1].split(".")[0] + ".unpaired_uniq.bam"
 				subprocess.call(cmd, shell = True) 
 				#os.remove(out_dir + file.name + ".bam")  

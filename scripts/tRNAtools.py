@@ -106,7 +106,9 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 				# Replace modomics antidon with normal ACGT codon, keep "." for pattern matching
 				anticodon = str(line.split('|')[2])
 				new_anticodon = getUnmodSeq(anticodon, modifications)
-				new_anticodon = new_anticodon.replace("N", ".")
+				if "N" in new_anticodon:
+					continue
+				#new_anticodon = new_anticodon.replace("N", ".")
 
 				# Check amino acid name in modomics - set to iMet if equal to Ini to match gtRNAdb
 				amino = str(line.split('|')[1])
@@ -126,6 +128,9 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 			if not mod_species in species:
 				continue
 			else:
+				if "N" in new_anticodon:
+					continue
+
 				sequence = line.strip().replace('U','T').replace('-','')
 				modomics_dict[curr_id]['sequence'] = sequence
 				unmod_sequence = getUnmodSeq(sequence, modifications)
@@ -542,10 +547,17 @@ def newModsParser(out_dir, experiment_name, new_mods_list, mod_lists, tRNA_dict)
 
 	with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
 		for cluster in mod_lists:
-			total_snps += len(mod_lists[cluster])
 			for (index, pos) in enumerate(mod_lists[cluster]):
-				snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N\n")
-
+				if pos in tRNA_dict[cluster]['InosinePos']:
+					if tRNA_dict[cluster]['sequence'][pos] == 'A':
+						snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G")
+						total_snps += 1
+					else:
+						continue
+				else:
+					snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
+					total_snps += 1
+				
 	log.info("{:,} modifications written to SNP index".format(total_snps))	
 
 def additionalModsParser(input_species, out_dir):

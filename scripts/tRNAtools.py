@@ -550,12 +550,12 @@ def newModsParser(out_dir, experiment_name, new_mods_list, mod_lists, tRNA_dict)
 			for (index, pos) in enumerate(mod_lists[cluster]):
 				if pos in tRNA_dict[cluster]['InosinePos']:
 					if tRNA_dict[cluster]['sequence'][pos] == 'A':
-						snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G")
+						snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G\n")
 						total_snps += 1
 					else:
 						continue
 				else:
-					snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
+					snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N\n")
 					total_snps += 1
 				
 	log.info("{:,} modifications written to SNP index".format(total_snps))	

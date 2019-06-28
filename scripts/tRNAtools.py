@@ -44,13 +44,13 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 		# Get species of input tRNA seqs to subset full Modomics table
 		species.add(' '.join(seq.split('_')[0:2]))
 		# only add to dictionary if not nmt or undetermined sequence
-		if not re.search('Und', seq):
+		if not (re.search('Und', seq) or re.search('nmt', seq)):
 			tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
-			if re.search('nmt', seq):
-				seq = seq.split("-")[0] + "_" + "-".join(seq.split("-")[1:])
-				loc_type = "mitochondrial"
-			else:
-				loc_type = "cytosolic"
+			# if re.search('nmt', seq):
+			# 	seq = seq.split("-")[0] + "_" + "-".join(seq.split("-")[1:])
+			# 	loc_type = "mitochondrial"
+			# else:
+			loc_type = "cytosolic"
 			tRNA_dict[seq]['sequence'] = tRNAseq
 			tRNA_dict[seq]['species'] = ' '.join(seq.split('_')[0:2])
 			tRNA_dict[seq]['type'] = loc_type
@@ -264,7 +264,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 	tRNAbed.close()
 
-	log.info("{} total tRNA gene sequences (undetermined sequences excluded)".format(len(tRNA_dict)))
+	log.info("{} total tRNA gene sequences (undetermined and nmt sequences excluded)".format(len(tRNA_dict)))
 	log.info("{} sequences with a match to Modomics dataset".format(match_count))
 
 	with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
@@ -586,8 +586,16 @@ def additionalModsParser(input_species, out_dir):
 
 	# for each additional modification in dictionary, define mod site based on conserved location relative to structural features
 	for isodecoder, data in additionalMods.items():
-		struct = [value for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key][0] # assume same structure for all members of an isodecoder/cluster and therefore just use first one
-		cluster = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key][0]
+		struct = [value for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key]
+		if struct: # test if struct is not empty, i.e. if isodecoder from additional mods exists in tRNA dictionary
+			struct = struct[0] # assume same structure for all members of an isodecoder/cluster and therefore just use first one
+		else:
+			continue 
+		cluster = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key]
+		if cluster:
+			cluster = cluster[0]
+		else:
+			continue
 		anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
 		for mod in data['mods']:
 			if mod == "m1A58":
@@ -650,7 +658,7 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 	else:
 		genome_file = out_dir + experiment_name + "_tRNATranscripts.fa"
 
-	index_cmd = "gmap_build -D " + out_dir + " -d " + experiment_name + "_tRNAgenome " + genome_file + \
+	index_cmd = "gmap_build -q 1 -D " + out_dir + " -d " + experiment_name + "_tRNAgenome " + genome_file + \
 				" &> " + out_dir + "genomeindex.log"
 	subprocess.call(index_cmd, shell = True) 
 	log.info("Genome indices done...")
@@ -668,7 +676,7 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
 		index_cmd = "cat " + snp_file + " | iit_store -o " + snp_index_path + "/" + snp_index_name + " &> " + out_dir + "snpindex.log"
 		subprocess.call(index_cmd, shell = True)
-		index_cmd = "snpindex -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
+		index_cmd = "snpindex -q 1 -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
 					" -v " + experiment_name + "_modificationSNPs " + snp_index_path + "/" + experiment_name + \
 					"_modificationSNPs.iit &>> " + out_dir + "snpindex.log"
 		subprocess.call(index_cmd, shell = True)
@@ -701,7 +709,7 @@ def generateSNPIndex(experiment_name, out_dir, snp_tolerance = False):
 		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
 		index_cmd = "cat " + snp_file + " | iit_store -o " + snp_index_path + "/" + snp_index_name + " &> " + out_dir + "snpindex.log"
 		subprocess.call(index_cmd, shell = True)
-		index_cmd = "snpindex -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
+		index_cmd = "snpindex -q 1 -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
 					" -v " + experiment_name + "_modificationSNPs " + snp_index_path + "/" + experiment_name + \
 					"_modificationSNPs.iit &>> " + out_dir + "snpindex.log"
 		subprocess.call(index_cmd, shell = True)

@@ -65,7 +65,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance, mismatch_dict, mod_lists, tRNA_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance, mismatch_dict, mod_lists, Inosine_lists, tRNA_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 	ssAlign.structureParser()
 	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, snp_tolerance, cluster)
@@ -81,8 +81,8 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
-		tRNAtools.newModsParser(out, name, new_mods, mod_lists, tRNA_dict)
+		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
+		tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict)
 		tRNAtools.generateSNPIndex(name, out, snp_tolerance)
 		map_round = 2
 		bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \

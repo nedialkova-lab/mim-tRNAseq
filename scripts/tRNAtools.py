@@ -520,15 +520,19 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance, mismatch_dict, mod_lists, tRNA_dict)
+	return(coverage_bed, snp_tolerance, mismatch_dict, mod_lists, Inosine_lists, tRNA_dict)
 
-def newModsParser(out_dir, experiment_name, new_mods_list, mod_lists, tRNA_dict):
+def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index
 
 	log.info("\n+------------------+ \
 		\n| Parsing new mods |\
 		\n+------------------+")	
 
+	# add new predicted inosines to inosine list 
+	for l in new_Inosines:
+		for cluster, inosines in l.items():
+			Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + l[cluster]))
 
 	for l in new_mods_list:
 		for cluster, mods in l.items():
@@ -548,7 +552,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, mod_lists, tRNA_dict)
 	with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
 		for cluster in mod_lists:
 			for (index, pos) in enumerate(mod_lists[cluster]):
-				if pos in tRNA_dict[cluster]['InosinePos']:
+				if pos in Inosine_lists[cluster]:
 					if tRNA_dict[cluster]['sequence'][pos] == 'A':
 						snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G\n")
 						total_snps += 1

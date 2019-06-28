@@ -50,7 +50,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 				elif map_round == 2:
 					with open(out_dir + "mapping_stats.txt","a") as stats_out:
 						stats_out.write("** NEW ALIGNMENT **\n\n")
-					unique_bam, librarySize, alignstats = remap(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches)
+					unique_bam, librarySize, alignstats = mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, out_dir, snp_tolerance, keep_temp, mismatches, remap)
 				
 				unique_bam_list.append(unique_bam)
 				coverageData.write(unique_bam + "\t" + group + "\t" + str(librarySize) + "\n")

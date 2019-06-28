@@ -81,12 +81,12 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists)
+		new_mods = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
 		tRNAtools.newModsParser(out, name, new_mods, mod_lists, tRNA_dict)
 		tRNAtools.generateSNPIndex(name, out, snp_tolerance)
 		map_round = 2
 		bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
-			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, mismatches, map_round)
+			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, remap_mismatches, map_round)
 		cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
 		getCoverage.plotCoverage(out, mito_trnas)
 		remap = False
@@ -111,7 +111,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# Misincorporation analysis
 	if snp_tolerance or not mismatches == 0.0:
-		mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists)
+		mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
@@ -169,6 +169,9 @@ if __name__ == '__main__':
 	align.add_argument('--max-mismatches', metavar = 'allowed mismatches', required = False, dest = 'mismatches', type = float, \
 		help = 'Maximum mismatches allowed. If specified between 0.0 and 1.0, then trated as a fraction of read length. Otherwise, treated as \
 		integer number of mismatches. Default is an automatic ultrafast value calculated by GSNAP; see GSNAP help for more info.')
+	align.add_argument('--remap-mismatches', metavar = 'allowed mismatches for remap', required = False, dest = 'remap_mismatches', type = float,\
+		help = 'Maximum number of mismatches allowed during remapping of all reads. Treated similarly to --max-mismatches. This is important to control misalignment of reads to similar clusters/tRNAs \
+		Note that the SNP index will be updated with new SNPs from the first round of alignment and so this should be relatively small to prohibit misalignment.')
 	align.add_argument('--snp-tolerance', required = False, dest = 'snp_tolerance', action = 'store_true',\
 		help = 'Enable GSNAP SNP-tolerant read alignment, where known modifications from Modomics are mapped as SNPs.')
 

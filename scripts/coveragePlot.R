@@ -112,12 +112,12 @@ if (length(args)==0) {
 	colnames(cov_bygene)[1] = 'Cluster'
 	cov_bygene$bam = gsub(".unpaired_uniq.bam","",cov_bygene$bam)
 	cov_bygene$bam = gsub("(.*/).*?","\\2",cov_bygene$bam)
-	plot_func = ggplot(cov_bygene, aes(x = bin, y = cov_norm)) + geom_bar(stat = 'identity') + 
+	plot_func = ggplot(cov_bygene, aes(x = bin, y = cov_norm)) + geom_bar(stat = 'identity', fill = "#6BA7BB") + 
   		facet_grid(Cluster~bam, scales='free') + xlab("Gene (%)") + ylab("Normalised coverage") + 
-  		scale_y_continuous(breaks = seq(0,1,0.25)) + theme(axis.title.x=element_blank(), 
-                                                     axis.text.y=element_text(colour="black",size=8),
-                                                     axis.text.x=element_blank(), strip.text.y = element_text(angle=0, size = 6),
-                                                     strip.text.x = element_text(angle=0, size = 4)) +
+  		theme(axis.title.x=element_blank(), 
+  			axis.text.y=element_text(colour="black",size=8),
+            axis.text.x=element_blank(), strip.text.y = element_text(angle=0, size = 6),
+            strip.text.x = element_text(angle=0, size = 4)) +
   		theme_bw()
 
   	plots = dlply(cov_bygene , "Cluster", `%+%`, e1 = plot_func)

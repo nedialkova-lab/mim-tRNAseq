@@ -23,12 +23,17 @@ def unknownMods(inputs, out_dir, knownTable, modTable, misinc_thresh, tRNA_dict,
 
 	log.info('Finding potential unannotated mods for {}'.format(inputs))
 	new_mods =  defaultdict(list)
+	newInosines = defaultdict(list)
 	for cluster, data in modTable.items():
 		for pos, type in data.items():
 			if (sum(modTable[cluster][pos].values()) >= misinc_thresh and pos-1 not in knownTable[cluster]): # misinc above threshold and not previously known
-				# ignore new mods where one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment) OR if mod seems to be an inosine (i.e. A with G misinc at 34)
-				if not (max(modTable[cluster][pos].values()) / sum(modTable[cluster][pos].values()) >= 0.90) or (tRNA_dict[cluster]['sequence'][pos-1] == 'A' and modTable[cluster][pos]['G']/sum(modTable[cluster][pos].values()) > 0.9 and cons_pos_dict[pos-1] == '34'): 
-					new_mods[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
+				# ignore new mods where one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
+				if not (max(modTable[cluster][pos].values()) / sum(modTable[cluster][pos].values()) >= 0.90):
+					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list to modify ref sequence and exclide from modification SNPs
+					if (tRNA_dict[cluster]['sequence'][pos-1] == 'A' and modTable[cluster][pos]['G']/sum(modTable[cluster][pos].values()) > 0.9 and cons_pos_dict[pos-1] == '34'):
+						newInosines[cluster].append(pos-1)
+					else:
+						new_mods[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
 
 	with open(out_dir + "mods/predictedModstemp.csv", "w") as predMods:
 		for cluster, data in new_mods.items():
@@ -37,7 +42,7 @@ def unknownMods(inputs, out_dir, knownTable, modTable, misinc_thresh, tRNA_dict,
 					str(pos) + "\t" + \
 					str(sum(modTable[cluster][pos+1].values())) + "\n")
 
-	return(new_mods)
+	return(new_mods, newInosines)
 
 def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tRNA_struct, remap, misinc_thresh, knownTable, tRNA_dict, cons_pos_dict, inputs):
 # modification counting and table generation, and CCA analysis
@@ -206,7 +211,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 
 	# if remapping is enabled, find uknown mod sites
 	if remap:
-		new_mods = unknownMods(inputs, out_dir, knownTable, modTable_prop, misinc_thresh, tRNA_dict, cons_pos_dict)
+		new_mods, new_Inosines = unknownMods(inputs, out_dir, knownTable, modTable_prop, misinc_thresh, tRNA_dict, cons_pos_dict)
 	else:
 		new_mods = {}
 
@@ -264,7 +269,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
-	return(new_mods)
+	return(new_mods, new_Inosines)
 
 def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, knownTable, tRNA_dict):
 # Wrapper function to call countMods_mp with multiprocessing
@@ -311,7 +316,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 	# initiate multiprocessing pool and run with bam names
 	pool = Pool(multi)
 	func = partial(countMods_mp, out_dir, cov_table, baminfo, mismatch_dict, cca, filtered_list, tRNA_struct_df, remap, misinc_thresh, knownTable, tRNA_dict, cons_pos_dict)
-	new_mods = pool.map(func, bamlist)
+	new_mods, new_Inosines = pool.map(func, bamlist)
 	pool.close()
 	pool.join()
 
@@ -364,6 +369,6 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, mismatch_dict, 
 		#CCAvsCC_table = CCAvsCC_table.pivot_table(index = 'gene', columns = 'sample', values = 'count', fill_value = 0)
 		CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
-	return(new_mods)
+	return(new_mods, new_Inosines)
 
 			

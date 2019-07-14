@@ -24,16 +24,17 @@ def unknownMods(inputs, out_dir, knownTable, modTable, misinc_thresh, tRNA_dict,
 	log.info('Finding potential unannotated mods for {}'.format(inputs))
 	new_mods =  defaultdict(list)
 	newInosines = defaultdict(list)
+	
 	for cluster, data in modTable.items():
 		for pos, type in data.items():
 			if (sum(modTable[cluster][pos].values()) >= misinc_thresh and pos-1 not in knownTable[cluster]): # misinc above threshold and not previously known
-				# ignore new mods where one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
-				if not (max(modTable[cluster][pos].values()) / sum(modTable[cluster][pos].values()) >= 0.90):
-					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list to modify ref sequence and exclide from modification SNPs
+				# if one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
+				if (max(modTable[cluster][pos].values()) / sum(modTable[cluster][pos].values()) >= 0.90):
+					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list to modify ref sequence and exclude from modification SNPs
 					if (tRNA_dict[cluster]['sequence'][pos-1] == 'A' and modTable[cluster][pos]['G']/sum(modTable[cluster][pos].values()) > 0.9 and cons_pos_dict[pos-1] == '34'):
 						newInosines[cluster].append(pos-1)
-					else:
-						new_mods[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
+				else:
+					new_mods[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
 
 	with open(out_dir + "mods/predictedModstemp.csv", "w") as predMods:
 		for cluster, data in new_mods.items():
@@ -214,6 +215,7 @@ def countMods_mp(out_dir, cov_table, info, mismatch_dict, cca, filtered_list, tR
 		new_mods, new_Inosines = unknownMods(inputs, out_dir, knownTable, modTable_prop, misinc_thresh, tRNA_dict, cons_pos_dict)
 	else:
 		new_mods = {}
+		new_Inosines = {}
 
 	# reformat modTable, add gaps and structure, and save to temp file
 	reform = {(outerKey, innerKey): values for outerKey, innerDict in modTable_prop.items() for innerKey, values in innerDict.items()}

@@ -163,43 +163,98 @@ for (i in unique(mods_agg$condition)) {
   sub_mods_aggtype = anti_join(sub_mods_aggtype, filter_0.1, by=c("cluster","pos"))
   # add in context info
   sub_mods_aggtype = merge(sub_mods_aggtype, context_info, by = c("cluster","pos"))
+  sub_mods_aggtype$bam = sub(out, "", sub_mods_aggtype$bam)
   sub_mods_aggtype_cyt = sub_mods_aggtype[!grepl("mito", sub_mods_aggtype$cluster) & !grepl("nmt", sub_mods_aggtype$cluster), ]
-  sub_mods_aggtype_cyt = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, upstream = sub_mods_aggtype_cyt$upstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
-  sub_mods_aggtype_cyt = do.call("data.frame", sub_mods_aggtype_cyt)
-  
+  # renormalise by sum of misinc at each site for each cluster in each bam file - this makes sum all misinc types = 1
+  sub_mods_aggtype_cyt = sub_mods_aggtype_cyt %>% group_by(cluster, pos, bam) %>% mutate(new_prop = proportion/sum(proportion))
+  #sub_mods_aggtype_cyt_up = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, upstream = sub_mods_aggtype_cyt$upstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
+  #sub_mods_aggtype_cyt_up = do.call("data.frame", sub_mods_aggtype_cyt_up)
+  #sub_mods_aggtype_cyt_down = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, downstream = sub_mods_aggtype_cyt$downstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
+  #sub_mods_aggtype_cyt_down = do.call("data.frame", sub_mods_aggtype_cyt_down)
+
   sub_mods_aggtype_cyt$canon_pos = factor(sub_mods_aggtype_cyt$canon_pos, levels = c('9', '20', '20a','26','32','34','37','58'))
-  
-  signature_plot = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = x.mean, fill = type)) + 
-    geom_bar(stat="identity", width = 0.8, position =position_dodge(width=0.9), alpha = 0.9) + 
+  color_num = length(unique(sub_mods_aggtype_cyt$bam))
+  dot_colors = brewer.pal(color_num, "Greys")[2:(color_num+1)]
+  names(dot_colors) = unique(sub_mods_aggtype_cyt$bam)
+
+  signature_plot_upstream = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = new_prop, fill = type)) + 
+    geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
+    geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
     facet_grid(upstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
-    geom_errorbar(aes(ymin = x.mean , ymax = x.mean + x.sd), width = 0.1, position = position_dodge(width=0.9)) + 
     theme_bw() +
     labs(y = "Proportion") + 
     theme(
-      axis.title.x  = element_blank()
-      ) +
+      axis.title.x  = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
+    ) +
+    scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
+    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
+    guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+
+  ggsave(paste(out, "mods/", paste(i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), signature_plot_upstream, height=10, width=14, useDingbats=FALSE)
+ 
+  signature_plot_downstream = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = new_prop, fill = type)) + 
+    geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
+    geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
+    facet_grid(downstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
+    theme_bw() +
+    labs(y = "Proportion") + 
+    theme(
+      axis.title.x  = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
+    ) +
+    scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
+    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
+    guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
     scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
   
-  ggsave(paste(out, "mods/", paste(i, 'misincSignatures.pdf', sep = '_'), sep = ''), signature_plot, height=10, width=14, useDingbats=FALSE)
-  
+  ggsave(paste(out, "mods/", paste(i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), signature_plot_downstream, height=10, width=14, useDingbats=FALSE)
+ 
   if (!is.na(mito_trnas)){
     sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$cluster) | grepl("nmt", sub_mods_aggtype$cluster), ]
-    sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
-    sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
+    # renormalise by sum of misinc at each site for each cluster in each bam file - this makes sum all misinc types = 1
+    sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(cluster, pos, bam) %>% mutate(new_prop = proportion/sum(proportion))
+    #sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, downstream = sub_mods_aggtype_mito$downstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
+    #sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
     sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))
-    mito_signature_plot = ggplot(sub_mods_aggtype_mito, aes(x = type, y = x.mean, fill = type)) + 
-      geom_bar(stat="identity", width = 0.8, position =position_dodge(width=0.9), alpha = 0.9) + 
+    mito_signature_plot_upstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
+      geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
+      geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
       facet_grid(upstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
-      geom_errorbar(aes(ymin = x.mean , ymax = x.mean + x.sd), width = 0.1, position = position_dodge(width=0.9)) + 
       theme_bw() +
       labs(y = "Proportion") + 
       theme(
         axis.title.x = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()
         ) +
+      scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
+      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
+      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
-    
-    ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures.pdf', sep = '_'), sep = ''), mito_signature_plot, height=10, width=14)
-    
+ 
+    ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_upstream, height=10, width=14)
+ 
+    mito_signature_plot_downstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
+      geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
+      geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
+      facet_grid(downstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
+      theme_bw() +
+      labs(y = "Proportion") + 
+      theme(
+        axis.title.x = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()
+        ) +
+      scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
+      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
+      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
+ 
+    ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_downstream, height=10, width=14)
+
   }
   
 }

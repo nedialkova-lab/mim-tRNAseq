@@ -16,8 +16,13 @@ import urllib.request
 from collections import defaultdict
 import ssAlign
 
-
 log = logging.getLogger(__name__)
+
+# This function is used to create nested defaultdicts like that needed for tRNA_dict
+# Note this can be done with lambda functions (e.g. tRNA_dict = defaultdict(lambda: defaultdict()))
+# But lambda functions cannot be pickled, and pickling is required for parallelization with multiprocessing. tRNA_dict is passed to such a multiprocessing pool later
+def dd():
+	return(defaultdict())
 
 def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off):
 # tRNA sequence files parser and dictionary building
@@ -33,7 +38,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 	log.info("Processing tRNA sequences...")
 
 	# Build dictionary of sequences from gtRNAdb fasta
-	tRNA_dict = defaultdict(lambda: defaultdict())
+	tRNA_dict = defaultdict(dd)
 	temp_dict = SeqIO.to_dict(SeqIO.parse(gtRNAdb,"fasta"))
 
 	# Initialise intron dictionary
@@ -177,8 +182,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	nomatch_count = 0
 	match_count = 0
 	total_snps = 0
+	total_inosines = 0
 	snp_records = list()
-	seq_records = list()
+	seq_records = defaultdict()
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
@@ -258,7 +264,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			nomatch_count += 1
 
 		# Build seqrecord list for writing
-		seq_records.append(SeqRecord(Seq(tRNA_dict[seq]['sequence'].upper(), Alphabet.generic_dna), id = str(seq)))
+		seq_records[str(seq)] = SeqRecord(Seq(tRNA_dict[seq]['sequence'].upper(), Alphabet.generic_dna), id = str(seq))
 
 		tRNAbed.write(seq + "\t0\t" + str(len(tRNA_dict[seq]['sequence'])) + "\t" + seq + "\t1000\t+\n" )
 
@@ -268,17 +274,19 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	log.info("{} sequences with a match to Modomics dataset".format(match_count))
 
 	with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
-		SeqIO.write(seq_records, temptRNATranscripts, "fasta")
+		SeqIO.write(seq_records.values(), temptRNATranscripts, "fasta")
 
 	# if clustering is not activated then write full gff and report on total SNPs written 
 	if not cluster:
 		coverage_bed = tRNAbed.name
 		mod_lists = dict()
+		Inosine_lists = dict()
 		with open(out_dir + experiment_name + "_tRNA.gff","w") as tRNAgff, open(out_dir + experiment_name + "isoacceptorInfo.txt","w") as isoacceptorInfo:	
 			isoacceptor_dict = defaultdict(int)
 			isoacceptorInfo.write("Isoacceptor\tsize\n")
 			for seq in tRNA_dict:
 				mod_lists[seq] = tRNA_dict[seq]['modified']
+				Inosine_lists[seq] = tRNA_dict[seq]['InosinePos']
 				tRNAgff.write(seq + "\ttRNAseq\texon\t1\t" + str(len(tRNA_dict[seq]['sequence'])) + "\t.\t+\t0\tgene_id '" + seq + "'\n")
 				isoacceptor_group = '-'.join(seq.split("-")[:-2])
 				isoacceptor_dict[isoacceptor_group] += 1
@@ -292,29 +300,42 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		# Format for SNP index (space separated):
 		# >snpID chromosomeName:position(1-based) RefMod
 		# e.g. >rs111 Homo_sapiens_nmt_tRNA-Leu-TAA-1-1_exp0:29 GN
-		for seq in tRNA_dict:
+		for seq in mod_lists:
 			isodecoder = "-".join(seq.split("-")[1:3])
 			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder and tRNA_dict[seq]['species'] in v['species']}
-			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == isodecoder and tRNA_dict[seq]['species'] in v['species']}
 			if additionalMods_sub:
 				tRNA_dict[seq]['modified'] = list(set(tRNA_dict[seq]['modified'] + additionalMods_sub[isodecoder]['mods']))
+				mod_lists[seq] = list(set(mod_lists[seq] + additionalMods_sub[isodecoder]['mods']))
+
+			total_snps += len(mod_lists[seq])
+
+			# Build snp_records as before but with cluster names and non-redundant sets of modifications
+			# Position is 1-based for iit_store i.e. pos + 1
+			for (index, pos) in enumerate(mod_lists[seq]):
+				snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
+
+		for seq in Inosine_lists:
+			isodecoder = "-".join(seq.split("-")[1:3])
+			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == isodecoder and tRNA_dict[seq]['species'] in v['species']}
 			if additionalInosines_sub:
 				tRNA_dict[seq]['InosinePos'] = list(set(tRNA_dict[seq]['InosinePos'] + additionalInosines_sub[isodecoder]['InosinePos']))
-			for (index, pos) in enumerate(tRNA_dict[seq]['modified']):
-				# Build snp_records with chromosomes equal to transcript names
-				# Position is 1-based for iit_store i.e. pos + 1
-				if pos in tRNA_dict[seq]['InosinePos']:
-					if tRNA_dict[seq]['sequence'][pos] == 'A':
-						snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "G")
-					else:
-						continue
-				else:
-					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
-			total_snps+= len(tRNA_dict[seq]['modified'])
-			if total_snps == 0:
-				snp_tolerance = False
+				Inosine_lists[seq] = list(set(Inosine_lists[seq] + additionalInosines_sub[isodecoder]['InosinePos']))
+
+			total_inosines += len(Inosine_lists[seq])
+
+		# edit ref seqs A to G at inosine positions
+		for seq in Inosine_lists:
+			for pos in Inosine_lists[seq]:
+				seq_records[seq].seq = seq_records[seq].seq[0:pos] + "G" + seq_records[seq].seq[pos+1:]
+
+		with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
+			SeqIO.write(seq_records.values(), temptRNATranscripts, "fasta")
+
+		if total_snps == 0:
+			snp_tolerance = False
 
 		log.info("{:,} modifications written to SNP index".format(total_snps))
+		log.info("{:,} A to G replacements in reference sequences for inosine modifications".format(total_inosines))
 		# empty mismatch dict to avoid error when returning it from this function
 		mismatch_dict = defaultdict(list)
 
@@ -338,8 +359,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		# combine centroids files into one file
 		combine_cmd = "cat " + temp_dir + "*_centroids.fa > " + temp_dir + "all_centroids.fa"
 		subprocess.call(combine_cmd, shell = True)
-		final_centroids = [SeqRecord(Seq(str(seq_record.seq).upper(), Alphabet.generic_dna), id = seq_record.id) for seq_record in SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")]
-			
+		final_centroids = {seq_record.id: SeqRecord(Seq(str(seq_record.seq).upper(), Alphabet.generic_dna), id = seq_record.id) for seq_record in SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")}
+
 		# read cluster files, get nonredudant set of mod positions of all members of a cluster, create snp_records for writing SNP index
 		cluster_pathlist = Path(temp_dir).glob("**/*_clusters.uc")
 		mod_lists = dict() # stores non-redundant sets of mismatches and mod positions for clusters
@@ -349,6 +370,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for misincorporation analysis in mmQuant)
 		cluster_num = 0
 		total_snps = 0
+		total_inosines = 0
 		clusterbed = open(out_dir + experiment_name + "_clusters.bed","w")
 		coverage_bed = clusterbed.name
 		clustergff = open(out_dir + experiment_name + "_tRNA.gff","w")
@@ -473,9 +495,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			for key, value in isoacceptor_dict.items():
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 
-		# write cluster transcripts
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
-			SeqIO.write(final_centroids, clusterTranscripts, "fasta")
+			SeqIO.write(final_centroids.values(), clusterTranscripts, "fasta")
 
 		# generate Stockholm alignment file for cluster transcripts and process additional mods file
 		ssAlign.aligntRNA(clusterTranscripts.name, out_dir)
@@ -483,34 +504,44 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 		log.info("{} clusters created from {} tRNA sequences".format(cluster_num,len(tRNA_dict)))
 
+		# update mod_lists with additional mods and write SNP index
 		for cluster in mod_lists:
 			isodecoder = "-".join(cluster.split("-")[1:3])
 			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder and tRNA_dict[cluster]['species'] in v['species']}
-			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == isodecoder and tRNA_dict[cluster]['species'] in v['species']}
 			if additionalMods_sub:
+				tRNA_dict[cluster]['modified'] = list(set(tRNA_dict[cluster]['modified'] + additionalMods_sub[isodecoder]['mods']))
 				mod_lists[cluster] = list(set(mod_lists[cluster] + additionalMods_sub[isodecoder]['mods']))
-			if additionalInosines_sub:
-				Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + additionalInosines_sub[isodecoder]['InosinePos']))
 
 			total_snps += len(mod_lists[cluster])
 
-
 			for (index, pos) in enumerate(mod_lists[cluster]):
 				# Build snp_records as before but with cluster names and non-redundant sets of modifications
-				# Add 'G' as alternate allele for Inosine modification but only if reference nucleotide is an A
 				# Position is 1-based for iit_store i.e. pos + 1
-				if pos in Inosine_lists[cluster]:
-					if tRNA_dict[cluster]['sequence'][pos] == 'A':
-						snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G")
-					else:
-						continue
-				else:
-					snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
+				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
+
+		for cluster in Inosine_lists:
+			isodecoder = "-".join(cluster.split("-")[1:3])
+			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == isodecoder and tRNA_dict[cluster]['species'] in v['species']}
+			if additionalInosines_sub:
+				tRNA_dict[cluster]['InosinePos'] = list(set(tRNA_dict[cluster]['InosinePos'] + additionalInosines_sub[isodecoder]['InosinePos']))
+				Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + additionalInosines_sub[isodecoder]['InosinePos']))
+
+			total_inosines += len(Inosine_lists[cluster])
+
+		# edit ref seqs A to G at inosine positions
+		for cluster in Inosine_lists:
+			for pos in Inosine_lists[cluster]:
+				final_centroids[cluster].seq = final_centroids[cluster].seq[0:pos] + "G" + final_centroids[cluster].seq[pos+1:]
+
+		# rewrite edited cluster transcripts
+		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
+			SeqIO.write(final_centroids.values(), clusterTranscripts, "fasta")
 
 		if total_snps == 0:
 			snp_tolerance = False		
 
-		log.info("{:,} modifications written to SNP index".format(total_snps))		
+		log.info("{:,} modifications written to SNP index".format(total_snps))
+		log.info("{:,} A to G replacements in reference sequences for inosine modifications".format(total_inosines))		
 	
 	# write outputs for indexing 
 	with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
@@ -522,24 +553,35 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance, mismatch_dict, mod_lists, Inosine_lists, tRNA_dict)
 
-def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict):
+def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index
 
 	log.info("\n+------------------+ \
 		\n| Parsing new mods |\
 		\n+------------------+")	
 
-	# add new predicted inosines to inosine list 
+	new_snps = 0
+	new_inosines = 0
+
+	# add new predicted inosines to inosine list and tRNA_dict
 	for l in new_Inosines:
 		for cluster, inosines in l.items():
+			tRNA_dict[cluster]['InosinePos'] = list(set(tRNA_dict[cluster]['InosinePos'] + l[cluster]))
 			Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + l[cluster]))
+			new_inosines += len(l[cluster])
 
+	log.info("{} new predicted position 34 inosines".format(new_inosines))
+
+	# add new predicted mods to mods_list and tRNA_dict
 	for l in new_mods_list:
 		for cluster, mods in l.items():
+			tRNA_dict[cluster]['modified'] = list(set(tRNA_dict[cluster]['modified'] + l[cluster]))
 			mod_lists[cluster] = list(set(mod_lists[cluster] + l[cluster]))
+			new_snps += len(l[cluster])
 
-	total_snps = 0
+	log.info("{} new predicted modifications".format(new_snps))
 
+	# write file of new predicted mods
 	predictedMods = open(out_dir + "mods/predictedMods.csv", "w")
 	predictedMods.write("cluster\tpos\tidentity\tmisinc\n")
 	with open(out_dir + "mods/predictedModstemp.csv", "r") as predictedTemp:
@@ -549,19 +591,35 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 			predictedMods.write(cluster + "\t" + str(pos) + "\t" + identity + "\t" + str(misinc) + "\n")
 	os.remove(out_dir + "mods/predictedModstemp.csv")
 
+	# rewrite SNP index
+	total_snps = 0
 	with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
 		for cluster in mod_lists:
 			for (index, pos) in enumerate(mod_lists[cluster]):
-				if pos in Inosine_lists[cluster]:
-					if tRNA_dict[cluster]['sequence'][pos] == 'A':
-						snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G\n")
-						total_snps += 1
-					else:
-						continue
-				else:
-					snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N\n")
-					total_snps += 1
-				
+				snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N\n")
+			total_snps += len(mod_lists[cluster])
+		# for cluster in Inosine_lists:
+		# 	for (index, pos) in enumerate(Inosine_lists[cluster]):
+		# 		snp_file.write(">" + cluster + "_snp" + str(index) + "  " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G\n")
+		# 	total_snps += len(Inosine_lists[cluster])
+
+	# read in reference transcripts for inosine editing - use cluster to determine correct file
+	if cluster:
+		tRNA_ref = out_dir + experiment_name + '_clusterTranscripts.fa'
+	else:
+		tRNA_ref = out_dir + experiment_name + '_tRNATranscripts.fa'
+	
+	tRNA_seqs = SeqIO.to_dict(SeqIO.parse(tRNA_ref, 'fasta'))	
+
+	# edit A to G for updated inosines list
+	# for cluster in Inosine_lists:
+	# 	for pos in Inosine_lists[cluster]:
+	# 		tRNA_seqs[cluster].seq = tRNA_seqs[cluster].seq[0:pos] + "G" + tRNA_seqs[cluster].seq[pos+1:]
+
+	# rewrite tRNA transcript reference
+	with open(tRNA_ref, "w") as transcript_fasta:
+		SeqIO.write(tRNA_seqs.values(), transcript_fasta, "fasta")
+		
 	log.info("{:,} modifications written to SNP index".format(total_snps))	
 
 def additionalModsParser(input_species, out_dir):
@@ -642,12 +700,18 @@ def additionalModsParser(input_species, out_dir):
 	return(additionalMods_parse, additionalInosines)
 
 
-def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluster = False):
+def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = False, cluster = False):
 # Builds genome and snp index files required by GSNAP
 
-	log.info("\n+--------------------------+ \
+	if map_round == 1:
+		log.info("\n+--------------------------+ \
 		 \n| Generating GSNAP indices |\
 		 \n+--------------------------+")
+
+	else:
+		log.info("\n+----------------------------+ \
+		\n| Regenerating GSNAP indices |\
+		\n+----------------------------+")
 
 	genome_index_path = out_dir + experiment_name + "_tRNAgenome"
 	genome_index_name = genome_index_path.split("/")[-1]
@@ -655,7 +719,7 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 	try:
 		os.mkdir(genome_index_path)
 	except FileExistsError:
-		log.warning("Genome index folder found! Building indices anyway...")
+		log.warning("Genome index folder found! Rebuilding index anyway...")
 	
 	if cluster:
 		genome_file = out_dir + experiment_name + "_clusterTranscripts.fa"
@@ -674,7 +738,7 @@ def generateGSNAPIndices(experiment_name, out_dir, snp_tolerance = False, cluste
 		try:
 			os.mkdir(snp_index_path)
 		except FileExistsError:
-			log.warning("SNP index folder found! Building indices anyway...")
+			log.warning("SNP index folder found! Rebuilding index anyway...")
 
 		snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
 		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]

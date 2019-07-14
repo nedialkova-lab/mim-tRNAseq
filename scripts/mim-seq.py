@@ -28,7 +28,7 @@ def restrictedFloat(x):
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
 def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, mode, cca, min_cov, mismatches, remap, misinc_thresh, mito_trnas, sample_data):
+	keep_temp, mode, cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, sample_data):
 	
 # Main wrapper
 
@@ -62,16 +62,17 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# main #
 	########
 
+	map_round = 1 #first round of mapping
+
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
 	coverage_bed, snp_tolerance, mismatch_dict, mod_lists, Inosine_lists, tRNA_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 	ssAlign.structureParser()
 	# Generate GSNAP indices
-	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, snp_tolerance, cluster)
+	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
 
 	# Align
-	map_round = 1 #first round of mapping
 	bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
 		snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, mismatches, map_round)
 
@@ -82,9 +83,9 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
 		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
-		tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict)
-		tRNAtools.generateSNPIndex(name, out, snp_tolerance)
+		tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
 		map_round = 2
+		genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
 		bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
 			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, remap_mismatches, map_round)
 		cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
@@ -244,4 +245,5 @@ if __name__ == '__main__':
 		else:
 			mimseq(args.trnas, args.trnaout, args.name, args.out, args.cluster, args.cluster_id, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
-				args.keep_temp, args.mode, args.cca, args.min_cov, args.mismatches, args.remap, args.misinc_thresh, args.mito, args.sampledata)
+				args.keep_temp, args.mode, args.cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
+				args.misinc_thresh, args.mito, args.sampledata)

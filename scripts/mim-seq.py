@@ -82,7 +82,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
+		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
 		tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
@@ -112,7 +112,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# Misincorporation analysis
 	if snp_tolerance or not mismatches == 0.0:
-		mmQuant.generateModsTable(coverageData, out, threads, cov_table, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
+		mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 

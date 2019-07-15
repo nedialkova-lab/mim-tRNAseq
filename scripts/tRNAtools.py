@@ -232,7 +232,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		if not anticodon in anticodon_list:
 			anticodon_list.append(anticodon)
 		# find initial possible matches to modomics where anticodons match and types are the same (here regex is used to match anticodons with "." in modomics to all possible matching sequences from input tRNAs)
-		match = {k:v for k,v in modomics_dict.items() if re.match("^" + anticodon + "+$", v['anticodon']) and tRNA_dict[seq]['type'] == v['type']}
+		match = {k:v for k,v in modomics_dict.items() if re.match("^" + v['anticodon'] + "+$", anticodon) and tRNA_dict[seq]['type'] == v['type']}
 		if len(match) >= 1:
 			temp_matchFasta = open(temp_dir + "modomicsMatch.fasta","w")
 			for i in match:	
@@ -347,6 +347,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 		log.info("**** Clustering tRNA sequences ****")
 		log.info("Clustering tRNA sequences by {:.0%} similarity...".format(cluster_id))
+		# dictionary of final centroid sequences
+		final_centroids = defaultdict()
 		# get dictionary of sequences for each anticodon and write to fastas
 		for anticodon in anticodon_list:
 			seq_set = {k:{'sequence':v['sequence'],'modified':v['modified']} for k,v in tRNA_dict.items() if v['anticodon'] == anticodon}
@@ -354,12 +356,22 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				for sequence in seq_set:
 					anticodon_seqs.write(">" + sequence + "\n" + seq_set[sequence]['sequence'] + "\n")
 			# run usearch on each anticodon sequence fatsa to cluster
-			cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null" 
+			#cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -id " + str(cluster_id) + " -sizeout -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null" 
+			cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null"
 			subprocess.call(cluster_cmd, shell = True)
+			# sort clusters by size (i.e. number of members in cluster)
+			#sort_cmd = "usearch -sortbysize " + temp_dir + anticodon + "_centroids.fa -fastaout " + temp_dir + anticodon + "_centroids_sort.fa &> /dev/null"
+			#subprocess.call(sort_cmd, shell = True)
+			# recluster based on sorted by size clusters
+			#final_cluster_cmd = "usearch -cluster_smallmem " + temp_dir + anticodon + "_centroids_sort.fa -sortedby size -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroidsFinal.fa &> /dev/null" 
+			#subprocess.call(final_cluster_cmd, shell = True)
 		# combine centroids files into one file
 		combine_cmd = "cat " + temp_dir + "*_centroids.fa > " + temp_dir + "all_centroids.fa"
 		subprocess.call(combine_cmd, shell = True)
-		final_centroids = {seq_record.id: SeqRecord(Seq(str(seq_record.seq).upper(), Alphabet.generic_dna), id = seq_record.id) for seq_record in SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")}
+		centroids = SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")
+		for centroid in centroids:
+			centroid.id = centroid.id.split(";")[0]
+			final_centroids[centroid.id] = SeqRecord(Seq(str(centroid.seq).upper(), Alphabet.generic_dna), id = centroid.id) 
 
 		# read cluster files, get nonredudant set of mod positions of all members of a cluster, create snp_records for writing SNP index
 		cluster_pathlist = Path(temp_dir).glob("**/*_clusters.uc")
@@ -382,7 +394,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 					# Handle cluster centroids and initialise modified positions list
 					if line.split("\t")[0] == "S":
 						cluster_num += 1
-						cluster_name = line.split("\t")[8]
+						cluster_name = line.split("\t")[8].split(";")[0]
 						mod_lists[cluster_name] = tRNA_dict[cluster_name]["modified"]
 						Inosine_lists[cluster_name] = tRNA_dict[cluster_name]['InosinePos']
 						clusterbed.write(cluster_name + "\t0\t" + str(len(tRNA_dict[cluster_name]['sequence'])) + "\t" + cluster_name + "\t1000\t+\n" )
@@ -391,8 +403,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				
 					# Handle members of clusters
 					elif line.split("\t")[0] == "H":
-						member_name = line.split("\t")[8]
-						cluster_name = line.split("\t")[9]
+						member_name = line.split("\t")[8].split(";")[0]
+						cluster_name = line.split("\t")[9].split(";")[0]
 						compr_aln = line.split("\t")[7]
 						# if member of cluster is 100% identical (i.e. "=" in 8th column of cluster file)
 						if compr_aln == "=":
@@ -567,8 +579,9 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 	for l in new_Inosines:
 		for cluster, inosines in l.items():
 			tRNA_dict[cluster]['InosinePos'] = list(set(tRNA_dict[cluster]['InosinePos'] + l[cluster]))
+			old_inosines = len(Inosine_lists[cluster])
 			Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + l[cluster]))
-			new_inosines += len(l[cluster])
+			new_inosines += len(Inosine_lists[cluster]) - old_inosines
 
 	log.info("{} new predicted position 34 inosines".format(new_inosines))
 
@@ -576,8 +589,9 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 	for l in new_mods_list:
 		for cluster, mods in l.items():
 			tRNA_dict[cluster]['modified'] = list(set(tRNA_dict[cluster]['modified'] + l[cluster]))
+			old_mods = len(mod_lists[cluster])
 			mod_lists[cluster] = list(set(mod_lists[cluster] + l[cluster]))
-			new_snps += len(l[cluster])
+			new_snps += len(mod_lists[cluster]) - old_mods
 
 	log.info("{} new predicted modifications".format(new_snps))
 
@@ -598,10 +612,10 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 			for (index, pos) in enumerate(mod_lists[cluster]):
 				snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N\n")
 			total_snps += len(mod_lists[cluster])
-		# for cluster in Inosine_lists:
-		# 	for (index, pos) in enumerate(Inosine_lists[cluster]):
-		# 		snp_file.write(">" + cluster + "_snp" + str(index) + "  " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G\n")
-		# 	total_snps += len(Inosine_lists[cluster])
+		for cluster in Inosine_lists:
+		 	for (index, pos) in enumerate(Inosine_lists[cluster]):
+		 		snp_file.write(">" + cluster + "_snp" + str(index) + "  " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G\n")
+		 	total_snps += len(Inosine_lists[cluster])
 
 	# read in reference transcripts for inosine editing - use cluster to determine correct file
 	if cluster:

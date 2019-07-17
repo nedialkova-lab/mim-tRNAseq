@@ -67,7 +67,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance, mismatch_dict, mod_lists, Inosine_lists, tRNA_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 	ssAlign.structureParser()
 	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
@@ -77,8 +77,8 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, mismatches, map_round)
 
 	# Coverage and plots
-	cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
-	getCoverage.plotCoverage(out, mito_trnas)
+	cov_table, filtered_list, sorted_aa = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov, control_cond)
+	getCoverage.plotCoverage(out, mito_trnas, sorted_aa)
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
@@ -88,8 +88,8 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
 		bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
 			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, remap_mismatches, map_round)
-		cov_table, filtered_list = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov)
-		getCoverage.plotCoverage(out, mito_trnas)
+		cov_table, filtered_list, sorted_aa = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov, control_cond)
+		getCoverage.plotCoverage(out, mito_trnas, sorted_aa)
 		remap = False
 	else:
 		log.info("\n*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")

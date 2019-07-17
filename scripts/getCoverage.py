@@ -60,7 +60,7 @@ def getBamList (sampleGroups):
 	return(baminfo, bamlist)
 	sampleGroups.close()
 
-def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov):
+def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov, control_cond):
 # Uses bedtools coverage and pandas generate coverage in 5% intervals per gene and isoacceptor for plotting
 
 	log.info("\n+-----------------------------------+\
@@ -88,7 +88,7 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov):
 
 	for bam, info in baminfo.items():
 
-		coverage = pd.read_table(out_dir + bam.split("/")[-1] + "_coverage.txt", header = None, index_col = 0)[[6,7]] 
+		coverage = pd.read_csv(out_dir + bam.split("/")[-1] + "_coverage.txt", header = None, index_col = 0, sep = "\t")[[6,7]] 
 		coverage['aa'] = coverage.index.format()
 		coverage.loc[coverage.aa.str.contains('mito'), 'aa'] = "mito" + coverage[coverage.aa.str.contains('mito')].aa.str.split("-").str[-4]
 		coverage.loc[coverage.aa.str.contains('nmt'), 'aa'] = "nmt" + coverage[coverage.aa.str.contains('nmt')].aa.str.split("-").str[-4]
@@ -114,16 +114,30 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov):
 	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = "nmt" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
 	cov_mean_gene.loc[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = cov_mean_gene[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
 	cov_mean_gene = cov_mean_gene[['Cluster','pos','cov','aa','condition','cov_norm','bin','bam']]
-	cov_mean_gene = cov_mean_gene.groupby(['Cluster', 'bin', 'bam']).mean()
+	cov_mean_gene = cov_mean_gene.groupby(['Cluster', 'bin', 'condition', 'bam']).mean()
+	cov_mean_gene = cov_mean_gene.dropna()
 	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t")
-	cov_mean_aa = cov_mean.groupby(['aa', 'bin', 'bam']).mean()	
+
+	cov_mean_aa = cov_mean.groupby(['aa', 'bin', 'condition', 'bam']).mean()
 	cov_mean_aa.to_csv(out_dir + "coverage_byaa.txt", sep = "\t")
+	cov_mean_aa	= cov_mean_aa.reset_index()
+	cov_mean_aa = cov_mean_aa.dropna()
 
-	return(cov_mean, filtered)
+	cov_mean_aa_controlcond = cov_mean_aa[cov_mean_aa.condition == control_cond]
+	bam = pd.unique(cov_mean_aa_controlcond['bam'])[0] 
+	cov_mean_aa_controlcond = cov_mean_aa_controlcond[cov_mean_aa_controlcond.bam == bam]
+	cov_ratios = dict()
+	for aa, data in cov_mean_aa_controlcond.groupby('aa'):
+		ratio = float(data[data.bin == 8]['cov_norm']) / float(data[data.bin == 92]['cov_norm'])
+		cov_ratios[aa] = ratio
+	sorted_aa = sorted(cov_ratios, key = cov_ratios.get)
+	sorted_aa = "_".join(str(e) for e in sorted_aa)
 
-def plotCoverage(out_dir, mito_trnas):
+	return(cov_mean, filtered, sorted_aa)
+
+def plotCoverage(out_dir, mito_trnas, sorted_aa):
 	
 	script_path = os.path.dirname(os.path.realpath(__file__))
-	command = "Rscript " + script_path + "/coveragePlot.R " + out_dir + "coverage_bygene.txt " + out_dir + "coverage_byaa.txt " + out_dir + " " + mito_trnas 
+	command = "Rscript " + script_path + "/coveragePlot.R " + out_dir + "coverage_bygene.txt " + out_dir + "coverage_byaa.txt " + out_dir + " " + mito_trnas + " " + sorted_aa
 	subprocess.call(command, shell = True)
 

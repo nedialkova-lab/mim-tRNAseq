@@ -20,11 +20,16 @@ if (length(args)==0) {
 
 	out_dir = args[3]
 	mito_trnas = args[4]
+	sorted_aa = args[5]
+	sorted_aa = unlist(strsplit(sorted_aa, "_"))
 
 	## Aggregated coverage plots for all Isoacceptors
 	cov_byaa = read.table(args[2], header=TRUE, sep = "\t")
+	cov_byaa = cov_byaa[complete.cases(cov_byaa),]
 	cov_byaa$bam = gsub(".unpaired_uniq.bam","",cov_byaa$bam)
 	cov_byaa$bam = gsub("(.*/).*?","\\2",cov_byaa$bam)
+	cov_byaa = cov_byaa[!grepl("eColi", cov_byaa$aa),]
+	cov_byaa$aa = factor(cov_byaa$aa, levels = sorted_aa)
 	cyt_colourCount = length(unique(subset(cov_byaa$aa, !grepl("mito", cov_byaa$aa) & !grepl("nmt", cov_byaa$aa))))
 	mit_colourCount = length(unique(subset(cov_byaa$aa, grepl("mito", cov_byaa$aa) | grepl("nmt", cov_byaa$aa))))
 	facetCount = length(unique(cov_byaa$bam))

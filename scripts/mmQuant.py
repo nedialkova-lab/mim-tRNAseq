@@ -23,17 +23,19 @@ def unknownMods(inputs, out_dir, knownTable, modTable, misinc_thresh, cov_table,
 
 	log.info('Finding potential unannotated mods for {}'.format(inputs))
 	new_mods =  defaultdict(list)
-	newInosines = defaultdict(list)
+	new_Inosines = defaultdict(list)
+	cons_anticodon = ssAlign.getAnticodon()
 	
 	for cluster, data in modTable.items():
+		anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
 		for pos, type in data.items():
 			cov = cov_table[(cov_table.pos == pos) & (cov_table.bam == inputs)].loc[cluster]['cov']
 			if (sum(modTable[cluster][pos].values()) >= misinc_thresh and cov >= min_cov and pos-1 not in knownTable[cluster]): # misinc above threshold, cov above threshold and not previously known
 				# if one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
-				if (max(modTable[cluster][pos].values()) / sum(modTable[cluster][pos].values()) >= 0.95):
-					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list to modify ref sequence and exclude from modification SNPs
-					if (tRNA_dict[cluster]['sequence'][pos-1] == 'A' and modTable[cluster][pos]['G']/sum(modTable[cluster][pos].values()) > 0.95 and cons_pos_dict[pos-1] == '34'):
-						newInosines[cluster].append(pos-1)
+				if (max(modTable[cluster][pos].values()) / sum(modTable[cluster][pos].values()) >= 0.90):
+					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list and modification SNPs file (see tRNAtools.ModsParser())
+					if (tRNA_dict[cluster]['sequence'][pos-1] == 'A' and modTable[cluster][pos]['G']/sum(modTable[cluster][pos].values()) > 0.90 and pos-1 == min(anticodon)):
+						new_Inosines[cluster].append(pos-1)
 				else:
 					new_mods[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
 
@@ -44,16 +46,18 @@ def unknownMods(inputs, out_dir, knownTable, modTable, misinc_thresh, cov_table,
 					str(pos) + "\t" + \
 					str(sum(modTable[cluster][pos+1].values())) + "\n")
 
-	return(new_mods, newInosines)
+	return(new_mods, new_Inosines)
 
 def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered_list, tRNA_struct, remap, misinc_thresh, knownTable, tRNA_dict, cons_pos_dict, inputs):
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+	isodecoderTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 	stopTable = defaultdict(lambda: defaultdict(int))
 	geneCov = defaultdict(int)
 	condition = info[inputs][0]
 
+	# initialise structures and outputs if CCA analysis in on
 	if cca:
 		aln_count = 0
 		cca_dict = defaultdict(lambda: defaultdict(int))
@@ -61,6 +65,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 		dinuc_prop = open(inputs + "_dinuc.csv", "w")
 		CCAvsCC_counts = open(inputs + "_CCAcounts.csv", "w")
 
+	# process mods by looping through alignments in bam file
 	bam_file = pysam.AlignmentFile(inputs, "rb")
 	log.info('Analysing {}...'.format(inputs))
 	for read in bam_file.fetch(until_eof=True):
@@ -103,6 +108,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 		stopTable[reference][offset+1] += 1
 		
 		# build mismatch dictionary ignoring inserts in reference ('^') due to alignment algorithm and adding offset only to first interval of MD tag
+		# build isodecoderTable to count reads with known mismatches between cluster members to later split reads by isodecoders
 		ref_pos = 0
 		read_pos = 0
 		for index, interval in enumerate(md_list):
@@ -122,6 +128,8 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 						# 	modTable[reference][ref_pos]['known'] = 1 # log if the mismatch was a known modified position by checking for lowercase letter in MD tag (see --md-lowercase-snp in GSNAP parameters)
 						# else:
 						# 	modTable[reference][ref_pos]['known'] = 0
+					elif ref_pos in mismatch_dict[reference]:
+						isodecoderTable[reference][ref_pos][identity] += 1 # here 0 based numbering used for pos as these positions will refer back to sequences positions and not used for referring to canonical numbering etc...
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -140,6 +148,8 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 						# 	modTable[reference][ref_pos]['known'] = 1
 						# else:
 						# 	modTable[reference][ref_pos]['known'] = 0
+					elif ref_pos in mismatch_dict[reference]:
+						isodecoderTable[reference][ref_pos][identity] += 1
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -188,7 +198,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 
 	## Edit misincorportation and stop data before writing
 
-	# build dictionaries for mismatches, known modification sites, and stops, normalizing to total coverage per nucleotide
+	# build dictionaries for mismatches, isodecoder counts, and stops, normalizing to total coverage per nucleotide
 	modTable_prop = {cluster: {pos: {
 				group: count / cov_table[(cov_table.pos == pos) & (cov_table.condition == condition) & (cov_table.bam == inputs)].loc[cluster]['cov']
 				  for group, count in data.items() if group in ['A','C','G','T']
@@ -196,6 +206,15 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 			for pos, data in values.items()
 							}
 		for cluster, values in modTable.items()
+					}
+
+	isodecoderTable_prop = {cluster: {pos: {
+				group: count / cov_table[(cov_table.pos == pos+1) & (cov_table.condition == condition) & (cov_table.bam == inputs)].loc[cluster]['cov']
+				  for group, count in data.items() if group in ['A','C','G','T']
+								}
+			for pos, data in values.items()
+							}
+		for cluster, values in isodecoderTable.items()
 					}
 
 	# knownTable = {cluster: {pos: test['known']
@@ -244,6 +263,15 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 	modTable_prop_melt = modTable_prop_melt.dropna(subset=['struct'])
 
 	modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
+
+	# reformat isodecoderTable and save to temp
+	reform = {(outerKey, innerKey): values for outerKey, innerDict in isodecoderTable_prop.items() for innerKey, values in innerDict.items()}
+	isodecoderTable_prop_df = pd.DataFrame.from_dict(reform)
+	isodecoderTable_prop_df['type'] = isodecoderTable_prop_df.index
+	isodecoderTable_prop_melt = isodecoderTable_prop_df.melt(id_vars=['type'], var_name=['cluster','pos'], value_name='proportion')
+	isodecoderTable_prop_melt['bam'] = inputs
+	isodecoderTable_prop_melt.pos = pd.to_numeric(isodecoderTable_prop_melt.pos)
+	print(isodecoderTable_prop_melt)
 
 	# reformat stopTable, add gaps and structure, and save to temp file
 	stopTable_prop_df = pd.DataFrame.from_dict(stopTable_prop)
@@ -319,7 +347,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, min_cov, mismat
 	# initiate multiprocessing pool and run with bam names
 	pool = Pool(multi)
 	func = partial(countMods_mp, out_dir, cov_table, min_cov, baminfo, mismatch_dict, cca, filtered_list, tRNA_struct_df, remap, misinc_thresh, knownTable, tRNA_dict, cons_pos_dict)
-	new_mods, new_Inosines = pool.map(func, bamlist)
+	new_mods, new_Inosines = zip(*pool.map(func, bamlist))
 	pool.close()
 	pool.join()
 

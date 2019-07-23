@@ -34,7 +34,7 @@ def unknownMods(inputs, out_dir, knownTable, modTable, misinc_thresh, cov_table,
 				# if one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
 				if (max(modTable[cluster][pos].values()) / sum(modTable[cluster][pos].values()) >= 0.90):
 					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list and modification SNPs file (see tRNAtools.ModsParser())
-					if (tRNA_dict[cluster]['sequence'][pos-1] == 'A' and modTable[cluster][pos]['G']/sum(modTable[cluster][pos].values()) > 0.90 and pos-1 == min(anticodon)):
+					if (tRNA_dict[cluster]['sequence'][pos-1] == 'A' and list(modTable[cluster][pos].keys())[list(modTable[cluster][pos].values()).index(max(modTable[cluster][pos].values()))] == 'G' and pos-1 == min(anticodon)):
 						new_Inosines[cluster].append(pos-1)
 				else:
 					new_mods[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
@@ -52,7 +52,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-	isodecoderTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+	clusterMMTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 	stopTable = defaultdict(lambda: defaultdict(int))
 	geneCov = defaultdict(int)
 	condition = info[inputs][0]
@@ -108,7 +108,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 		stopTable[reference][offset+1] += 1
 		
 		# build mismatch dictionary ignoring inserts in reference ('^') due to alignment algorithm and adding offset only to first interval of MD tag
-		# build isodecoderTable to count reads with known mismatches between cluster members to later split reads by isodecoders
+		# build clusterMMTable to count reads with known mismatches between cluster members to later split reads by isodecoders
 		ref_pos = 0
 		read_pos = 0
 		for index, interval in enumerate(md_list):
@@ -129,7 +129,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 						# else:
 						# 	modTable[reference][ref_pos]['known'] = 0
 					elif ref_pos in mismatch_dict[reference]:
-						isodecoderTable[reference][ref_pos][identity] += 1 # here 0 based numbering used for pos as these positions will refer back to sequences positions and not used for referring to canonical numbering etc...
+						clusterMMTable[reference][ref_pos][identity] += 1 # here 0 based numbering used for pos as these positions will refer back to sequences positions and not used for referring to canonical numbering etc...
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -149,7 +149,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 						# else:
 						# 	modTable[reference][ref_pos]['known'] = 0
 					elif ref_pos in mismatch_dict[reference]:
-						isodecoderTable[reference][ref_pos][identity] += 1
+						clusterMMTable[reference][ref_pos][identity] += 1
 					# move forward
 					read_pos += 1
 					ref_pos += 1
@@ -208,13 +208,13 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 		for cluster, values in modTable.items()
 					}
 
-	isodecoderTable_prop = {cluster: {pos: {
+	clusterMMTable_prop = {cluster: {pos: {
 				group: count / cov_table[(cov_table.pos == pos+1) & (cov_table.condition == condition) & (cov_table.bam == inputs)].loc[cluster]['cov']
 				  for group, count in data.items() if group in ['A','C','G','T']
 								}
 			for pos, data in values.items()
 							}
-		for cluster, values in isodecoderTable.items()
+		for cluster, values in clusterMMTable.items()
 					}
 
 	# knownTable = {cluster: {pos: test['known']
@@ -264,14 +264,17 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 
 	modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
-	# reformat isodecoderTable and save to temp
-	reform = {(outerKey, innerKey): values for outerKey, innerDict in isodecoderTable_prop.items() for innerKey, values in innerDict.items()}
-	isodecoderTable_prop_df = pd.DataFrame.from_dict(reform)
-	isodecoderTable_prop_df['type'] = isodecoderTable_prop_df.index
-	isodecoderTable_prop_melt = isodecoderTable_prop_df.melt(id_vars=['type'], var_name=['cluster','pos'], value_name='proportion')
-	isodecoderTable_prop_melt['bam'] = inputs
-	isodecoderTable_prop_melt.pos = pd.to_numeric(isodecoderTable_prop_melt.pos)
-	print(isodecoderTable_prop_melt)
+	# reformat clusterMMTable and save to temp
+	reform = {(outerKey, innerKey): values for outerKey, innerDict in clusterMMTable_prop.items() for innerKey, values in innerDict.items()}
+	clusterMMTable_prop_df = pd.DataFrame.from_dict(reform)
+	clusterMMTable_prop_df['type'] = clusterMMTable_prop_df.index
+	clusterMMTable_prop_melt = clusterMMTable_prop_df.melt(id_vars=['type'], var_name=['cluster','pos'], value_name='proportion')
+	clusterMMTable_prop_melt['bam'] = inputs
+	clusterMMTable_prop_melt.pos = pd.to_numeric(clusterMMTable_prop_melt.pos)
+	clusterMMTable_prop_melt = clusterMMTable_prop_melt.dropna()
+	clusterMMTable_prop_melt.index = clusterMMTable_prop_melt['cluster']
+	clusterMMTable_prop_melt = clusterMMTable_prop_melt.drop(columns = ['cluster'])
+	clusterMMTable_prop_melt.to_csv(inputs + "clusterMMTable.csv", sep = "\t", index = True)
 
 	# reformat stopTable, add gaps and structure, and save to temp file
 	stopTable_prop_df = pd.DataFrame.from_dict(stopTable_prop)
@@ -352,6 +355,7 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, min_cov, mismat
 	pool.join()
 
 	modTable_total = pd.DataFrame()
+	clusterMMTable_total = pd.DataFrame()
 	#knownTable_total = pd.DataFrame()
 	stopTable_total = pd.DataFrame()
 
@@ -360,23 +364,25 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, min_cov, mismat
 
 	for bam in bamlist:
 		# read in temp files and then delete
-		modTable = pd.read_table(bam + "mismatchTable.csv", header = 0)
+		modTable = pd.read_csv(bam + "mismatchTable.csv", header = 0, sep = "\t")
 		modTable['canon_pos'] = modTable['pos'].map(cons_pos_dict)
 		os.remove(bam + "mismatchTable.csv")
-		#knownTable = pd.read_table(bam + "knownModSites.csv", header = 0)
-		#os.remove(bam + "knownModSites.csv")
-		stopTable = pd.read_table(bam + "RTstopTable.csv", header = 0)
+
+		clusterMMTable = pd.read_csv(bam + "clusterMMTable.csv", header = 0, sep = "\t", index_col = 0)
+		os.remove(bam + "clusterMMTable.csv")
+
+		stopTable = pd.read_csv(bam + "RTstopTable.csv", header = 0, sep = "\t")
 		stopTable['canon_pos'] = stopTable['pos'].map(cons_pos_dict)
 		os.remove(bam + "RTstopTable.csv")
 
 		# add individual temp files to main big table and save
 		modTable_total = modTable_total.append(modTable)
-		#knownTable_total = knownTable_total.append(knownTable)
+		clusterMMTable_total = clusterMMTable_total.append(clusterMMTable)
 		stopTable_total = stopTable_total.append(stopTable)
 
 		if cca:
 			# same for CCA analysis files
-			dinuc = pd.read_table(bam + "_dinuc.csv", header = None, keep_default_na=False)
+			dinuc = pd.read_csv(bam + "_dinuc.csv", header = None, keep_default_na=False, sep = "\t")
 			os.remove(bam + "_dinuc.csv")
 			CCA = pd.read_table(bam + "_CCAcounts.csv", header = None)
 			os.remove(bam + "_CCAcounts.csv")
@@ -400,6 +406,6 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, min_cov, mismat
 		#CCAvsCC_table = CCAvsCC_table.pivot_table(index = 'gene', columns = 'sample', values = 'count', fill_value = 0)
 		CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
-	return(new_mods, new_Inosines)
+	return(new_mods, new_Inosines, clusterMMTable_total)
 
 			

@@ -48,6 +48,7 @@ sampleData = args[2]
 control_cond = args[3]
 subdir = "DESeq2/"
 subdir_cluster = "DESeq2/cluster"
+subdir_isodecoder = "DESeq2/isodecoder"
 subdir_anticodon = "DESeq2/anticodon"
 
 # Output directory
@@ -55,10 +56,12 @@ dir.create(file.path(outdir, subdir), showWarnings = FALSE)
 setwd(file.path(outdir))
 dir.create(file.path(subdir, 'cluster'), showWarnings = FALSE)
 dir.create(file.path(subdir, 'anticodon'), showWarnings = FALSE)
+dir.create(file.path(subdir, 'isodecoder'), showWarnings = FALSE)
 
 # Import data from featureCounts and sampleData
 cluster_countdata = read.table("counts.txt", header=TRUE, row.names=1, check.names = FALSE)
 anticodon_countdata = read.table("Anticodon_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
 coldata = read.table(paste(sampleData, sep=""), header=FALSE, sep = "\t", row.names=1)
 
 # Remove first five columns (chr, start, end, strand, length)
@@ -68,9 +71,11 @@ coldata = data.frame(row.names=rownames(coldata), condition = coldata[,1])
 # Remove .bam or .sam and outdir from column names
 colnames(cluster_countdata) = gsub("\\.[sb]am$", "", colnames(cluster_countdata))
 colnames(anticodon_countdata) = gsub("\\.[sb]am$", "", colnames(anticodon_countdata))
+colnames(isodecoder_countdata) = gsub("\\.[sb]am$", "", colnames(isodecoder_countdata))
 rownames(coldata) = gsub("\\.[sb]am$", "", rownames(coldata))
 colnames(cluster_countdata) = substr(colnames(cluster_countdata),nchar(outdir)+1,nchar(colnames(cluster_countdata)))
 colnames(anticodon_countdata) = substr(colnames(anticodon_countdata),nchar(outdir)+1,nchar(colnames(anticodon_countdata)))
+colnames(isodecoder_countdata) = substr(colnames(isodecoder_countdata),nchar(outdir)+1,nchar(colnames(isodecoder_countdata)))
 rownames(coldata) = substr(rownames(coldata),nchar(outdir)+1,nchar(rownames(coldata)))
 colnames(coldata) = "condition"
 
@@ -92,13 +97,15 @@ for (con in unique(coldata$condition)) {
 
 cluster_countdata = cluster_countdata[, order(colnames(cluster_countdata))]
 anticodon_countdata = anticodon_countdata[, order(colnames(anticodon_countdata))]
+isodecoder_countdata = isodecoder_countdata[, order(colnames(isodecoder_countdata))]
 coldata = coldata[order(rownames(coldata)), , drop = FALSE]
 
 # Convert to matrix
 cluster_countdata = as.matrix(cluster_countdata)
 anticodon_countdata = as.matrix(anticodon_countdata)
+isodecoder_countdata = as.matrix(isodecoder_countdata)
 
-# Get cluster and isoacceptor data
+# Get cluster, isoacceptor and isodecoder data
 clusterFile = list.files(path="./", pattern="clusterInfo.txt", full.names=T)
 if (length(clusterFile) == 1) {
   clusterInfo = read.table(clusterFile[1], header=T, row.names=1)

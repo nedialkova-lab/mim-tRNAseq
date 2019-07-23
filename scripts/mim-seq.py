@@ -12,7 +12,7 @@
 # contact: aberens@biochem.mpg.de
 # github: https://github.com/drewjbeh/mim-tRNAseq
 
-import tRNAtools, tRNAmap, getCoverage, mmQuant, CCAanalysis, ssAlign
+import tRNAtools, tRNAmap, getCoverage, mmQuant, CCAanalysis, ssAlign, splitReads
 import sys, os, subprocess, logging, datetime
 import argparse
 from pyfiglet import figlet_format
@@ -67,7 +67,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict, cluster_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 	ssAlign.structureParser()
 	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
@@ -82,7 +82,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
+		new_mods, new_Inosines, clusterMMTable = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
 		tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
@@ -92,13 +92,36 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		getCoverage.plotCoverage(out, mito_trnas, sorted_aa)
 		remap = False
 	else:
-		log.info("\n*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
+		log.info("\n*** New modifications not discovered as remap is not enabled ***\n")
 
 	# featureCounts
 	tRNAmap.countReads(bams_list, mode, threads, out)
 
-	# DESeq2
+	# Misincorporation analysis
+	if snp_tolerance or not mismatches == 0.0:
+		new_mods, new_Inosines, clusterMMTable = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
+	else:
+		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
+
+	# Output modification context file for plotting
+	mod_sites, cons_pos_list, cons_pos_dict = ssAlign.modContext(out)
+
 	script_path = os.path.dirname(os.path.realpath(__file__))
+	
+	if snp_tolerance or not mismatches == 0.0:
+		# plot mods and stops
+		log.info("Plotting modification and RT stop data...")
+		modplot_cmd = "Rscript " + script_path + "/modPlot.R " + out + " " + str(mod_sites) + " " + str(cons_pos_list) + " " + str(mito_trnas)
+		subprocess.call(modplot_cmd, shell=True)
+		# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
+		if cca:
+			CCAanalysis.plotDinuc(out)
+
+	# split read counts by isodecoder
+	if cluster:
+		splitReads.splitReadsIsodecoder(isodecoder_count, clusterMMTable, tRNA_dict, cluster_dict, mismatch_dict, out)
+
+	# DESeq2
 	sample_data = os.path.abspath(coverageData)
 
 	log.info("\n+----------------------------------------------+\
@@ -109,24 +132,6 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	deseq_out = out + "DESeq2"
 
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))
-
-	# Misincorporation analysis
-	if snp_tolerance or not mismatches == 0.0:
-		mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
-	else:
-		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
-
-	# Output modification context file for plotting
-	mod_sites, cons_pos_list, cons_pos_dict = ssAlign.modContext(out)
-	
-	if snp_tolerance or not mismatches == 0.0:
-		# plot mods and stops
-		log.info("Plotting modification and RT stop data...")
-		modplot_cmd = "Rscript " + script_path + "/modPlot.R " + out + " " + str(mod_sites) + " " + str(cons_pos_list) + " " + str(mito_trnas)
-		subprocess.call(modplot_cmd, shell=True)
-		# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
-		if cca:
-			CCAanalysis.plotDinuc(out)
 
 	# tidy files
 	tRNAtools.tidyFiles(out, cca)

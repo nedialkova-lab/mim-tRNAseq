@@ -204,11 +204,11 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 	if snp_tolerance:
 		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
 		+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
-		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --ignore-trim-in-filtering 1 " + mismatch_string + \
+		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 0 " + mismatch_string + \
 		fq + " &>> " + out_dir + "align.log"
 	else:
 		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
-		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp --ignore-trim-in-filtering 1 " + mismatch_string\
+		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 0 " + mismatch_string\
 		+ fq + " &>> " + out_dir + "align.log"
 
 	log.info("Aligning reads to {}...".format(genome_index_name))

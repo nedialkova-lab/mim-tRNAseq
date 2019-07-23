@@ -378,9 +378,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		mod_lists = dict() # stores non-redundant sets of mismatches and mod positions for clusters
 		Inosine_lists = dict() # stores positions of inosines for clusters
 		snp_records = list()
-		cluster_dict = dict() # info about clusters
+		cluster_dict = defaultdict(list) # info about clusters
 		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for misincorporation analysis in mmQuant)
-		isodecoder_count = defaultdict(int) # dictionary that counts the number of unique sequences in each cluster - used for splitting read counts into isodecoders
+		isodecoder_count = defaultdict() # dictionary that counts the number of unique sequences in each cluster - used for splitting read counts into isodecoders
 		cluster_num = 0
 		total_snps = 0
 		total_inosines = 0
@@ -400,8 +400,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 						Inosine_lists[cluster_name] = tRNA_dict[cluster_name]['InosinePos']
 						clusterbed.write(cluster_name + "\t0\t" + str(len(tRNA_dict[cluster_name]['sequence'])) + "\t" + cluster_name + "\t1000\t+\n" )
 						clustergff.write(cluster_name + "\ttRNAseq\texon\t1\t" + str(len(tRNA_dict[cluster_name]['sequence'])) + "\t.\t+\t0\tgene_id '" + cluster_name + "'\n")
-						cluster_dict[cluster_name] = cluster_num
-						isodecoder_count[cluster_name] += 1
+						cluster_dict[cluster_name].append(cluster_name)
 				
 					# Handle members of clusters
 					elif line.split("\t")[0] == "H":
@@ -412,7 +411,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 						if compr_aln == "=":
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + tRNA_dict[member_name]["modified"]))
 							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + tRNA_dict[member_name]["InosinePos"]))
-							cluster_dict[member_name] = cluster_dict[cluster_name]
+							cluster_dict[cluster_name].append(member_name)
 						
 						# if there are insertions or deletions in the centroid, edit member or centroid sequences to ignore these positions
 						# and edit modified positions list in order to make non-redundant positions list, similar to next else statement
@@ -476,12 +475,11 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
-							isodecoder_count[cluster_name] += 1
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
 							member_Inosines = tRNA_dict[member_name]["InosinePos"]
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + member_Inosines))
-							cluster_dict[member_name] = cluster_dict[cluster_name]
+							cluster_dict[cluster_name].append(member_name)
 
 						# handle members that are not exact sequence matches but have no indels either
 						# find mismatches and build non-redundant set
@@ -490,24 +488,28 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 							member_seq = tRNA_dict[member_name]["sequence"]
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
-							isodecoder_count[cluster_name] += 1
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
 							member_Inosines = tRNA_dict[member_name]["InosinePos"]
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + member_Inosines))
-							cluster_dict[member_name] = cluster_dict[cluster_name]
-		
+							cluster_dict[cluster_name].append(member_name)			
+
 		clusterbed.close()
 
-		# Write cluster information to tsv
+		# Write cluster information to tsv and get number of unique sequences per cluster (i.e. isodecoders) for read count splitting
 		with open(out_dir + experiment_name + "clusterInfo.txt","w") as clusterInfo, open(out_dir + experiment_name + "isoacceptorInfo.txt","w") as isoacceptorInfo:
 			isoacceptor_dict = defaultdict(int)
-			clusterInfo.write("tRNA\tcluster_num\tcluster_size\n")
+			clusterInfo.write("tRNA\tcluster_num\tcluster_size\tparent\n")
 			isoacceptorInfo.write("Isoacceptor\tsize\n")
 			for key, value in cluster_dict.items():
-				clusterInfo.write("{}\t{}\t{}\n".format(key, value, sum(clusters == value for clusters in cluster_dict.values())))
-				isoacceptor_group = '-'.join(key.split("-")[:-2])
-				isoacceptor_dict[isoacceptor_group] += 1
+				uniquecluster_seqs = set()
+				cluster_num = list(cluster_dict.keys()).index(key)
+				for member in value:
+					uniquecluster_seqs.add(tRNA_dict[member]['sequence'].upper())
+					clusterInfo.write("{}\t{}\t{}\t{}\n".format(member, cluster_num, len(value), key))
+					isoacceptor_group = '-'.join(member.split("-")[:-2])
+					isoacceptor_dict[isoacceptor_group] += 1
+				isodecoder_count[key] = len(uniquecluster_seqs)
 			for key, value in isoacceptor_dict.items():
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 
@@ -518,7 +520,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		ssAlign.aligntRNA(clusterTranscripts.name, out_dir)
 		additionalMods, additionalInosines = additionalModsParser(species, out_dir)
 
-		log.info("{} clusters created from {} tRNA sequences".format(cluster_num,len(tRNA_dict)))
+		log.info("{} clusters created from {} tRNA sequences".format(len(cluster_dict),len(tRNA_dict)))
 
 		# update mod_lists with additional mods and write SNP index
 		for cluster in mod_lists:
@@ -567,7 +569,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict)
+	return(coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict, cluster_dict)
 
 def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index

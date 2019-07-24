@@ -301,11 +301,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		# >snpID chromosomeName:position(1-based) RefMod
 		# e.g. >rs111 Homo_sapiens_nmt_tRNA-Leu-TAA-1-1_exp0:29 GN
 		for seq in mod_lists:
-			isodecoder = "-".join(seq.split("-")[1:3])
-			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder and tRNA_dict[seq]['species'] in v['species']}
+			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == seq and tRNA_dict[seq]['species'] in v['species']}
 			if additionalMods_sub:
-				tRNA_dict[seq]['modified'] = list(set(tRNA_dict[seq]['modified'] + additionalMods_sub[isodecoder]['mods']))
-				mod_lists[seq] = list(set(mod_lists[seq] + additionalMods_sub[isodecoder]['mods']))
+				tRNA_dict[seq]['modified'] = list(set(tRNA_dict[seq]['modified'] + additionalMods_sub[seq]['mods']))
+				mod_lists[seq] = list(set(mod_lists[seq] + additionalMods_sub[seq]['mods']))
 
 			total_snps += len(mod_lists[seq])
 
@@ -315,11 +314,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
 
 		for seq in Inosine_lists:
-			isodecoder = "-".join(seq.split("-")[1:3])
-			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == isodecoder and tRNA_dict[seq]['species'] in v['species']}
+			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == seq and tRNA_dict[seq]['species'] in v['species']}
 			if additionalInosines_sub:
-				tRNA_dict[seq]['InosinePos'] = list(set(tRNA_dict[seq]['InosinePos'] + additionalInosines_sub[isodecoder]['InosinePos']))
-				Inosine_lists[seq] = list(set(Inosine_lists[seq] + additionalInosines_sub[isodecoder]['InosinePos']))
+				tRNA_dict[seq]['InosinePos'] = list(set(tRNA_dict[seq]['InosinePos'] + additionalInosines_sub[seq]['InosinePos']))
+				Inosine_lists[seq] = list(set(Inosine_lists[seq] + additionalInosines_sub[seq]['InosinePos']))
 
 			total_inosines += len(Inosine_lists[seq])
 

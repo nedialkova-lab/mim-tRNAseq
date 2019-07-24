@@ -131,17 +131,14 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov, control_cond
 	for aa, data in cov_mean_aa_controlcond.groupby('aa'):
 		ratio = float(data[data.bin == 8]['cov_norm']) / float(data[data.bin == 92]['cov_norm'])
 		cov_ratios[aa] = ratio
-	print(cov_ratios)
 	sorted_aa = sorted(cov_ratios, key = cov_ratios.get)
-	print(sorted_aa)
 	sorted_aa = "_".join(str(e) for e in sorted_aa)
-	print(sorted_aa)
 
 	return(cov_mean, filtered, sorted_aa)
 
 def plotCoverage(out_dir, mito_trnas, sorted_aa):
 	
 	script_path = os.path.dirname(os.path.realpath(__file__))
-	command = "Rscript " + script_path + "/coveragePlot.R " + out_dir + "coverage_bygene.txt " + out_dir + "coverage_byaa.txt " + out_dir + " " + mito_trnas + " " + sorted_aa
+	command = "Rscript " + script_path + "/coveragePlot.R " + out_dir + "coverage_bygene.txt " + out_dir + "coverage_byaa.txt " + out_dir + " " + sorted_aa + " " + mito_trnas
 	subprocess.call(command, shell = True)
 

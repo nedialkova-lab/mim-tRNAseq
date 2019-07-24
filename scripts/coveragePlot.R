@@ -22,6 +22,10 @@ if (length(args)==0) {
 	mito_trnas = args[4]
 	sorted_aa = args[5]
 	sorted_aa = unlist(strsplit(sorted_aa, "_"))
+	if (!is.na(mito_trnas)){
+		sorted_aa = sorted_aa[!grepl("mito", sorted_aa)]
+	}
+	print(sorted_aa)
 
 	## Aggregated coverage plots for all Isoacceptors
 	cov_byaa = read.table(args[2], header=TRUE, sep = "\t")

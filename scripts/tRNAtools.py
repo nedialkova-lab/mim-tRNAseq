@@ -356,17 +356,17 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				for sequence in seq_set:
 					anticodon_seqs.write(">" + sequence + "\n" + seq_set[sequence]['sequence'] + "\n")
 			# run usearch on each anticodon sequence fatsa to cluster
-			#cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -id " + str(cluster_id) + " -sizeout -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null" 
-			cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null"
+			cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -id " + str(cluster_id) + " -sizeout -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null" 
+			#cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null"
 			subprocess.call(cluster_cmd, shell = True)
 			# sort clusters by size (i.e. number of members in cluster)
-			#sort_cmd = "usearch -sortbysize " + temp_dir + anticodon + "_centroids.fa -fastaout " + temp_dir + anticodon + "_centroids_sort.fa &> /dev/null"
-			#subprocess.call(sort_cmd, shell = True)
+			sort_cmd = "usearch -sortbysize " + temp_dir + anticodon + "_centroids.fa -fastaout " + temp_dir + anticodon + "_centroids_sort.fa &> /dev/null"
+			subprocess.call(sort_cmd, shell = True)
 			# recluster based on sorted by size clusters
-			#final_cluster_cmd = "usearch -cluster_smallmem " + temp_dir + anticodon + "_centroids_sort.fa -sortedby size -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroidsFinal.fa &> /dev/null" 
-			#subprocess.call(final_cluster_cmd, shell = True)
+			final_cluster_cmd = "usearch -cluster_smallmem " + temp_dir + anticodon + "_centroids_sort.fa -sortedby size -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroidsFinal.fa &> /dev/null" 
+			subprocess.call(final_cluster_cmd, shell = True)
 		# combine centroids files into one file
-		combine_cmd = "cat " + temp_dir + "*_centroids.fa > " + temp_dir + "all_centroids.fa"
+		combine_cmd = "cat " + temp_dir + "*_centroidsFinal.fa > " + temp_dir + "all_centroids.fa"
 		subprocess.call(combine_cmd, shell = True)
 		centroids = SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")
 		for centroid in centroids:
@@ -378,9 +378,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		mod_lists = dict() # stores non-redundant sets of mismatches and mod positions for clusters
 		Inosine_lists = dict() # stores positions of inosines for clusters
 		snp_records = list()
-		cluster_dict = defaultdict(list) # info about clusters
-		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for misincorporation analysis in mmQuant)
-		isodecoder_count = defaultdict() # dictionary that counts the number of unique sequences in each cluster - used for splitting read counts into isodecoders
+		cluster_dict = defaultdict(list) # info about clusters and members
+		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for exclusion from misincorporation analysis in mmQuant)
+		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list)) # for each cluster, list of members that mismatch at each position corresonding to mismatch dict - used for splitting read counts into isodecoders (splitReads.py)
+		isodecoder_count = defaultdict() # dictionary that counts the number of unique sequences in each cluster - used for splitting read counts into isodecoders (splitReads.py)
 		cluster_num = 0
 		total_snps = 0
 		total_inosines = 0
@@ -471,10 +472,13 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 									if insert == insertion_pos[index-1] + 1:
 										adjust_pos_ins -= 1
 								new_insert = insert + adjust_pos_len + adjust_pos_ins
-								cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
+								member_seq = member_seq[ :new_insert] + cluster_seq[insert] + member_seq[new_insert: ]
+								#cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
+							for mismatch in mismatches:
+								cluster_perPos_mismatchMembers[cluster_name][mismatch].append(member_name)
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
 							member_Inosines = tRNA_dict[member_name]["InosinePos"]
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
@@ -488,6 +492,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 							member_seq = tRNA_dict[member_name]["sequence"]
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
+							for mismatch in mismatches:
+								cluster_perPos_mismatchMembers[cluster_name][mismatch].append(member_name)
 							member_mods = list(set(tRNA_dict[member_name]["modified"] + mismatches))
 							member_Inosines = tRNA_dict[member_name]["InosinePos"]
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
@@ -524,11 +530,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 		# update mod_lists with additional mods and write SNP index
 		for cluster in mod_lists:
-			isodecoder = "-".join(cluster.split("-")[1:3])
-			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == isodecoder and tRNA_dict[cluster]['species'] in v['species']}
+			additionalMods_sub = {k:v for k, v in additionalMods.items() if k == cluster and tRNA_dict[cluster]['species'] in v['species']}
 			if additionalMods_sub:
-				tRNA_dict[cluster]['modified'] = list(set(tRNA_dict[cluster]['modified'] + additionalMods_sub[isodecoder]['mods']))
-				mod_lists[cluster] = list(set(mod_lists[cluster] + additionalMods_sub[isodecoder]['mods']))
+				tRNA_dict[cluster]['modified'] = list(set(tRNA_dict[cluster]['modified'] + additionalMods_sub[cluster]['mods']))
+				mod_lists[cluster] = list(set(mod_lists[cluster] + additionalMods_sub[cluster]['mods']))
 
 			total_snps += len(mod_lists[cluster])
 
@@ -538,11 +543,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
 
 		for cluster in Inosine_lists:
-			isodecoder = "-".join(cluster.split("-")[1:3])
-			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == isodecoder and tRNA_dict[cluster]['species'] in v['species']}
+			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == cluster and tRNA_dict[cluster]['species'] in v['species']}
 			if additionalInosines_sub:
-				tRNA_dict[cluster]['InosinePos'] = list(set(tRNA_dict[cluster]['InosinePos'] + additionalInosines_sub[isodecoder]['InosinePos']))
-				Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + additionalInosines_sub[isodecoder]['InosinePos']))
+				tRNA_dict[cluster]['InosinePos'] = list(set(tRNA_dict[cluster]['InosinePos'] + additionalInosines_sub[cluster]['InosinePos']))
+				Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + additionalInosines_sub[cluster]['InosinePos']))
 
 			total_inosines += len(Inosine_lists[cluster])
 
@@ -569,7 +573,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict, cluster_dict)
+	return(coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
 
 def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index
@@ -660,7 +664,7 @@ def additionalModsParser(input_species, out_dir):
 			additionalMods[tRNA]['species'] = species
 
 	# initialise dictionaries of structure (with and without gapped numbering) and anticodon positions to define canonical mod sites
-	tRNA_struct = ssAlign.tRNAclassifier(out_dir)
+	tRNA_struct, cons_pos_list, cons_pos_dict = ssAlign.tRNAclassifier(out_dir)
 	tRNA_struct_nogap = ssAlign.tRNAclassifier_nogaps()
 	cons_anticodon = ssAlign.getAnticodon()
 
@@ -670,57 +674,82 @@ def additionalModsParser(input_species, out_dir):
 
 	# for each additional modification in dictionary, define mod site based on conserved location relative to structural features
 	for isodecoder, data in additionalMods.items():
-		struct = [value for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key]
-		if struct: # test if struct is not empty, i.e. if isodecoder from additional mods exists in tRNA dictionary
-			struct = struct[0] # assume same structure for all members of an isodecoder/cluster and therefore just use first one
-		else:
-			continue 
-		cluster = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key]
-		if cluster:
-			cluster = cluster[0]
-		else:
-			continue
-		anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
-		for mod in data['mods']:
-			if mod == "m1A58":
-				section = [pos for pos, value in struct.items() if value == "T stem-loop"]
-				mod_site = section[-8]
-				additionalMods_parse[isodecoder]['mods'].append(mod_site)
-				additionalMods_parse[isodecoder]['species'].append(data['species'])
-			if mod == "m2,2G26":
-				section	= [pos for pos, value in struct.items() if value == 'bulge2']
-				mod_site = section[0]
-				additionalMods_parse[isodecoder]['mods'].append(mod_site)
-				additionalMods_parse[isodecoder]['species'].append(data['species'])
-			if mod == "m1G9":
-				section = [pos for pos, value in struct.items() if value == 'bulge1']
-				mod_site = section[-1]
-				additionalMods_parse[isodecoder]['mods'].append(mod_site)
-				additionalMods_parse[isodecoder]['species'].append(data['species'])
-			if mod == "m1G37":
-				mod_site = max(anticodon) + 1
-				additionalMods_parse[isodecoder]['mods'].append(mod_site)
-				additionalMods_parse[isodecoder]['species'].append(data['species'])
-			if mod == 'm3C32':
-				mod_site = min(anticodon) - 2
-				additionalMods_parse[isodecoder]['mods'].append(mod_site)
-				additionalMods_parse[isodecoder]['species'].append(data['species'])
-			if mod == 'm3C47':
-				section = [pos for pos, value in struct.items() if value == 'Variable loop']
-				mod_site = section[-2]
-				additionalMods_parse[isodecoder]['mods'].append(mod_site)
-				additionalMods_parse[isodecoder]['species'].append(data['species'])
-			if mod == 'I34':
-				mod_site = min(anticodon)
-				additionalMods_parse[isodecoder]['mods'].append(mod_site)
-				additionalMods_parse[isodecoder]['species'].append(data['species'])
-				additionalInosines[isodecoder]['InosinePos'].append(mod_site)
-				additionalInosines[isodecoder]['species'].append(data['species'])
+		clusters = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key]
+		for cluster in clusters:
+			no_gap_struct = [value for key, value in tRNA_struct_nogap.items() if key == cluster and 'nmt' not in key]
+			if not no_gap_struct: # test if struct is empty, i.e. if isodecoder from additional mods does not exist in tRNA dictionary
+				continue
+			gap_struct = [value for key, value in tRNA_struct.items() if key == cluster and 'nmt' not in key]			
+			anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
 
-			#if mod == 'm3C20':
+			for mod in data['mods']:
+				if mod == "m1A58":
+					cons_pos = '58'
+					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+					if not mod_site == 'NA':
+						additionalMods_parse[cluster]['mods'].append(mod_site)
+						additionalMods_parse[cluster]['species'].append(data['species'])
+				if mod == "m2,2G26":
+					cons_pos = '26'
+					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+					if not mod_site == 'NA':
+						additionalMods_parse[cluster]['mods'].append(mod_site)
+						additionalMods_parse[cluster]['species'].append(data['species'])
+				if mod == "m1G9":
+					cons_pos = '9'
+					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+					if not mod_site == 'NA':
+						additionalMods_parse[cluster]['mods'].append(mod_site)
+						additionalMods_parse[cluster]['species'].append(data['species'])
+				if mod == "m1G37":
+					cons_pos = '37'
+					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+					if not mod_site == 'NA':
+						additionalMods_parse[cluster]['mods'].append(mod_site)
+						additionalMods_parse[cluster]['species'].append(data['species'])
+				if mod == 'm3C32':
+					cons_pos = '32'
+					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+					if not mod_site == 'NA':
+						additionalMods_parse[isodecoder]['mods'].append(mod_site)
+						additionalMods_parse[isodecoder]['species'].append(data['species'])
+				if mod == 'm3C47':
+					cons_pos = '47'
+					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+					if not mod_site == 'NA':
+						additionalMods_parse[cluster]['mods'].append(mod_site)
+						additionalMods_parse[cluster]['species'].append(data['species'])
+				if mod == 'I34':
+					mod_site = min(anticodon)
+					additionalInosines[cluster]['InosinePos'].append(mod_site)
+					additionalInosines[cluster]['species'].append(data['species'])
+				if mod == 'm3C20':
+					cons_pos = '20'
+					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+					if not mod_site == 'NA':
+						additionalMods_parse[cluster]['mods'].append(mod_site)
+						additionalMods_parse[cluster]['species'].append(data['species'])
 			
 	return(additionalMods_parse, additionalInosines)
 
+def getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap):
+# Gets mod site for individual clusters based on conserved position
+
+	gapped_pos = list(cons_pos_dict)[list(cons_pos_dict.values()).index(cons_pos)]
+	struct_element = tRNA_struct[cluster][gapped_pos]
+	if not struct_element == 'gap':
+		all_struct_element = {pos: element for pos, element in tRNA_struct[cluster].items() if element == struct_element}
+		all_struct_element_list = [pos for pos in all_struct_element.keys()]
+		all_struct_element_list = sorted(all_struct_element_list)
+		index_struct_element = all_struct_element_list.index(gapped_pos)
+		all_struct_element_nogap = {pos: element for pos, element in tRNA_struct_nogap[cluster].items() if element == struct_element}
+		all_struct_element_list_nogap = [pos for pos in all_struct_element_nogap.keys()]
+		all_struct_element_list_nogap = sorted(all_struct_element_list_nogap)
+		mod_site = all_struct_element_list_nogap[index_struct_element]
+	else:
+		mod_site = 'NA'
+	
+	return(mod_site)
 
 def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = False, cluster = False):
 # Builds genome and snp index files required by GSNAP

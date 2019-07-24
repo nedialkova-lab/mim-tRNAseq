@@ -67,7 +67,8 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict, cluster_dict = tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
+	coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
+	= tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 	ssAlign.structureParser()
 	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
@@ -119,7 +120,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# split read counts by isodecoder
 	if cluster:
-		splitReads.splitReadsIsodecoder(isodecoder_count, clusterMMTable, tRNA_dict, cluster_dict, mismatch_dict, out)
+		splitReads.splitReadsIsodecoder(isodecoder_count, clusterMMTable, tRNA_dict, cluster_dict, mismatch_dict, cluster_perPos_mismatchMembers, out)
 
 	# DESeq2
 	sample_data = os.path.abspath(coverageData)

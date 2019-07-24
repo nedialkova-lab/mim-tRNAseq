@@ -10,7 +10,7 @@ from collections import defaultdict
 
 log = logging.getLogger(__name__)
 
-def splitReadsIsodecoder(isodecoder_counts, clusterMMprops, tRNA_dict, cluster_dict, mismatch_dict, out_dir):
+def splitReadsIsodecoder(isodecoder_counts, clusterMMprops, tRNA_dict, cluster_dict, mismatch_dict, cluster_perPos_mismatchMembers, out_dir):
 
 	log.info("\n+--------------------------------------+\
 		\n| Splitting read counts by isodecoders |\
@@ -34,7 +34,8 @@ def splitReadsIsodecoder(isodecoder_counts, clusterMMprops, tRNA_dict, cluster_d
 		for pos in mismatches:
 			if curr_isodecoders < isodecoder_num:
 				type_count = defaultdict(list)
-				mismatch_members = {tRNA:sequence for tRNA, sequence in cluster_members.items() if not sequence[pos].upper() == tRNA_dict[cluster]['sequence'][pos].upper()}
+				mismatch_members = {tRNA:sequence for tRNA, sequence in cluster_members.items() if tRNA in cluster_perPos_mismatchMembers[cluster][pos]}
+				#mismatch_members = {tRNA:sequence for tRNA, sequence in cluster_members.items() if not sequence[pos].upper() == tRNA_dict[cluster]['sequence'][pos].upper()}
 				for tRNA, sequence in mismatch_members.items():
 					if (not sequence.upper() in detected_seqs) and (not tRNA in detected_clusters):
 						type_count[sequence[pos]].append(tRNA)

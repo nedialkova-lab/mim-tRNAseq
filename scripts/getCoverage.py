@@ -123,6 +123,7 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov, control_cond
 	cov_mean_aa	= cov_mean_aa.reset_index()
 	cov_mean_aa = cov_mean_aa.dropna()
 
+	# 5' to 3' coverage ratio calculation for ordering AAs on coverage plot
 	cov_mean_aa_controlcond = cov_mean_aa[cov_mean_aa.condition == control_cond]
 	bam = pd.unique(cov_mean_aa_controlcond['bam'])[0] 
 	cov_mean_aa_controlcond = cov_mean_aa_controlcond[cov_mean_aa_controlcond.bam == bam]
@@ -130,8 +131,11 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov, control_cond
 	for aa, data in cov_mean_aa_controlcond.groupby('aa'):
 		ratio = float(data[data.bin == 8]['cov_norm']) / float(data[data.bin == 92]['cov_norm'])
 		cov_ratios[aa] = ratio
+	print(cov_ratios)
 	sorted_aa = sorted(cov_ratios, key = cov_ratios.get)
+	print(sorted_aa)
 	sorted_aa = "_".join(str(e) for e in sorted_aa)
+	print(sorted_aa)
 
 	return(cov_mean, filtered, sorted_aa)
 

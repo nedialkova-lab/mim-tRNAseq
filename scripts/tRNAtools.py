@@ -321,6 +321,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 			total_inosines += len(Inosine_lists[seq])
 
+		Inosine_clusters = [cluster for cluster, inosines in Inosine_lists.items() if len(inosines) > 0]
+
 		# edit ref seqs A to G at inosine positions
 		for seq in Inosine_lists:
 			for pos in Inosine_lists[seq]:
@@ -378,6 +380,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		snp_records = list()
 		cluster_dict = defaultdict(list) # info about clusters and members
 		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for exclusion from misincorporation analysis in mmQuant)
+		insert_dict = defaultdict(lambda: defaultdict(list)) # dictionary of insertions in cluster parents - these are not recorded as mismatches but are needed in order to split read counts into isodecoders
 		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list)) # for each cluster, list of members that mismatch at each position corresonding to mismatch dict - used for splitting read counts into isodecoders (splitReads.py)
 		isodecoder_count = defaultdict() # dictionary that counts the number of unique sequences in each cluster - used for splitting read counts into isodecoders (splitReads.py)
 		cluster_num = 0
@@ -471,6 +474,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 										adjust_pos_ins -= 1
 								new_insert = insert + adjust_pos_len + adjust_pos_ins
 								member_seq = member_seq[ :new_insert] + cluster_seq[insert] + member_seq[new_insert: ]
+								insert_dict[cluster_name][new_insert-1].append(member_name)
 								#cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
@@ -516,7 +520,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				isodecoder_count[key] = len(uniquecluster_seqs)
 			for key, value in isoacceptor_dict.items():
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
-
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
 			SeqIO.write(final_centroids.values(), clusterTranscripts, "fasta")
 
@@ -553,6 +556,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			for pos in Inosine_lists[cluster]:
 				final_centroids[cluster].seq = final_centroids[cluster].seq[0:pos] + "G" + final_centroids[cluster].seq[pos+1:]
 
+		Inosine_clusters = [cluster for cluster, inosines in Inosine_lists.items() if len(inosines) > 0]
+
 		# rewrite edited cluster transcripts
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
 			SeqIO.write(final_centroids.values(), clusterTranscripts, "fasta")
@@ -571,7 +576,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
+	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, isodecoder_count, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
 
 def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index
@@ -583,6 +588,9 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 	new_snps = 0
 	new_inosines = 0
 	newInosine_lists = defaultdict(list)
+
+	# keep original inosine list (i.e. before addding new ones) to modify misincorporation proportion in mismatchTable
+	Inosine_clusters = [cluster for cluster, inosines in Inosine_lists.items() if len(inosines) > 0]
 
 	# add new predicted inosines to inosine list and tRNA_dict
 	for l in new_Inosines:
@@ -645,6 +653,8 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 		SeqIO.write(tRNA_seqs.values(), transcript_fasta, "fasta")
 		
 	log.info("{:,} modifications written to SNP index".format(total_snps))	
+
+	return(Inosine_clusters)
 
 def additionalModsParser(input_species, out_dir):
 # Reads in manual addition of modifcations in /data/additionalMods.txt
@@ -932,7 +942,7 @@ def tidyFiles (out_dir, cca):
 
 	for file in files:
 		full_file = out_dir + file
-		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "cm.log" in file or "clusterInfo" in file or "isoacceptorInfo" in file or "modificationSNPs" in file):
+		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "cm.log" in file or "clusterInfo" in file or "isoacceptorInfo" in file or "isodecoderInfo" in file or "modificationSNPs" in file):
 			shutil.move(full_file, out_dir + "annotation")
 		if (file.endswith("tRNAgenome") or file.endswith("index") or "index.log" in file):
 			shutil.move(full_file, out_dir + "indices")

@@ -183,7 +183,7 @@ def remap(fq, genome_index_path, genome_index_name, snp_index_path, \
 		alignstats_dict["Type"].append(type_list[i])
 		alignstats_dict["Count"].append(count)
 
-	return(unique_bam, total_count, alignstats_dict)
+	return(unique_bam, unique_count, alignstats_dict)
 
 def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index_name, threads, \
 	out_dir,snp_tolerance, keep_temp, mismatches, remap):
@@ -263,7 +263,7 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 		alignstats_dict["Type"].append(type_list[i])
 		alignstats_dict["Count"].append(count)
 
-	return(unique_bam, total_count, alignstats_dict)
+	return(unique_bam, unique_count, alignstats_dict)
 
 def countReads(unique_bam_list, mode, threads, out_dir):
 

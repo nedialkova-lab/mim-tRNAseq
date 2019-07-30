@@ -118,11 +118,20 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov, control_cond
 	cov_mean_gene = cov_mean_gene.dropna()
 	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t")
 
-	cov_mean_aa = cov_mean.groupby(['aa', 'bin', 'condition', 'bam']).mean()
-	cov_mean_aa.to_csv(out_dir + "coverage_byaa.txt", sep = "\t")
+	# coverage per amino acid
+	cov_mean_aa = cov_mean.groupby(['aa', 'condition', 'bam', 'pos']).sum() # sum coverages for all clusters for each amino acid
+	cov_mean_aa = cov_mean_aa.reset_index()
+	# remove last pos for each group (i.e. max pos) since this has very low coverage arising from members with different lengths
+	cov_mean_aa = cov_mean_aa.groupby('aa').apply(lambda group: group.loc[group['pos'] != group['pos'].max()])
+	cov_mean_aa = cov_mean_aa.drop(columns='aa')
+	cov_mean_aa = cov_mean_aa.reset_index()
+	cov_mean_aa = cov_mean_aa.drop(columns='level_1')
+	cov_mean_aa['bin'] = cov_mean_aa.groupby(['aa','condition','bam'])['pos'].transform(lambda x: pd.qcut(x, 25, labels=range(4,104,4)))
+	cov_mean_aa = cov_mean_aa.groupby(['aa', 'bin', 'condition', 'bam']).mean()
 	cov_mean_aa	= cov_mean_aa.reset_index()
 	cov_mean_aa = cov_mean_aa.dropna()
-
+	cov_mean_aa.to_csv(out_dir + "coverage_byaa.txt", sep = "\t", index = False)
+	
 	# 5' to 3' coverage ratio calculation for ordering AAs on coverage plot
 	cov_mean_aa_controlcond = cov_mean_aa[cov_mean_aa.condition == control_cond]
 	bam = pd.unique(cov_mean_aa_controlcond['bam'])[0] 

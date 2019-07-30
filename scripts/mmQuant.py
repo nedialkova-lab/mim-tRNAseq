@@ -155,6 +155,8 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 					ref_pos += 1
 			elif interval.startswith('^'):
 				insertion = len(interval) - 1
+				identity = "insertion"
+				clusterMMTable[reference][ref_pos][identity] += 1
 				ref_pos += insertion
 
 		################
@@ -210,7 +212,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 
 	clusterMMTable_prop = {cluster: {pos: {
 				group: count / cov_table[(cov_table.pos == pos+1) & (cov_table.condition == condition) & (cov_table.bam == inputs)].loc[cluster]['cov']
-				  for group, count in data.items() if group in ['A','C','G','T']
+				  for group, count in data.items() if group in ['A','C','G','T', 'insertion']
 								}
 			for pos, data in values.items()
 							}
@@ -305,7 +307,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 
 	return(new_mods, new_Inosines)
 
-def generateModsTable(sampleGroups, out_dir, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, knownTable, tRNA_dict):
+def generateModsTable(sampleGroups, out_dir, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, knownTable, tRNA_dict, Inosine_clusters):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -366,6 +368,8 @@ def generateModsTable(sampleGroups, out_dir, threads, cov_table, min_cov, mismat
 		# read in temp files and then delete
 		modTable = pd.read_csv(bam + "mismatchTable.csv", header = 0, sep = "\t")
 		modTable['canon_pos'] = modTable['pos'].map(cons_pos_dict)
+		for cluster in Inosine_clusters:
+			modTable.at[(modTable.canon_pos == '34') & (modTable['type'] == 'G') & (modTable.cluster == cluster), 'proportion'] = 1 - sum(modTable[(modTable.canon_pos == '34') & (modTable['type'] != 'G') & (modTable.cluster == cluster)]['proportion'].dropna())
 		os.remove(bam + "mismatchTable.csv")
 
 		clusterMMTable = pd.read_csv(bam + "clusterMMTable.csv", header = 0, sep = "\t", index_col = 0)

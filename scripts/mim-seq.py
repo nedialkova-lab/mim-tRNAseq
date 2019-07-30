@@ -113,7 +113,6 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		# plot mods and stops
 		log.info("Plotting modification and RT stop data...")
 		modplot_cmd = "Rscript " + script_path + "/modPlot.R " + out + " " + str(mod_sites) + " " + str(cons_pos_list) + " " + str(misinc_thresh) + " " + str(mito_trnas)
-		print(modplot_cmd)
 		subprocess.call(modplot_cmd, shell=True)
 		# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 		if cca:

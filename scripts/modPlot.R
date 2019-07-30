@@ -133,7 +133,8 @@ for (i in unique(mods_agg$condition)) {
   
   mods_scatter = ggplot(sub_mods_pos[!grepl("mito", sub_mods_pos$cluster) & !grepl("nmt", sub_mods_pos$cluster), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
     theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(breaks = c(0.0, 0.25, 0.50, 0.75, 1.0), colours = cols) +
-    geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
+    geom_hline(yintercept = misinc_thresh, linetype = "dashed", alpha = 0.4) + 
+    scale_y_continuous(limits = c(0,1)) +
     theme(
       axis.text.x=element_blank(),
       axis.title.x=element_blank(),
@@ -146,6 +147,7 @@ for (i in unique(mods_agg$condition)) {
     mito_mods_scatter = ggplot(sub_mods_pos[grepl("mito", sub_mods_pos$cluster) | grepl("nmt", sub_mods_pos$cluster), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
       theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(breaks = c(0.0, 0.25, 0.50, 0.75, 1.0), colours = cols) +
       geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
+      scale_y_continuous(limits = c(0,1)) +
       theme(
         axis.text.x=element_blank(),
         axis.title.x = element_blank(),
@@ -192,6 +194,7 @@ for (i in unique(mods_agg$condition)) {
     ) +
     scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
     scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
+    scale_y_continuous(limits = c(0,1)) +
     guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
 
   ggsave(paste(out, "mods/", paste(i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), signature_plot_upstream, height=10, width=14, useDingbats=FALSE)
@@ -209,7 +212,8 @@ for (i in unique(mods_agg$condition)) {
     ) +
     scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
     scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-    guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+    guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")))) +
+    scale_y_continuous(limits = c(0,1)) +
     scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
   
   ggsave(paste(out, "mods/", paste(i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), signature_plot_downstream, height=10, width=14, useDingbats=FALSE)
@@ -234,7 +238,8 @@ for (i in unique(mods_agg$condition)) {
         ) +
       scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")))) +
+      scale_y_continuous(limits = c(0,1)) +
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
  
     ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_upstream, height=10, width=14)
@@ -252,7 +257,8 @@ for (i in unique(mods_agg$condition)) {
         ) +
       scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")))) +
+      scale_y_continuous(limits = c(0,1)) +
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
  
     ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_downstream, height=10, width=14)

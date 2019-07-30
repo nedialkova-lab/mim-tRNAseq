@@ -135,7 +135,6 @@ def splitReadsIsodecoder(isodecoder_counts, clusterMMprops, tRNA_dict, cluster_d
 		for isodecoder, size in isodecoder_sizes.items():
 			isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
 
-	print(counts.shape)
 	counts.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t")
 	log.info("Read counts per isodecoder saved to " + out_dir + "counts/Isodecoder_counts.txt")
 

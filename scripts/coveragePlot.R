@@ -39,7 +39,7 @@ if (length(args)==0) {
 		geom_bar(stat = "identity", alpha = 0.8) + 
 		facet_wrap(~bam, ncol = 4) + 
 		xlab("Gene (%)") + 
-		ylab("Normalised coverage (coverage/library size)") + 
+		ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
 		labs(fill = "Isoacceptor") + 
 		scale_fill_manual(values = getPalette(cyt_colourCount)) + 
 		theme_bw()
@@ -49,7 +49,7 @@ if (length(args)==0) {
 		mitocov_byaa_norm = ggplot(subset(cov_byaa, grepl("mito", cov_byaa$aa) | grepl("nmt", cov_byaa$aa)), aes(x = bin, y = cov_norm, fill = aa, group = aa)) + 
 			geom_bar(stat = "identity", alpha = 0.8) + 
 			facet_wrap(~bam, ncol = 4) + 
-			xlab("Gene (%)") + ylab("Normalised coverage (coverage/library size)") + 
+			xlab("Gene (%)") + ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
 			labs(fill = "Isoacceptor") + 
 			scale_fill_manual(values = getPalette(mit_colourCount)) + 
 			theme_bw()
@@ -107,7 +107,7 @@ if (length(args)==0) {
 		geom_line() + 
 		facet_wrap(~bam, ncol = 4) +
 		xlab("Gene (%)") + 
-		ylab("Normalised coverage (coverage/library size)") + 
+		ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
 		labs(color = "Amino acid group") + 
 		theme_bw()
 	ggsave(paste(out_dir, "coverage_byaa_line.pdf", sep = ''), cov_byaa_line, height = ceiling(facetCount/4) * 4, width = 14)

@@ -19,10 +19,11 @@ mod_sites = args[2]
 mod_sites = unlist(strsplit(mod_sites, "_"))
 col_fun = colorRamp2(c(0, 0.5, 1), c("#f7fcf0", "#7bccc4", "#084081"))
 cols = brewer.pal(9, "GnBu")[-(1:2)]
-mito_trnas = args[4]
+mito_trnas = args[5]
 cons_pos = args[3]
 cons_pos = unlist(strsplit(cons_pos, "_"))
-misinc_thresh = as.numeric(args[5])
+misinc_thresh = as.numeric(args[4])
+print(misinc_thresh)
 
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
 mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep = "\t", quote = '')
@@ -157,17 +158,17 @@ for (i in unique(mods_agg$condition)) {
   
   # Misinc signatures
   # create filter list of rows where total misinc. rate < 0.1 
-  filter_0.1 = sub_mods_agg[sub_mods_agg$x < misinc_thresh, ]
+  filter_misincthresh = sub_mods_agg[sub_mods_agg$x < misinc_thresh, ]
   # subset mods table for condition
   sub_mods_aggtype = mods[mods$condition == i, ]
   # use filter to filter rows from this table
-  sub_mods_aggtype = anti_join(sub_mods_aggtype, filter_0.1, by=c("cluster","pos"))
+  sub_mods_aggtype = anti_join(sub_mods_aggtype, filter_misincthresh, by=c("cluster","pos"))
   # add in context info
   sub_mods_aggtype = merge(sub_mods_aggtype, context_info, by = c("cluster","pos"))
   sub_mods_aggtype$bam = sub(out, "", sub_mods_aggtype$bam)
   sub_mods_aggtype_cyt = sub_mods_aggtype[!grepl("mito", sub_mods_aggtype$cluster) & !grepl("nmt", sub_mods_aggtype$cluster), ]
-  # renormalise by sum of misinc at each site for each cluster in each bam file - this makes sum all misinc types = 1
-  sub_mods_aggtype_cyt = sub_mods_aggtype_cyt %>% group_by(cluster, pos, bam) %>% mutate(new_prop = proportion/sum(proportion))
+  # renormalise by sum of misinc at each site for each cluster in each bam file - this makes sum all misinc types = 1, additionally filter all clusters at each pos where misinc of highest nucle > 0.95
+  sub_mods_aggtype_cyt = sub_mods_aggtype_cyt %>% group_by(cluster, pos, bam, identity) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
   #sub_mods_aggtype_cyt_up = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, upstream = sub_mods_aggtype_cyt$upstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
   #sub_mods_aggtype_cyt_up = do.call("data.frame", sub_mods_aggtype_cyt_up)
   #sub_mods_aggtype_cyt_down = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, downstream = sub_mods_aggtype_cyt$downstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
@@ -216,7 +217,7 @@ for (i in unique(mods_agg$condition)) {
   if (!is.na(mito_trnas)){
     sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$cluster) | grepl("nmt", sub_mods_aggtype$cluster), ]
     # renormalise by sum of misinc at each site for each cluster in each bam file - this makes sum all misinc types = 1
-    sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(cluster, pos, bam) %>% mutate(new_prop = proportion/sum(proportion))
+    sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(cluster, pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
     #sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, downstream = sub_mods_aggtype_mito$downstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
     #sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
     sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))

@@ -67,7 +67,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance, mismatch_dict, isodecoder_count, mod_lists, Inosine_lists, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
+	coverage_bed, snp_tolerance, mismatch_dict, insert_dict, isodecoder_count, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
 	= tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans)
 	ssAlign.structureParser()
 	# Generate GSNAP indices
@@ -83,8 +83,8 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines, clusterMMTable = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
-		tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
+		new_mods, new_Inosines, clusterMMTable = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters)
+		Inosine_clusters = tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
 		bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
@@ -100,7 +100,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# Misincorporation analysis
 	if snp_tolerance or not mismatches == 0.0:
-		new_mods, new_Inosines, clusterMMTable = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict)
+		new_mods, new_Inosines, clusterMMTable = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters)
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
@@ -112,7 +112,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	if snp_tolerance or not mismatches == 0.0:
 		# plot mods and stops
 		log.info("Plotting modification and RT stop data...")
-		modplot_cmd = "Rscript " + script_path + "/modPlot.R " + out + " " + str(mod_sites) + " " + str(cons_pos_list) + " " + str(mito_trnas)
+		modplot_cmd = "Rscript " + script_path + "/modPlot.R " + out + " " + str(mod_sites) + " " + str(cons_pos_list) + " " + str(mito_trnas) + " " + str(misinc_thresh)
 		subprocess.call(modplot_cmd, shell=True)
 		# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 		if cca:
@@ -120,7 +120,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# split read counts by isodecoder
 	if cluster:
-		splitReads.splitReadsIsodecoder(isodecoder_count, clusterMMTable, tRNA_dict, cluster_dict, mismatch_dict, cluster_perPos_mismatchMembers, out)
+		splitReads.splitReadsIsodecoder(isodecoder_count, clusterMMTable, tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out, name)
 
 	# DESeq2
 	sample_data = os.path.abspath(coverageData)
@@ -213,8 +213,8 @@ if __name__ == '__main__':
 		help = 'Enable detection of unannotated (potential) modifications from misincorporation data. These are defined as having a total misincorporation rate\
 		higher than the threshold set with --misinc_thresh. These modifications are then appended to already known ones, and read alignment is reperformed.\
 		Very useful for poorly annotated species in Modomics. Due to realignment and misincorporation parsing, enabling this option slows the analysis down considerably.')
-	remapping.add_argument('--misinc-thresh', metavar = 'threshold for unannotated mods', dest = 'misinc_thresh', type = restrictedFloat, nargs = '?', default = 0.1,\
-		required = False, help = 'Threshold of total misincorporation rate at a position in a cluster used to call unannotated modifications. Value between 0 and 1, default is 0.1  (10%% misincorporation).')
+	remapping.add_argument('--misinc-thresh', metavar = 'threshold for unannotated mods', dest = 'misinc_thresh', type = restrictedFloat, nargs = '?', default = 0.125,\
+		required = False, help = 'Threshold of total misincorporation rate at a position in a cluster used to call unannotated modifications. Value between 0 and 1, default is 0.125  (12.5%% misincorporation).')
 
 	parser.add_argument('sampledata', help = 'Sample data sheet in text format, tab-separated. Column 1: full path to fastq (or fastq.gz). Column 2: condition/group.')
 

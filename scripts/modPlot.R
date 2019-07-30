@@ -22,6 +22,7 @@ cols = brewer.pal(9, "GnBu")[-(1:2)]
 mito_trnas = args[4]
 cons_pos = args[3]
 cons_pos = unlist(strsplit(cons_pos, "_"))
+misinc_thresh = as.numeric(args[5])
 
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
 mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep = "\t", quote = '')
@@ -156,7 +157,7 @@ for (i in unique(mods_agg$condition)) {
   
   # Misinc signatures
   # create filter list of rows where total misinc. rate < 0.1 
-  filter_0.1 = sub_mods_agg[sub_mods_agg$x < 0.1, ]
+  filter_0.1 = sub_mods_agg[sub_mods_agg$x < misinc_thresh, ]
   # subset mods table for condition
   sub_mods_aggtype = mods[mods$condition == i, ]
   # use filter to filter rows from this table

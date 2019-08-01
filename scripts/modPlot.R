@@ -23,7 +23,6 @@ mito_trnas = args[5]
 cons_pos = args[3]
 cons_pos = unlist(strsplit(cons_pos, "_"))
 misinc_thresh = as.numeric(args[4])
-print(misinc_thresh)
 
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
 mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep = "\t", quote = '')
@@ -85,7 +84,7 @@ for (i in unique(mods_agg$condition)) {
   heatmap_list = cyto_stops_hm %v% cyto_mods_hm
   pdf(paste(out, 'mods/', paste(i, "comb_heatmap.pdf", sep = "_"), sep = ''), width = 18, height = 16)
   draw(heatmap_list, ht_gap = unit(10, "mm"), column_title = "Cytoplasmic clusters")
-
+  
   if (!is.na(mito_trnas)){
     # mito mods
     sub_mods_agg = mods_agg[mods_agg$condition == i & (grepl("mito", mods_agg$cluster) | grepl("nmt", mods_agg$cluster)),]
@@ -115,7 +114,7 @@ for (i in unique(mods_agg$condition)) {
     heatmap_list = mito_stops_hm %v% mito_mods_hm
     draw(heatmap_list, ht_gap = unit(10, "mm"), column_title = "Mitochondrial (and nuclear-encoded mito) clusters")
     dev.off()
-
+    
   }
   
   else {
@@ -123,18 +122,21 @@ for (i in unique(mods_agg$condition)) {
   }
   
   # scatter plots
+  temp_mods = merge(mods, context_info, by = c('cluster', 'pos'))
+  temp_mods = temp_mods %>% group_by(cluster, pos, bam, identity) %>% mutate(new_prop = proportion/sum(proportion))
+  filter_proportions = temp_mods %>% group_by(cluster, pos, bam, identity) %>% filter((any(max(new_prop) > 0.95) & any(canon_pos != 34)) | (any(max(new_prop) > 0.95) & any(identity != 'A') & any(canon_pos == 34) & any(type != 'G')))
   sub_mods_agg = mods_agg[mods_agg$condition == i,]
   sub_mods_pos = sub_mods_agg[sub_mods_agg$canon_pos %in% mod_sites,]
   sub_mods_pos[which(sub_mods_pos$x > 1), 'x'] = 1
   sub_mods_pos = merge(sub_mods_pos, context_info, by = c('cluster', 'pos'))
+  sub_mods_pos = anti_join(sub_mods_pos, filter_proportions, by = c('cluster', 'pos', 'identity'))
   names(sub_mods_pos)[names(sub_mods_pos) == 'x'] = 'Proportion'
   
   sub_mods_pos$canon_pos = factor(sub_mods_pos$canon_pos, levels = c('9','20', '20a', '26', '32','34','37','58'))
   
   mods_scatter = ggplot(sub_mods_pos[!grepl("mito", sub_mods_pos$cluster) & !grepl("nmt", sub_mods_pos$cluster), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
     theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(breaks = c(0.0, 0.25, 0.50, 0.75, 1.0), colours = cols) +
-    geom_hline(yintercept = misinc_thresh, linetype = "dashed", alpha = 0.4) + 
-    scale_y_continuous(limits = c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
     theme(
       axis.text.x=element_blank(),
       axis.title.x=element_blank(),
@@ -147,7 +149,6 @@ for (i in unique(mods_agg$condition)) {
     mito_mods_scatter = ggplot(sub_mods_pos[grepl("mito", sub_mods_pos$cluster) | grepl("nmt", sub_mods_pos$cluster), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
       theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(breaks = c(0.0, 0.25, 0.50, 0.75, 1.0), colours = cols) +
       geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
-      scale_y_continuous(limits = c(0,1)) +
       theme(
         axis.text.x=element_blank(),
         axis.title.x = element_blank(),
@@ -170,17 +171,18 @@ for (i in unique(mods_agg$condition)) {
   sub_mods_aggtype$bam = sub(out, "", sub_mods_aggtype$bam)
   sub_mods_aggtype_cyt = sub_mods_aggtype[!grepl("mito", sub_mods_aggtype$cluster) & !grepl("nmt", sub_mods_aggtype$cluster), ]
   # renormalise by sum of misinc at each site for each cluster in each bam file - this makes sum all misinc types = 1, additionally filter all clusters at each pos where misinc of highest nucle > 0.95
-  sub_mods_aggtype_cyt = sub_mods_aggtype_cyt %>% group_by(cluster, pos, bam, identity) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
+  sub_mods_aggtype_cyt = sub_mods_aggtype_cyt %>% group_by(cluster, pos, bam, identity) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95) | (any(max(new_prop) >= 0.95 & any(identity == 'A') & any(canon_pos == 34) & any(type == 'G'))))
+                                                                                                                                                                                  
   #sub_mods_aggtype_cyt_up = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, upstream = sub_mods_aggtype_cyt$upstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
   #sub_mods_aggtype_cyt_up = do.call("data.frame", sub_mods_aggtype_cyt_up)
   #sub_mods_aggtype_cyt_down = aggregate(sub_mods_aggtype_cyt$proportion, by = list(identity = sub_mods_aggtype_cyt$identity, type = sub_mods_aggtype_cyt$type, downstream = sub_mods_aggtype_cyt$downstream, pos = sub_mods_aggtype_cyt$pos, canon_pos=sub_mods_aggtype_cyt$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
   #sub_mods_aggtype_cyt_down = do.call("data.frame", sub_mods_aggtype_cyt_down)
-
+  
   sub_mods_aggtype_cyt$canon_pos = factor(sub_mods_aggtype_cyt$canon_pos, levels = c('9', '20', '20a','26','32','34','37','58'))
   color_num = length(unique(sub_mods_aggtype_cyt$bam))
   dot_colors = brewer.pal(color_num, "Greys")[2:(color_num+1)]
   names(dot_colors) = unique(sub_mods_aggtype_cyt$bam)
-
+  
   signature_plot_upstream = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = new_prop, fill = type)) + 
     geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
     geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
@@ -194,11 +196,10 @@ for (i in unique(mods_agg$condition)) {
     ) +
     scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
     scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-    scale_y_continuous(limits = c(0,1)) +
     guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
-
+  
   ggsave(paste(out, "mods/", paste(i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), signature_plot_upstream, height=10, width=14, useDingbats=FALSE)
- 
+  
   signature_plot_downstream = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = new_prop, fill = type)) + 
     geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
     geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
@@ -212,12 +213,11 @@ for (i in unique(mods_agg$condition)) {
     ) +
     scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
     scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-    guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")))) +
-    scale_y_continuous(limits = c(0,1)) +
-    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
+    guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+  scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
   
   ggsave(paste(out, "mods/", paste(i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), signature_plot_downstream, height=10, width=14, useDingbats=FALSE)
- 
+  
   if (!is.na(mito_trnas)){
     sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$cluster) | grepl("nmt", sub_mods_aggtype$cluster), ]
     # renormalise by sum of misinc at each site for each cluster in each bam file - this makes sum all misinc types = 1
@@ -235,15 +235,14 @@ for (i in unique(mods_agg$condition)) {
         axis.title.x = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()
-        ) +
+      ) +
       scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")))) +
-      scale_y_continuous(limits = c(0,1)) +
-      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
- 
+      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
+    
     ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_upstream, height=10, width=14)
- 
+    
     mito_signature_plot_downstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
       geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
       geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
@@ -254,15 +253,14 @@ for (i in unique(mods_agg$condition)) {
         axis.title.x = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()
-        ) +
+      ) +
       scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
       scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")))) +
-      scale_y_continuous(limits = c(0,1)) +
-      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
- 
+      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
+    
     ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_downstream, height=10, width=14)
-
+    
   }
   
 }

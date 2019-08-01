@@ -40,7 +40,7 @@ if (length(args)==0) {
 		facet_wrap(~bam, ncol = 4) + 
 		xlab("Gene (%)") + 
 		ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
-		labs(fill = "Isoacceptor") + 
+		labs(fill = "Isotype") + 
 		scale_fill_manual(values = getPalette(cyt_colourCount)) + 
 		theme_bw()
 	ggsave(paste(out_dir, "coverage_byaa_norm.pdf", sep = ''), cov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
@@ -50,7 +50,7 @@ if (length(args)==0) {
 			geom_bar(stat = "identity", alpha = 0.8) + 
 			facet_wrap(~bam, ncol = 4) + 
 			xlab("Gene (%)") + ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
-			labs(fill = "Isoacceptor") + 
+			labs(fill = "Isotype") + 
 			scale_fill_manual(values = getPalette(mit_colourCount)) + 
 			theme_bw()
 		ggsave(paste(out_dir, "mitocoverage_byaa_norm.pdf", sep = ''), mitocov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
@@ -83,7 +83,7 @@ if (length(args)==0) {
 		geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
 		xlab("Gene (%)") + 
 		ylab("Scaled normalised coverage") + 
-		labs(fill = "Isoacceptor") + 
+		labs(fill = "Isotype") + 
 		#scale_y_continuous(breaks = seq(0,max(cov_byaa_norm_scaled),0.25)) + 
 		scale_fill_manual(values = getPalette(cyt_colourCount)) + 
 		theme_bw()
@@ -94,7 +94,7 @@ if (length(args)==0) {
 			geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
 			xlab("Gene (%)") + 
 			ylab("Scaled normalised coverage") + 
-			labs(fill = "Isoacceptor") + 
+			labs(fill = "Isotype") + 
 			scale_fill_manual(values = getPalette(mit_colourCount)) + 
 			theme_bw()
 		ggsave(paste(out_dir, "mitocoverage_byaa_norm_scaled.pdf", sep = ''), mitocov_byaa_norm_scaled, height = ceiling(facetCount/4) * 4, width = 14)

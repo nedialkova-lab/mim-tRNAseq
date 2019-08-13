@@ -187,7 +187,7 @@ def modContext(out):
 
 	# Define positions of conserved mod sites in gapped alignment for each tRNA
 	sites_dict = defaultdict()
-	mod_sites = ['9', '20', '20a', '26', '32', '34', '37', '58']
+	mod_sites = ['9', '20', '26', '32', '34', '37', '58']
 	
 	for mod in mod_sites:
 		sites_dict[mod] = list(cons_pos_dict.keys())[list(cons_pos_dict.values()).index(mod)]

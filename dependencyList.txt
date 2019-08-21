@@ -8,8 +8,9 @@ Python packages:
 	- seaborn 0.8.1
 	- matplotlib 2.1.2
 INFERNAL 1.1.2 (July 2016) 
+blast 2.7.1
 Subread package (for featureCounts) v1.6.2
-GMAP-GSNAP version 2018-05-30
+GMAP-GSNAP version 2019-02-26
 samtools version 1.6
 usearch v10.0.240
 bedtools v2.26.0

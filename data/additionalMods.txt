@@ -23,3 +23,8 @@ Homo sapiens	Pro-AGG	I34
 Homo sapiens	Ser-AGA	I34
 Homo sapiens	Thr-AGT	I34
 Homo sapiens	Val-AAC	I34
+Mus musculus	Ala-AGC	I34
+Mus musculus	Pro-AGG	I34
+Mus musculus	Thr-AGT	I34
+Mus musculus	Ser-AGA	I34
+Mus musculus	Leu-AAG	I34

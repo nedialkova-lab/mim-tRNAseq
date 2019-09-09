@@ -195,28 +195,28 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
  		zipped = '--gunzip'
 
 	if not mismatches == None:
-		mismatch_string = "--max-mismatches " + str(mismatches) + " "
+		mismatch_list = ["--max-mismatches", str(mismatches)]
 	elif mismatches == None:
-		mismatch_string = ""
+		mismatch_list = ""
 
 	output_prefix = fq.split("/")[-1].split(".")[0]
 
 	if snp_tolerance:
-		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -V " + snp_index_path + " -v " \
-		+ snp_index_name + " -t " + str(threads) + " --split-output " + out_dir + output_prefix + \
-		" --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 0 " + mismatch_string + \
-		fq + " &>> " + out_dir + "align.log"
+		map_cmd = ["gsnap", zipped, "-D", genome_index_path, "-d", genome_index_name, "-V", snp_index_path, "-v", \
+		snp_index_name, "-t", str(threads), "--split-output", out_dir + output_prefix, \
+		"--format", "sam", "--genome-unk-mismatch", "0", "--md-lowercase-snp", "--ignore-trim-in-filtering", "1", fq] 
+		map_cmd[-1:-1] = mismatch_list
 	else:
-		map_cmd = "gsnap " + zipped + " -D " + genome_index_path + " -d " + genome_index_name + " -t " + str(threads) + \
-		" --split-output " + out_dir + output_prefix + " --format=sam --genome-unk-mismatch=0 --md-lowercase-snp  --ignore-trim-in-filtering 0 " + mismatch_string\
-		+ fq + " &>> " + out_dir + "align.log"
+		map_cmd = ["gsnap", zipped, "-D", genome_index_path, "-d", genome_index_name, "-t", str(threads),\
+		"--split-output", out_dir + output_prefix, "--format", "sam", "--genome-unk-mismatch", "0", "--md-lowercase-snp", "--ignore-trim-in-filtering", "1", fq]
+		map_cmd[-1:-1] = mismatch_list
 
 	log.info("Aligning reads to {}...".format(genome_index_name))
-	subprocess.call(map_cmd, shell = True)
+	subprocess.check_call(map_cmd, stderr = open(out_dir + "align.log", "a"))
 	
 	# remove transloc sam output if no reads present (often the case)
-	cmd = "samtools view -c " + out_dir + output_prefix + ".unpaired_transloc"
-	readcount = int(subprocess.check_output(cmd, shell = True))
+	cmd = ["samtools", "view", "-c", out_dir + output_prefix + ".unpaired_transloc"]
+	readcount = int(subprocess.check_output(cmd))
 	if readcount == 0:
 		os.remove(out_dir + output_prefix + ".unpaired_transloc")
 
@@ -226,27 +226,28 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 		align_pathlist = Path(out_dir).glob(output_prefix + "*")
 		for file in align_pathlist:
 			if re.search("mult",file.name) and not re.search("bam", file.name):
-				cmd = "samtools view -@ " + str(threads) + " -F 0x904 -c " + out_dir + file.name
-				multi_count = int(subprocess.check_output(cmd, shell = True))
+				cmd = ["samtools", "view" ,"-@", str(threads), "-F", "0x904", "-c", out_dir + file.name]
+				multi_count = int(subprocess.check_output(cmd))
 				if keep_temp or remap:
-					cmd = "samtools view -@ " + str(threads) + " -bh -o " + out_dir + file.name + ".bam " + out_dir + file.name
-					subprocess.call(cmd, shell = True)
+					cmd = ["samtools", "view", "-@", str(threads), "-bh", "-o", out_dir + file.name + ".bam", out_dir + file.name]
+					subprocess.check_call(cmd)
 					os.remove(out_dir + file.name)
 				elif not keep_temp or not remap:
 					os.remove(out_dir + file.name)
 			elif re.search("uniq",file.name) and not re.search("bam", file.name):
-				cmd = "samtools view -@ " + str(threads) + " -c " + out_dir + file.name
-				unique_count = int(subprocess.check_output(cmd, shell = True))
+				cmd = ["samtools", "view", "-@", str(threads), "-c", out_dir + file.name]
+				unique_count = int(subprocess.check_output(cmd))
 				unique_bam = out_dir + file.name + ".bam"
-				cmd = "samtools view -@ " + str(threads) + " -bh " + out_dir + file.name + " | samtools sort -@ " + str(threads) + " -o " + unique_bam + " - "
-				subprocess.call(cmd, shell = True)
+				ps = subprocess.Popen(["samtools", "view", "-@", str(threads), "-bh", out_dir + file.name], stdout = subprocess.PIPE)
+				cmd = ["samtools", "sort", "-@", str(threads), "-o", unique_bam]
+				subprocess.check_call(cmd, stdin = ps.stdout)
 				os.remove(out_dir + file.name)
 			elif re.search("nomapping",file.name) and not re.search("bam", file.name):
-				cmd = "samtools view -@ " + str(threads) + " -c " + out_dir + file.name
-				unmapped_count = int(subprocess.check_output(cmd, shell = True))
+				cmd = ["samtools", "view", "-@", str(threads), "-c", out_dir + file.name]
+				unmapped_count = int(subprocess.check_output(cmd))
 				if keep_temp or remap:
-					cmd = "samtools view -@ " + str(threads) + " -bh -o " + out_dir + file.name + ".bam " + out_dir + file.name
-					subprocess.call(cmd, shell = True)
+					cmd = ["samtools", "view", "-@", str(threads), "-bh", "-o", out_dir + file.name + ".bam", out_dir + file.name]
+					subprocess.check_call(cmd)
 					os.remove(out_dir + file.name)
 				elif not keep_temp or not remap:
 				 	os.remove(out_dir + file.name)
@@ -276,16 +277,19 @@ def countReads(unique_bam_list, mode, threads, out_dir):
 	# Find tRNA gff produced earlier...
 	gff_file = glob.glob(out_dir + '*.gff')[0]
 
-	cmd = "featureCounts -T " + str(threads) 
+	cmd = ["featureCounts", "-T", str(threads)] 
 
 	if mode == "none":
-		cmd += " -a " + gff_file + " -o " + out_dir + "counts.txt " + " " .join(unique_bam_list) + " &>> " + out_dir + "featureCounts.log"
+		cmd.extend(["-a", gff_file, "-o", out_dir + "counts.txt"])
+		cmd.extend(unique_bam_list)
 	elif mode == "all":
-		cmd += " -O -a " + gff_file + " -o " + out_dir + "counts.txt " + " " .join(unique_bam_list) + " &>> " + out_dir + "featureCounts.log"
+		cmd.extend(["-O", "-a", gff_file, "-o", out_dir + "counts.txt"])
+		cmd.extend(unique_bam_list)
 	elif mode == "fraction":
-		cmd += " -O --fraction -a " + gff_file + " -o " + out_dir + "counts.txt " + " " .join(unique_bam_list) + " &>> " + out_dir + "featureCounts.log"
+		cmd.extend(["-O", "--fraction", "-a", gff_file, "-o", out_dir + "counts.txt"])
+		cmd.extend(unique_bam_list)
 
-	subprocess.call(cmd, shell=True)
+	subprocess.check_call(cmd, stderr = open(out_dir + "featureCounts.log", "a"))
 
 	log.info("Read counts per tRNA/cluster saved to " + out_dir + "counts/counts.txt")
 

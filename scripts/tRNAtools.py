@@ -10,7 +10,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio import Alphabet
 from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio.Blast import NCBIXML
-import re, copy, sys, os, shutil, subprocess, logging
+import re, copy, sys, os, shutil, subprocess, logging, glob
 from pathlib import Path
 import urllib.request
 from collections import defaultdict
@@ -356,18 +356,19 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				for sequence in seq_set:
 					anticodon_seqs.write(">" + sequence + "\n" + seq_set[sequence]['sequence'] + "\n")
 			# run usearch on each anticodon sequence fatsa to cluster
-			cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -id " + str(cluster_id) + " -sizeout -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null" 
-			#cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null"
-			subprocess.call(cluster_cmd, shell = True)
+			cluster_cmd = ["usearch", "-cluster_fast", temp_dir + anticodon + "_allseqs.fa", "-id", str(cluster_id), "-sizeout" ,"-centroids", temp_dir + anticodon + "_centroids.fa", "-uc", temp_dir + anticodon + "_clusters.uc"]			#cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null"
+			subprocess.check_call(cluster_cmd, stdout = subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 			# sort clusters by size (i.e. number of members in cluster)
-			sort_cmd = "usearch -sortbysize " + temp_dir + anticodon + "_centroids.fa -fastaout " + temp_dir + anticodon + "_centroids_sort.fa &> /dev/null"
-			subprocess.call(sort_cmd, shell = True)
+			sort_cmd = ["usearch", "-sortbysize", temp_dir + anticodon + "_centroids.fa", "-fastaout", temp_dir + anticodon + "_centroids_sort.fa"]
+			subprocess.check_call(sort_cmd, stdout = subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 			# recluster based on sorted by size clusters
-			final_cluster_cmd = "usearch -cluster_smallmem " + temp_dir + anticodon + "_centroids_sort.fa -sortedby size -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroidsFinal.fa &> /dev/null" 
-			subprocess.call(final_cluster_cmd, shell = True)
+			final_cluster_cmd = ["usearch", "-cluster_smallmem", temp_dir + anticodon + "_centroids_sort.fa", "-sortedby", "size", "-id", str(cluster_id), "-centroids", temp_dir + anticodon + "_centroidsFinal.fa"]
+			subprocess.check_call(final_cluster_cmd, stdout = subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		# combine centroids files into one file
-		combine_cmd = "cat " + temp_dir + "*_centroidsFinal.fa > " + temp_dir + "all_centroids.fa"
-		subprocess.call(combine_cmd, shell = True)
+		for filename in glob.glob(temp_dir + "*_centroidsFinal.fa"):
+			with open(filename, "r") as fileh:
+				with open(temp_dir + "all_centroids.fa", "a") as outh:
+					outh.write(fileh.read())
 		centroids = SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")
 		for centroid in centroids:
 			centroid.id = centroid.id.split(";")[0]
@@ -785,9 +786,8 @@ def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = Fa
 	else:
 		genome_file = out_dir + experiment_name + "_tRNATranscripts.fa"
 
-	index_cmd = "gmap_build -q 1 -D " + out_dir + " -d " + experiment_name + "_tRNAgenome " + genome_file + \
-				" &> " + out_dir + "genomeindex.log"
-	subprocess.call(index_cmd, shell = True) 
+	index_cmd = ["gmap_build", "-q", "1", "-D", out_dir, "-d", experiment_name + "_tRNAgenome", genome_file]
+	subprocess.check_call(index_cmd, stderr = open(out_dir + "genomeindex.log", "w")) 
 	log.info("Genome indices done...")
 
 	snp_index_path = out_dir + experiment_name + "snp_index"
@@ -801,12 +801,13 @@ def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = Fa
 
 		snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
 		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
-		index_cmd = "cat " + snp_file + " | iit_store -o " + snp_index_path + "/" + snp_index_name + " &> " + out_dir + "snpindex.log"
-		subprocess.call(index_cmd, shell = True)
-		index_cmd = "snpindex -q 1 -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
-					" -v " + experiment_name + "_modificationSNPs " + snp_index_path + "/" + experiment_name + \
-					"_modificationSNPs.iit &>> " + out_dir + "snpindex.log"
-		subprocess.call(index_cmd, shell = True)
+		ps = subprocess.Popen(('cat', snp_file), stdout = subprocess.PIPE)
+		index_cmd = ["iit_store", "-o", snp_index_path + "/" + snp_index_name]
+		subprocess.check_call(index_cmd, stdin = ps.stdout, stdout = open(out_dir + "snpindex.log", "w"))
+		index_cmd = ["snpindex", "-q", "1", "-D", genome_index_path, "-d", experiment_name + "_tRNAgenome", "-V", snp_index_path, \
+					"-v", experiment_name + "_modificationSNPs", snp_index_path + "/" + experiment_name + \
+					"_modificationSNPs.iit"]
+		subprocess.check_call(index_cmd, stderr = open(out_dir + "snpindex.log", "w"))
 		log.info("SNP indices done...")
 		return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
 
@@ -834,12 +835,13 @@ def generateSNPIndex(experiment_name, out_dir, snp_tolerance = False):
 
 		snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
 		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
-		index_cmd = "cat " + snp_file + " | iit_store -o " + snp_index_path + "/" + snp_index_name + " &> " + out_dir + "snpindex.log"
-		subprocess.call(index_cmd, shell = True)
-		index_cmd = "snpindex -q 1 -D " + genome_index_path + " -d " + experiment_name + "_tRNAgenome -V " + snp_index_path + \
-					" -v " + experiment_name + "_modificationSNPs " + snp_index_path + "/" + experiment_name + \
-					"_modificationSNPs.iit &>> " + out_dir + "snpindex.log"
-		subprocess.call(index_cmd, shell = True)
+		ps = subprocess.Popen(('cat', snp_file), stdout = subprocess.PIPE)
+		index_cmd = ["iit_store", "-o", snp_index_path + "/" + snp_index_name]
+		subprocess.check_call(index_cmd, stdin = ps.stdout, stdout = open(out_dir + "snpindex.log", "w"))
+		index_cmd = ["snpindex", "-q", "1", "-D", genome_index_path, "-d", experiment_name + "_tRNAgenome", "-V", snp_index_path, \
+					"-v", experiment_name + "_modificationSNPs", snp_index_path + "/" + experiment_name + \
+					"_modificationSNPs.iit"]
+		subprocess.check_call(index_cmd, stderr = open(out_dir + "snpindex.log", "w"))
 		log.info("SNP indices done...")
 
 	elif not snp_tolerance:

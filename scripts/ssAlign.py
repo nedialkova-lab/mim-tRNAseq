@@ -16,8 +16,8 @@ def aligntRNA(tRNAseqs, out):
 	global stkname
 	stkname = tRNAseqs.split(".fa")[0] + '_align.stk'
 	cmfile ='/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1]) + '/data/tRNAmatureseq.cm'
-	cmcommand = 'cmalign -o ' + stkname + ' --nonbanded -g ' + cmfile + ' ' + tRNAseqs + ' &>> ' + out + 'cm.log'
-	subprocess.call(cmcommand, shell = True)
+	cmcommand = ['cmalign', '-o', stkname, '--nonbanded', '-g', cmfile, tRNAseqs]
+	subprocess.check_call(cmcommand, stdout = open(out + 'cm.log', 'w'))
 
 def extraCCA():
 	# look for extra CCA's added spuriously that fall outside of canonical tRNA structure

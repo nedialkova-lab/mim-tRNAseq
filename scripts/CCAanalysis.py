@@ -19,7 +19,7 @@ def plotDinuc(out_dir):
 
 	out = out_dir + "CCAanalysis/"
 	script_path = os.path.dirname(os.path.realpath(__file__))
-	command = "Rscript " + script_path + "/ccaPlots.R " + out + "AlignedDinucProportions.csv " + out + "/CCAcounts.csv " + out
-	subprocess.call(command, shell = True)
+	command = ["Rscript", script_path + "/ccaPlots.R", out + "AlignedDinucProportions.csv", out + "/CCAcounts.csv", out]
+	subprocess.check_call(command)
 
 	log.info("CCA analysis done and plots created. Located in {}".format(out))

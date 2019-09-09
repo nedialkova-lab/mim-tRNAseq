@@ -20,6 +20,9 @@ if (length(args)==0) {
 
 	out_dir = args[3]
 	mito_trnas = args[5]
+	if (mito_trnas == ''){
+		mito_trnas = NA
+	}
 	sorted_aa = args[4]
 	sorted_aa = unlist(strsplit(sorted_aa, "_"))
 

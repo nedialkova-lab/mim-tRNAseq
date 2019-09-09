@@ -20,6 +20,9 @@ mod_sites = unlist(strsplit(mod_sites, "_"))
 col_fun = colorRamp2(c(0, 0.5, 1), c("#f7fcf0", "#7bccc4", "#084081"))
 cols = brewer.pal(9, "GnBu")[-(1:2)]
 mito_trnas = args[5]
+if (mito_trnas == ''){
+  mito_trnas = NA
+}
 cons_pos = args[3]
 cons_pos = unlist(strsplit(cons_pos, "_"))
 misinc_thresh = as.numeric(args[4])

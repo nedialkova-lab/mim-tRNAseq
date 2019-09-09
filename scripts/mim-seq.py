@@ -112,8 +112,8 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	if snp_tolerance or not mismatches == 0.0:
 		# plot mods and stops
 		log.info("Plotting modification and RT stop data...")
-		modplot_cmd = "Rscript " + script_path + "/modPlot.R " + out + " " + str(mod_sites) + " " + str(cons_pos_list) + " " + str(misinc_thresh) + " " + str(mito_trnas)
-		subprocess.call(modplot_cmd, shell=True)
+		modplot_cmd = ["Rscript", script_path + "/modPlot.R", out, str(mod_sites), str(cons_pos_list), str(misinc_thresh), str(mito_trnas)]
+		subprocess.check_call(modplot_cmd)
 		# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 		if cca:
 			CCAanalysis.plotDinuc(out)
@@ -128,8 +128,8 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("\n+----------------------------------------------+\
 	\n| Differential expression analysis with DESeq2 |\
 	\n+----------------------------------------------+")
-	deseq_cmd = "Rscript " + script_path + "/deseq.R " + out + " " + sample_data + " " + control_cond
-	subprocess.call(deseq_cmd, shell=True)
+	deseq_cmd = ["Rscript", script_path + "/deseq.R", out, sample_data, control_cond]
+	subprocess.check_call(deseq_cmd)
 	deseq_out = out + "DESeq2"
 
 	log.info("DESeq2 outputs located in: {}".format(deseq_out))

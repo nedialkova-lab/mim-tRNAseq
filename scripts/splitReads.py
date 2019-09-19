@@ -1,6 +1,7 @@
  #! /usr/bin/env python3
 
 import pandas as pd
+import numpy as np
 import logging
 from collections import defaultdict
 
@@ -114,11 +115,16 @@ def splitReadsIsodecoder(isodecoder_counts, clusterMMprops, tRNA_dict, cluster_d
 							sequence = tRNA_dict[tRNA]['sequence'].upper()
 							detected_seqs.remove(sequence)
 
+	
+	counts['Single_isodecoder'] = "NA"
 	# for all clusters in cluster_dict, isdecoder size is number of members remaining after updating in above code
 	# these include clusters with only one isodecoder - i.e. not in mismatch_dict, and clusters that could not be separated into isodecoders because no unique mismatch distinguishes them
 	for cluster, members in cluster_dict.items():
 		cluster_size = len(members)
 		isodecoder_sizes[cluster] = cluster_size
+		remaining_isodecoders = set([data['sequence'].upper() for member, data in tRNA_dict.items() if member in members])
+		if len(remaining_isodecoders) > 1:
+			counts.at[cluster, 'Single_isodecoder'] = "False"
 		# if cluster not in mismatch_dict:
 		# 	cluster_members = [gene for gene, data in tRNA_dict.items() if gene in cluster_dict[cluster]]
 		# 	parent_size = len(cluster_members)
@@ -135,7 +141,7 @@ def splitReadsIsodecoder(isodecoder_counts, clusterMMprops, tRNA_dict, cluster_d
 		for isodecoder, size in isodecoder_sizes.items():
 			isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
 
-	counts.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t")
+	counts.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t", na_rep = "NA")
 	log.info("Read counts per isodecoder saved to " + out_dir + "counts/Isodecoder_counts.txt")
 
 

@@ -46,6 +46,7 @@ args = commandArgs(trailingOnly = TRUE)
 outdir = args[1]
 sampleData = args[2]
 control_cond = args[3]
+cluster_id = as.numeric(args[4])
 subdir = "DESeq2/"
 subdir_isodecoder = "DESeq2/isodecoder"
 subdir_anticodon = "DESeq2/anticodon"
@@ -60,7 +61,13 @@ dir.create(file.path(subdir, 'isodecoder'), showWarnings = FALSE)
 # Filter out mito counts
 anticodon_countdata = read.table("Anticodon_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
 anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)),]
-isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+if (cluster_id == 1) {
+  isodecoder_countdata = read.table("counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+  isodecoder_countdata = isodecoder_countdata[, -c(1,2,3,4,5)]
+} else {
+  isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+  isodecoder_countdata$Single_isodecoder = NULL
+}
 isodecoder_countdata = isodecoder_countdata[!grepl("mito", rownames(isodecoder_countdata)),]
 coldata = read.table(paste(sampleData, sep=""), header=FALSE, sep = "\t", row.names=1)
 
@@ -104,11 +111,19 @@ isoacceptorInfo = read.table(isoacceptorFile[1], header=T, row.names=1)
 isoacceptorInfo = isoacceptorInfo[ , 'size', drop=F]
 isoacceptorInfo$rn = rownames(isoacceptorInfo)
 
-
+if (cluster_id == 1){
+  isodecoderFile = list.files(path="./", pattern="clusterInfo.txt", full.names=T)
+  isodecoderInfo = read.table(isodecoderFile[1], header=T)
+  isodecoderInfo = isodecoderInfo[!duplicated(isodecoderInfo$parent),]
+  isodecoderInfo = isodecoderInfo[, 'cluster_size', drop = F]
+  colnames(isodecoderInfo) = 'size'
+  isodecoderInfo$rn = rownames(isodecoderInfo)
+} else {
 isodecoderFile = list.files(path="./", pattern="isodecoderInfo.txt", full.names=T)
 isodecoderInfo = read.table(isodecoderFile[1], header=T, row.names=1)
 isodecoderInfo = isodecoderInfo[ , 'size', drop=F]
 isodecoderInfo$rn = rownames(isodecoderInfo)
+}
 
 # Analysis with DESeq2 ----------------------------------------------------
 

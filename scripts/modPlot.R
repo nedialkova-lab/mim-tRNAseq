@@ -30,6 +30,7 @@ misinc_thresh = as.numeric(args[4])
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
 mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep = "\t", quote = '')
 mods$proportion[is.na(mods$proportion)] = 0
+mods$proportion[is.infinite(mods$proportion)] = 0
 mods$cluster = sub(".*_mito_tRNA-","mito",mods$cluster)
 mods$cluster = sub(".*_nmt_tRNA-","nmt",mods$cluster)
 mods$cluster = sub(".*_tRNA-","",mods$cluster)
@@ -40,6 +41,7 @@ mods_agg = aggregate(mods_agg$x, by = list(cluster=mods_agg$cluster, pos=mods_ag
 # read in stops table and process as above for mods
 stops = read.table(paste(out, "mods/RTstopTable.csv", sep = ''), header = T, sep = "\t", quote = '')
 stops$proportion[is.na(stops$proportion)] = 0
+stops$proportion[is.infinite(stops$proportion)] = 0
 stops$cluster = sub(".*_mito_tRNA-","mito",stops$cluster)
 stops$cluster = sub(".*_nmt_tRNA-","nmt",stops$cluster)
 stops$cluster = sub(".*_tRNA-","",stops$cluster)

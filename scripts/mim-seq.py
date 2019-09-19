@@ -119,7 +119,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 			CCAanalysis.plotDinuc(out)
 
 	# split read counts by isodecoder
-	if cluster:
+	if cluster and not cluster_id == 1:
 		splitReads.splitReadsIsodecoder(isodecoder_count, clusterMMTable, tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out, name)
 
 	# DESeq2
@@ -128,7 +128,8 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("\n+----------------------------------------------+\
 	\n| Differential expression analysis with DESeq2 |\
 	\n+----------------------------------------------+")
-	deseq_cmd = ["Rscript", script_path + "/deseq.R", out, sample_data, control_cond]
+
+	deseq_cmd = ["Rscript", script_path + "/deseq.R", out, sample_data, control_cond, str(cluster_id)]
 	subprocess.check_call(deseq_cmd)
 	deseq_out = out + "DESeq2"
 

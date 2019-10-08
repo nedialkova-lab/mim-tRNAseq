@@ -51,7 +51,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		level=logging.INFO,
 		handlers=[
 			logging.FileHandler(out + "mim-tRNAseq_{}.log".format(now.strftime("%H-%M-%S"))),
-			logging.StreamHandler(sys.stdout)
+			logging.StreamHandler()
 		])
 	log = logging.getLogger(__name__)
 	log.info("mim-tRNAseq run with command:")

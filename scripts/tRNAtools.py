@@ -67,7 +67,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 		# read each mito tRNA, edit sequence header to match nuclear genes as above and add to tRNA_dict
 		for seq in temp_dict:
 			seq_parts = seq.split("|")
-			species = ' '.join(seq_parts[1].split("_")[0:])
+			mito_species = ' '.join(seq_parts[1].split("_")[0:])
 			anticodon = seq_parts[4]
 			amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
 			mito_count[anticodon] += 1
@@ -97,6 +97,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 	log.info("Processing modomics database...")
 	modomics_file = getModomics()
 	modomics_dict = {}
+	perSpecies_count = defaultdict(int)
 	for line in modomics_file.splitlines():
 		line = line.strip()
 		sameIDcount = 0
@@ -108,6 +109,8 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 			if not mod_species in species:
 				continue
 			else:
+				# Add to perSpecies_count to tally total modomics entries per species of interest
+				perSpecies_count[mod_species] += 1
 				# Replace modomics antidon with normal ACGT codon, keep "." for pattern matching
 				anticodon = str(line.split('|')[2])
 				new_anticodon = getUnmodSeq(anticodon, modifications)
@@ -122,9 +125,9 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 
 				curr_id = str(line.split('|')[3].split(' ')[0]) + '_' + str(line.split('|')[3].split(' ')[1]) + '_' + str(line.split('|')[0].split(' ')[1]) + '-' + amino + '-' + new_anticodon
 				#Unique names for duplicates
-				if curr_id in modomics_dict:
+				while curr_id in modomics_dict:
 					sameIDcount += 1
-					curr_id = curr_id + '-' + str(sameIDcount)
+					curr_id = "-".join(curr_id.split('-')[0:3]) + '-' + str(sameIDcount)
 
 				tRNA_type = str(line.split('|')[4])
 				modomics_dict[curr_id] = {'sequence':'','type':tRNA_type, 'anticodon':new_anticodon}
@@ -163,7 +166,8 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 				# else:
 				# 	duplicate_item = curr_id
 
-	log.info('Number of Modomics entries for species of interest: {}'.format(len(modomics_dict)))
+	for species in perSpecies_count:
+		log.info('Number of Modomics entries for {}: {}'.format(species, perSpecies_count[species]))
 
 	return(tRNA_dict,modomics_dict, species)
 

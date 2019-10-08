@@ -23,6 +23,7 @@ R packages:
 	- calibrate v1.7.2
 	- gridExtra v2.3
 	- plyr v1.8.4
+	- dplyr v0.8.3
   - ggpol 0.0.4
 			if (!require(devtools)) {
 				install.packages('devtools')

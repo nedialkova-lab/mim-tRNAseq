@@ -45,8 +45,13 @@ def splitReadsIsodecoder(isodecoder_counts, clusterMMprops, tRNA_dict, cluster_d
 				for tRNA, sequence in mismatch_members.items():
 					# do not process same sequence or cluster twice
 					if (not sequence.upper() in detected_seqs) and (not tRNA in detected_clusters):
-						type_count[sequence[pos]].append(tRNA)
-						detected_seqs.append(sequence.upper())
+						# catch IndexError exception when cluster parent is longer than member and mismatch position lies outiside cluster member length
+						# in these cases just ignore this specific mismatch_member tRNA as the mismatch in question does not apply to this memeber
+						try:
+							type_count[sequence[pos]].append(tRNA)
+							detected_seqs.append(sequence.upper())
+						except IndexError:
+							continue
 				
 				# Only process tRNAs which are unique in a specific mismatch at a position, thereby using this mismacth to uniquely assign reads to only this isodecoder
 				for identity, tRNAs in type_count.items():

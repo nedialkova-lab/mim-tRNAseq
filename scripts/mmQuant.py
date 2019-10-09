@@ -263,6 +263,9 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 	modTable_prop_melt = modTable_prop_melt[['cluster','pos', 'type','proportion','condition', 'bam']]
 	modTable_prop_melt = modTable_prop_melt.join(tRNA_struct, on=['cluster', 'pos'])
 	modTable_prop_melt = modTable_prop_melt.dropna(subset=['struct'])
+	cov_merge = cov_table[['pos', 'cov', 'bam']]
+	cov_merge['cluster'] = cov_merge.index
+	modTable_prop_melt = pd.merge(modTable_prop_melt, cov_merge, on = ['cluster', 'pos', 'bam'], how = 'left')
 
 	modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 

@@ -101,7 +101,7 @@ if (nrow(coldata) == 1) {
   } else {
 
     # Make subdirectories
-    dir.create(file.path(outdir, subdir), showWarnings = FALSE)
+    dir.create(file.path(subdir), showWarnings = FALSE)
     dir.create(file.path(subdir, 'anticodon'), showWarnings = FALSE)
     dir.create(file.path(subdir, 'isodecoder'), showWarnings = FALSE)
 

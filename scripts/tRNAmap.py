@@ -193,13 +193,14 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 	zipped = ''
 	if re.search(".gz",fq):
  		zipped = '--gunzip'
+ 		output_prefix = fq.split("/")[-1].split(".fastq.gz")[0]
+	else:
+ 		output_prefix = fq.split("/")[-1].split(".fastq")[0]
 
 	if not mismatches == None:
 		mismatch_list = ["--max-mismatches", str(mismatches)]
 	elif mismatches == None:
 		mismatch_list = ""
-
-	output_prefix = fq.split("/")[-1].split(".")[0]
 
 	if snp_tolerance:
 		map_cmd = ["gsnap", zipped, "-D", genome_index_path, "-d", genome_index_name, "-V", snp_index_path, "-v", \

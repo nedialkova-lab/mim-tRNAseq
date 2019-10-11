@@ -247,25 +247,28 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 	modTable_prop_melt['condition'] = condition
 	modTable_prop_melt['bam'] = inputs
 	modTable_prop_melt.pos = pd.to_numeric(modTable_prop_melt.pos)
+	# add coverage per nucelotide from cov_table
+	cov_merge = cov_table[['pos', 'cov', 'bam']]
+	cov_merge['cluster'] = cov_merge.index
+	#cov_merge.columns = ['canon_pos', 'cov', 'bam', 'cluster']
+	cov_merge['pos'] = cov_merge['pos'].astype(int)
+	modTable_prop_melt = pd.merge(modTable_prop_melt, cov_merge, on = ['cluster', 'pos', 'bam'], how = 'left')
 	
 	grouped = modTable_prop_melt.groupby('cluster')
 	for name, group in grouped:
 		for pos in tRNA_struct.loc[name].index:
 			if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
 				modTable_prop_melt.loc[(modTable_prop_melt.cluster == name) & (modTable_prop_melt.pos >= pos), 'pos'] += 1
-				new = pd.DataFrame({'cluster':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]})
+				new = pd.DataFrame({'cluster':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1], 'cov':'NA'})
 				modTable_prop_melt = modTable_prop_melt.append(new)
 			if not any(modTable_prop_melt.loc[modTable_prop_melt.cluster == name].pos == pos):
-				new = pd.DataFrame({'cluster':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]})
+				new = pd.DataFrame({'cluster':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1], 'cov':'NA'})
 				modTable_prop_melt = modTable_prop_melt.append(new)
 
 
-	modTable_prop_melt = modTable_prop_melt[['cluster','pos', 'type','proportion','condition', 'bam']]
+	modTable_prop_melt = modTable_prop_melt[['cluster','pos', 'type','proportion','condition', 'bam', 'cov']]
 	modTable_prop_melt = modTable_prop_melt.join(tRNA_struct, on=['cluster', 'pos'])
 	modTable_prop_melt = modTable_prop_melt.dropna(subset=['struct'])
-	cov_merge = cov_table[['pos', 'cov', 'bam']]
-	cov_merge['cluster'] = cov_merge.index
-	modTable_prop_melt = pd.merge(modTable_prop_melt, cov_merge, on = ['cluster', 'pos', 'bam'], how = 'left')
 
 	modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 

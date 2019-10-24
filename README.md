@@ -25,24 +25,33 @@ Unix command line dependencies:
 
 Tool | Version >= | Link
 -----|------------|-----
-Subread package | 1.6.2 | [Download subread package](http://subread.sourceforge.net/)
-GMAP-GSNAP | 2019-02-26 | [Download GMAP/GSNAP](http://research-pub.gene.com/gmap/)
-samtools | 1.7 | [Download samtools](http://www.htslib.org/)
-usearch | 10.0.240 | [Download usearch](https://www.drive5.com/usearch/)
-bedtools | 2.26.0 | [Install bedtools](https://bedtools.readthedocs.io/en/latest/content/installation.html)
-R | 3.5.2 | [Download R](https://www.r-project.org/)
-INFERNAL | 1.1.2 (July 2016) | [Download INFERNAL](http://eddylab.org/infernal/)
-BLAST | 2.7.1 | [Download BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download)
+Subread package | 1.6.2 | [subread package](http://subread.sourceforge.net/)
+GMAP-GSNAP | 2019-02-26 | [GMAP/GSNAP](http://research-pub.gene.com/gmap/)
+samtools | 1.7 | [samtools](http://www.htslib.org/)
+usearch | 10.0.240 | [usearch](https://www.drive5.com/usearch/)
+bedtools | 2.26.0 | [bedtools](https://bedtools.readthedocs.io/en/latest/content/installation.html)
+R | 3.5.2 | [R](https://www.r-project.org/)
+INFERNAL | 1.1.2 (July 2016) | [INFERNAL](http://eddylab.org/infernal/)
+BLAST | 2.7.1 | [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download)
 
 Required R packages:
 
-Package | Version >=
---------|------------
-ggplot2 | 2.2.1
-DESeq2 | 1.14.1
-RColorBrewer | 1.1.2  
-pheatmap | 1.0.10
-calibrate | 1.7.2
+Package | Version >= | Link
+--------|------------|-----
+DESeq2 | 1.22.2 | [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)
+RColorBrewer | 1.1.2 | [RColorBrewer](https://www.rdocumentation.org/packages/RColorBrewer/versions/1.1-2)
+pheatmap | 1.0.12 | [pheatmap](https://www.rdocumentation.org/packages/pheatmap/versions/1.0.12)
+calibrate | 1.7.2 | [calibrate](https://cran.r-project.org/web/packages/calibrate/index.html)
+gridExtra | 2.3 | [girExtra](https://cran.r-project.org/web/packages/gridExtra/index.html)
+plyr | 1.8.4 | [plyr](https://www.rdocumentation.org/packages/plyr/versions/1.8.4)
+reshape2 | 1.4.3 | [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
+circlize | 0.4.7 | [circlize](https://cran.r-project.org/web/packages/circlize/index.html)
+tidyverse | 1.2.1 | [Install tidyverse](https://www.tidyverse.org/packages/)
+ggpol | 0.0.5 | *
+ComplexHeatmap | 1.99.5 | **
+
+'* To install ggpol, please get development version from github:
+
 
 Required Python packages:
 

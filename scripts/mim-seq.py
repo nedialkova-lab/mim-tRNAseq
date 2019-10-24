@@ -159,8 +159,8 @@ if __name__ == '__main__':
 	options = parser.add_argument_group("Program options")
 	options.add_argument('--cluster', required = False, dest = 'cluster', action = 'store_true',\
 		help = 'Enable usearch sequence clustering of tRNAs by isodecoder - drastically reduces rate of multi-mapping reads.')
-	options.add_argument('--cluster-id', metavar = 'clutering id cutoff', dest = 'cluster_id', type = restrictedFloat, nargs = '?', default = 0.95,\
-		required = False, help = 'Identity cutoff for usearch clustering between 0 and 1. Default is 0.95.')
+	options.add_argument('--cluster-id', metavar = 'clutering identity threshold', dest = 'cluster_id', type = restrictedFloat, nargs = '?', default = 0.97,\
+		required = False, help = 'Identity cutoff for usearch clustering between 0 and 1. Default is 0.97.')
 	options.add_argument('--threads', metavar = 'thread number', required = False, dest = 'threads', type = int, \
 		help = 'Set processor threads to use during read alignment and read counting.')
 	options.add_argument('--posttrans-mod-off', required = False, dest = 'posttrans', action = 'store_true', \

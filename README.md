@@ -51,18 +51,20 @@ ggpol | 0.0.5 | * [ggpol](https://github.com/erocoar/ggpol)
 ComplexHeatmap | 1.99.5 | ** [ComplexHeatmap](https://github.com/jokergoo/ComplexHeatmap)
 
 \* To install ggpol, please get development version from github:
-	```if (!require(devtools)) {
+```R
+	if (!require(devtools)) {
 		install.packages('devtools')
         }
     devtools::install_github('erocoar/ggpol')
 ```
 \*\* To install ComplexHeatmap, please get development version from github:
-	```if (!require(devtools)) {
+
+```R
+	if (!require(devtools)) {
 		install.packages('devtools')
         }
     devtools::install_github('jokergoo/ComplexHeatmap')	
 ```
-
 Required Python packages:
 
 Package | Version >=

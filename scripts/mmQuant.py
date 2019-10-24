@@ -248,7 +248,7 @@ def countMods_mp(out_dir, cov_table, min_cov, info, mismatch_dict, cca, filtered
 	modTable_prop_melt['bam'] = inputs
 	modTable_prop_melt.pos = pd.to_numeric(modTable_prop_melt.pos)
 	# add coverage per nucelotide from cov_table
-	cov_merge = cov_table[['pos', 'cov', 'bam']]
+	cov_merge = cov_table.loc[:, ('pos', 'cov', 'bam')]
 	cov_merge['cluster'] = cov_merge.index
 	#cov_merge.columns = ['canon_pos', 'cov', 'bam', 'cluster']
 	cov_merge['pos'] = cov_merge['pos'].astype(int)

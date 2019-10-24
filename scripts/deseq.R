@@ -61,7 +61,7 @@ anticodon_countdata = read.table("Anticodon_counts.txt", header=TRUE, row.names=
 anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)),]
 if (cluster_id == 1) {
   isodecoder_countdata = read.table("counts.txt", header=TRUE, row.names=1, check.names = FALSE)
-  isodecoder_countdata = isodecoder_countdata[, -c(1,2,3,4,5)]
+  isodecoder_countdata = isodecoder_countdata[, -c(1,2,3,4,5), drop = FALSE]
 } else {
   isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
   isodecoder_countdata$Single_isodecoder = NULL

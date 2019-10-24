@@ -174,8 +174,12 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 def getModomics():
 	# Get full Modomics modified tRNA data from web
 
-	with urllib.request.urlopen('http://modomics.genesilico.pl/sequences/list/?type_field=tRNA&subtype=all&species=all&display_ascii=Display+as+ASCII&nomenclature=abbrev') as response:
-		modomics = response.read().decode()
+	try:
+		with urllib.request.urlopen('http://modomics.genesilico.pl/sequences/list/?type_field=tRNA&subtype=all&species=all&display_ascii=Display+as+ASCII&nomenclature=abbrev') as response:
+			modomics = response.read().decode()
+	except Exception as e:
+		logging.error("Error in {}".format("fetching modomics"), exc_info=e)
+		raise
 
 	return modomics
 
@@ -791,7 +795,7 @@ def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = Fa
 		genome_file = out_dir + experiment_name + "_tRNATranscripts.fa"
 
 	index_cmd = ["gmap_build", "-q", "1", "-D", out_dir, "-d", experiment_name + "_tRNAgenome", genome_file]
-	subprocess.check_call(index_cmd, stderr = open(out_dir + "genomeindex.log", "w")) 
+	subprocess.check_call(index_cmd, stderr = open(out_dir + "genomeindex.log", "w"), stdout = subprocess.DEVNULL) 
 	log.info("Genome indices done...")
 
 	snp_index_path = out_dir + experiment_name + "snp_index"
@@ -805,13 +809,13 @@ def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = Fa
 
 		snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
 		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
-		ps = subprocess.Popen(('cat', snp_file), stdout = subprocess.PIPE)
+		ps = subprocess.Popen(('cat', snp_file), stdout = subprocess.PIPE, stderr = subprocess.DEVNULL)
 		index_cmd = ["iit_store", "-o", snp_index_path + "/" + snp_index_name]
-		subprocess.check_call(index_cmd, stdin = ps.stdout, stdout = open(out_dir + "snpindex.log", "w"))
+		subprocess.check_call(index_cmd, stdin = ps.stdout, stdout = open(out_dir + "snpindex.log", "w"), stderr = subprocess.DEVNULL)
 		index_cmd = ["snpindex", "-q", "1", "-D", genome_index_path, "-d", experiment_name + "_tRNAgenome", "-V", snp_index_path, \
 					"-v", experiment_name + "_modificationSNPs", snp_index_path + "/" + experiment_name + \
 					"_modificationSNPs.iit"]
-		subprocess.check_call(index_cmd, stderr = open(out_dir + "snpindex.log", "w"))
+		subprocess.check_call(index_cmd, stderr = open(out_dir + "snpindex.log", "w"), stdout = subprocess.DEVNULL)
 		log.info("SNP indices done...")
 		return(genome_index_path, genome_index_name, snp_index_path, snp_index_name)
 

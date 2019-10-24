@@ -47,10 +47,20 @@ plyr | 1.8.4 | [plyr](https://www.rdocumentation.org/packages/plyr/versions/1.8.
 reshape2 | 1.4.3 | [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
 circlize | 0.4.7 | [circlize](https://cran.r-project.org/web/packages/circlize/index.html)
 tidyverse | 1.2.1 | [Install tidyverse](https://www.tidyverse.org/packages/)
-ggpol | 0.0.5 | *
-ComplexHeatmap | 1.99.5 | **
+ggpol | 0.0.5 | * [ggpol](https://github.com/erocoar/ggpol)
+ComplexHeatmap | 1.99.5 | ** [ComplexHeatmap](https://github.com/jokergoo/ComplexHeatmap)
 
-'* To install ggpol, please get development version from github:
+\* To install ggpol, please get development version from github:
+	if (!require(devtools)) {
+		install.packages('devtools')
+        }
+    devtools::install_github('erocoar/ggpol')
+
+\*\* To install ComplexHeatmap, please get development version from github:
+	if (!require(devtools)) {
+		install.packages('devtools')
+        }
+    devtools::install_github('jokergoo/ComplexHeatmap')	
 
 
 Required Python packages:

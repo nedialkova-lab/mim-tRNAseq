@@ -87,12 +87,14 @@ The package also comes with a data/ folder which has the required tRNAscan-SE in
 
 An example command to run mim-tRNAseq may look as follows:
 ```bash
-./scripts/mim-seq.py -t data/hg19_eColitK/hg19_eColitK.fa -o data/hg19_eColitK/hg19_eschColi-tRNAs.out -m data/hg19_eColitK/hg19-mitotRNAs.fa --snp-tolerance --cluster --cluster-id 0.97 --threads 15 --min-cov 1000 --max-mismatches 0.1 --control-condition kiPS --cca-analysis -n hg19_mix --out-dir hg19_all_0.1_remap0.05_ID0.97 --max-multi 6 --remap --remap-mismatches 0.05 sampleData_hg19_all.txt
+./scripts/mim-seq.py -t data/hg19_eColitK/hg19_eColitK.fa -o data/hg19_eColitK/hg19_eschColi-tRNAs.out -m data/hg19_eColitK/hg19-mitotRNAs.fa 
+--snp-tolerance --cluster --cluster-id 0.97 --threads 15 --min-cov 1000 --max-mismatches 0.1 --control-condition kiPS --cca-analysis 
+-n hg19_mix --out-dir hg19_all_0.1_remap0.05_ID0.97 --max-multi 6 --remap --remap-mismatches 0.05 sampleData_hg19_all.txt
 ```
 
 ## Input formatting
 
-Note: mim-tRNAseq does not require an input from [Modomics](http://modomics.genesilico.pl/) for modification indexing, but automatically connexts to the Modomics servers and retrieves this information. Therefore an *internet connection is required* to run mim-tRNAseq.
+Note: mim-tRNAseq does not require an input from [Modomics](http://modomics.genesilico.pl/) for modification indexing, but automatically connexts to the Modomics servers and retrieves this information. Therefore an **internet connection is required** to run mim-tRNAseq.
 
 mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the data/ folder. If not here, you may be able to obtain the required files from the [gtRNAdb](http://gtrnadb.ucsc.edu/). Failing this, the input files can be generated using [tRNAscan-SE](http://trna.ucsc.edu/tRNAscan-SE/) on a genome reference file. Input files include:
 * Genomic tRNA sequences: DNA sequences of tRNA loci in genome of interest in fasta format, including introns but excluding trailer and leader sequences.

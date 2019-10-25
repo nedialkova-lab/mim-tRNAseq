@@ -52,39 +52,65 @@ ComplexHeatmap | 1.99.5 | ** [ComplexHeatmap](https://github.com/jokergoo/Comple
 
 \* To install ggpol, please get development version from github:
 ```R
-	if (!require(devtools)) {
-		install.packages('devtools')
-        }
-    devtools::install_github('erocoar/ggpol')
+if (!require(devtools)) {
+	install.packages('devtools')
+    }
+devtools::install_github('erocoar/ggpol')
 ```
 \*\* To install ComplexHeatmap, please get development version from github:
 
 ```R
-	if (!require(devtools)) {
-		install.packages('devtools')
-        }
-    devtools::install_github('jokergoo/ComplexHeatmap')	
+if (!require(devtools)) {
+	install.packages('devtools')
+    }
+devtools::install_github('jokergoo/ComplexHeatmap')	
 ```
 Required Python packages:
 
-Package | Version >=
---------|---------
-biopython | 1.70
-pyfiglet | 0.7.5
-pybedtools | 0.7.10
-pandas | 0.22.0
-numpy | 1.14.0
+Package | Version >= | Link
+--------|------------|-----
+biopython | 1.70 | [Biopython](https://biopython.org/)
+pyfiglet | 0.7.5 | [pyfiglet](https://pypi.org/project/pyfiglet/0.7/)
+pybedtools | 0.7.10 | [pybedtools](https://daler.github.io/pybedtools/)
+pysam | 0.14.1 | [pysam](https://pysam.readthedocs.io/en/latest/api.html)
+pandas | 0.22.0 | [pandas](https://pandas.pydata.org/)
+numpy | 1.14.2 | [NumPy](https://numpy.org/)
  
-## Usage
+## Installation and usage
+
+To use mim-tRNAseq, please clone this git repository (`git clone https://github.com/drewjbeh/mim-tRNAseq.git`, or download zip and extract) and run the mim-seq.py script in the scripts/ folder.
+```bash
+./scripts/mim-seq.py
+```
+This will display the package usage and help page. Note the REQUIRED arguments and inputs. 
+The package also comes with a data/ folder which has the required tRNAscan-SE input files for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not effect the results.
+
+An example command to run mim-tRNAseq may look as follows:
+```bash
+./scripts/mim-seq.py -t data/hg19_eColitK/hg19_eColitK.fa -o data/hg19_eColitK/hg19_eschColi-tRNAs.out -m data/hg19_eColitK/hg19-mitotRNAs.fa --snp-tolerance --cluster --cluster-id 0.97 --threads 15 --min-cov 1000 --max-mismatches 0.1 --control-condition kiPS --cca-analysis -n hg19_mix --out-dir hg19_all_0.1_remap0.05_ID0.97 --max-multi 6 --remap --remap-mismatches 0.05 sampleData_hg19_all.txt
+```
 
 ## Input formatting
+
+Note: mim-tRNAseq does not require an input from [Modomics](http://modomics.genesilico.pl/) for modification indexing, but automatically connexts to the Modomics servers and retrieves this information. Therefore an *internet connection is required* to run mim-tRNAseq.
+
+mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the data/ folder. If not here, you may be able to obtain the required files from the [gtRNAdb](http://gtrnadb.ucsc.edu/). Failing this, the input files can be generated using [tRNAscan-SE](http://trna.ucsc.edu/tRNAscan-SE/) on a genome reference file. Input files include:
+* Genomic tRNA sequences: DNA sequences of tRNA loci in genome of interest in fasta format, including introns but excluding trailer and leader sequences.
+* tRNA ".out" file: contains important info about tRNA introns.
+* Experiment sample file: User-generated tab-delimited file with 2 columns. The first is the absolute path to trimmed tRNAseq reads. The second is the condition name, used to group replicates (e.g. WT or knock-out etc)
+* OPTIONAL mitochondrial tRNA sequences: Can be obtained from the [mitotRNAdb](http://mttrna.bioinf.uni-leipzig.de/mtDataOutput/) if available. First, find the organism of interest in the "Search Database" tab, select all sequences for organism, choose "Send FASTA" in the drop-down at the bottom of the results, and click "Submit".
 
 ## Outputs
 
 ## Contact
 
+Drew Behrens: abehrens@biochem.mpg.de
+Danny Nedialkova: nedialkova@biochem.mpg.de
+
+Nedialkova laboratory: https://www.biochem.mpg.de/nedialkova
 
 
 ## Cite
 
-## 
+Behrens et al., High-resolution quantitative profiling of tRNA pools by mim-tRNAseq (2020)
+

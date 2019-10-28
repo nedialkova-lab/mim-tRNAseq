@@ -10,10 +10,10 @@ To use mim-tRNAseq, please clone this git repository (`git clone https://github.
 	./scripts/mim-seq.py
 
 This will display the package usage and help page. Note the REQUIRED arguments and inputs. 
-The package also comes with a data/ folder which has the required tRNAscan-SE input files for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not effect the results.
+The package also comes with a data/ folder which has the required tRNAscan-SE input files (and mitochondrial tRNA inputs where available) for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not effect the results.
 
-**Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda
-This will significantly improve the installation and usage of mim-tRNAseq
+**Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda.
+This will significantly improve the installation and usage of mim-tRNAseq.
 
 Dependencies
 ^^^^^^^^^^^^
@@ -144,7 +144,7 @@ An example command to run mim-tRNAseq may look as follows:
 	--min-cov 1000 --max-mismatches 0.1 --control-condition kiPS --cca-analysis -n hg19_mix 
 	--out-dir hg19_all_0.1_remap0.05_ID0.97 --max-multi 6 --remap --remap-mismatches 0.05 sampleData_hg19_all.txt
 
-Please see our CodeOcean container for an example run of mim-tRNAseq on some sample data
+Please see our CodeOcean container for an example run of mim-tRNAseq on some sample data.
 
 
 Input files

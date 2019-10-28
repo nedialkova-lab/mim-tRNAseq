@@ -19,7 +19,7 @@ This package is a semi-automated analysis pipeline for the quantification and an
 
 
 Index
------
+=====
 
 .. toctree::
    :maxdepth: 2

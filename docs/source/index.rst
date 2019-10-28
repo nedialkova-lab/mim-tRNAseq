@@ -19,15 +19,15 @@ This package is a semi-automated analysis pipeline for the quantification and an
 
 
 Index
-=====
+-----
 
 .. toctree::
    :maxdepth: 2
 
-   intro
-   start
-   output
-   contact
+   intro.rst
+   start.rst
+   output.rst
+   contact.rst
 
 Indices and tables
 ==================

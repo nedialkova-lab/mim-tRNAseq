@@ -19,7 +19,7 @@ Using mim-tRNAseq and TGIRT overcomes these problems. First, tRNA genes sharing 
 
 Detailed methodology is shown in the image below, and described in Behrens et al. (2020)
 
-![methods](/img/method.png)
+![methods](/docs/img/method.png)
 
 ## Dependencies
 
@@ -88,6 +88,9 @@ To use mim-tRNAseq, please clone this git repository (`git clone https://github.
 ```
 This will display the package usage and help page. Note the REQUIRED arguments and inputs. 
 The package also comes with a data/ folder which has the required tRNAscan-SE input files for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not effect the results.
+
+**Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda
+This will significantly improve the installation and usage of mim-tRNAseq
 
 An example command to run mim-tRNAseq may look as follows:
 ```bash

@@ -5,8 +5,8 @@ Installation
 ^^^^^^^^^^^^
 
 To use mim-tRNAseq, please clone this git repository (`git clone https://github.com/drewjbeh/mim-tRNAseq.git`, or download zip and extract) and run the mim-seq.py script in the scripts/ folder.
-
 ::
+
 	./scripts/mim-seq.py
 
 This will display the package usage and help page. Note the REQUIRED arguments and inputs. 
@@ -19,8 +19,8 @@ Usage
 ^^^^^
 
 An example command to run mim-tRNAseq may look as follows:
-
 ::
+
 	./scripts/mim-seq.py -t data/hg19_eColitK/hg19_eColitK.fa -o data/hg19_eColitK/hg19_eschColi-tRNAs.out 
 	-m data/hg19_eColitK/hg19-mitotRNAs.fa --snp-tolerance --cluster --cluster-id 0.97 --threads 15 
 	--min-cov 1000 --max-mismatches 0.1 --control-condition kiPS --cca-analysis -n hg19_mix 

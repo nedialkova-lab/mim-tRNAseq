@@ -92,16 +92,16 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 .. _ComplexHeatmap: https://github.com/jokergoo/ComplexHeatmap
 
 \* To install ggpol, please get development version from github:
-
 ::
+
 	if (!require(devtools)) {
 	install.packages('devtools')
 	}
 	devtools::install_github('erocoar/ggpol')
 
 \*\* To install ComplexHeatmap, please get development version from github:
-
 ::
+
 	if (!require(devtools)) {
 	install.packages('devtools')
 	}

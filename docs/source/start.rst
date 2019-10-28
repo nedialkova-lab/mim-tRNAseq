@@ -15,6 +15,124 @@ The package also comes with a data/ folder which has the required tRNAscan-SE in
 **Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda
 This will significantly improve the installation and usage of mim-tRNAseq
 
+Dependencies
+^^^^^^^^^^^^
+
+Please install all dependencies below before running mim-tRNAseq. In most cases, newer versions of the packages should be fine, but if you encounter any errors when running, first try to install the exact verisons of dependencies listed below.
+
+**Unix command line dependencies:**
+
++-----------------+-------------------+-----------+
+|Tool             | Version >=        | Link      |
++=================+===================+===========+
+| Subread package | 1.6.2             | subread_  |
++-----------------+-------------------+-----------+
+| GMAP-GSNAP      | 2019-02-26        | GSNAP_    |
++-----------------+-------------------+-----------+
+| samtools        | 1.7               | samtools_ |
++-----------------+-------------------+-----------+
+| usearch         | 10.0.240          | usearch_  |
++-----------------+-------------------+-----------+
+| bedtools        | 2.26.0            | bedtools_ |
++-----------------+-------------------+-----------+
+| R               | 3.5.2             | R_        |
++-----------------+-------------------+-----------+
+| INFERNAL        | 1.1.2 (July 2016) | INFERNAL_ |
++-----------------+-------------------+-----------+
+| BLAST           | 2.7.1             | BLAST_    |
++-----------------+-------------------+-----------+
+
+.. _subread: http://subread.sourceforge.net/
+.. _GSNAP: http://research-pub.gene.com/gmap/
+.. _samtools: http://www.htslib.org/
+.. _usearch: https://www.drive5.com/usearch/
+.. _bedtools: https://bedtools.readthedocs.io/en/latest/content/installation.html
+.. _R: https://www.r-project.org/
+.. _INFERNAL: http://eddylab.org/infernal/
+.. _BLAST: https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download
+
+**Required R packages:**
+
++----------------+------------+----------------------+
+| Package        | Version >= | Link                 |
++================+============+======================+
+| DESeq2         | 1.22.2     | DESeq2_              |
++----------------+------------+----------------------+
+| RColorBrewer   | 1.1.2      | RColorBrewer_        |
++----------------+------------+----------------------+
+| pheatmap       | 1.0.12     | pheatmap_            |
++----------------+------------+----------------------+
+| calibrate      | 1.7.2      | calibrate_           |
++----------------+------------+----------------------+
+| gridExtra      | 2.3        | gridExtra_           |
++----------------+------------+----------------------+
+| plyr           | 1.8.4      | plyr_                |
++----------------+------------+----------------------+
+| reshape2       | 1.4.3      | reshape2_            |
++----------------+------------+----------------------+
+| circlize       | 0.4.7      | circlize_            |
++----------------+------------+----------------------+
+| tidyverse      | 1.2.1      | tidyverse_           |
++----------------+------------+----------------------+
+| ggpol          | 0.0.5      | \* ggpol_            |
++----------------+------------+----------------------+
+| ComplexHeatmap | 1.99.5     | \*\* ComplexHeatmap_ |
++----------------+------------+----------------------+
+
+.. _DESeq2: https://bioconductor.org/packages/release/bioc/html/DESeq2.html
+.. _RColorBrewer: https://www.rdocumentation.org/packages/RColorBrewer/versions/1.1-2
+.. _pheatmap: https://www.rdocumentation.org/packages/pheatmap/versions/1.0.12
+.. _calibrate: https://cran.r-project.org/web/packages/calibrate/index.html
+.. _gridExtra: https://cran.r-project.org/web/packages/gridExtra/index.html
+.. _plyr: https://www.rdocumentation.org/packages/plyr/versions/1.8.4
+.. _reshape2: https://cran.r-project.org/web/packages/reshape2/index.html
+.. _circlize: https://cran.r-project.org/web/packages/circlize/index.html
+.. _tidyverse: https://www.tidyverse.org/packages/
+.. _ggpol: https://github.com/erocoar/ggpol
+.. _ComplexHeatmap: https://github.com/jokergoo/ComplexHeatmap
+
+\* To install ggpol, please get development version from github:
+::
+
+	if (!require(devtools)) {
+	install.packages('devtools')
+	}
+	devtools::install_github('erocoar/ggpol')
+
+\*\* To install ComplexHeatmap, please get development version from github:
+::
+
+	if (!require(devtools)) {
+	install.packages('devtools')
+	}
+	devtools::install_github('jokergoo/ComplexHeatmap')	
+
+**Required Python packages:**
+
++------------+------------+-------------+
+| Package    | Version >= | Link        |
++============+============+=============+
+| Biopython  | 1.70       | Biopython_  |
++------------+------------+-------------+
+| pyfiglet   | 0.7.5      | pyfiglet_   |
++------------+------------+-------------+
+| pybedtools | 0.7.10     | pybedtools_ |
++------------+------------+-------------+
+| pysam      | 0.14.1     | pysam_      |
++------------+------------+-------------+
+| pandas     | 0.22.0     | pandas_     |
++------------+------------+-------------+
+| numpy      | 1.14.2     | NumPy_      |
++------------+------------+-------------+
+
+.. _Biopython: https://biopython.org/
+.. _pyfiglet: https://pypi.org/project/pyfiglet/0.7/
+.. _pybedtools: https://daler.github.io/pybedtools/
+.. _pysam: https://pysam.readthedocs.io/en/latest/api.html
+.. _pandas: https://pandas.pydata.org/
+.. _NumPy: https://numpy.org/
+
+
 Usage
 ^^^^^
 

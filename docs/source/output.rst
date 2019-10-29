@@ -40,7 +40,6 @@ Read count outputs.
 *`Isodecoder_counts.txt`: Deconvoluted isodecoder counts calculated from mismatch proportions. See methods in Behrens et al., 2020. Only produced if cluster-id < 1.
 
 
-
 **indices**
 
 Indices required for GSNAP alignment.

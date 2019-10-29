@@ -1,4 +1,4 @@
-![logo](docs/img/logo.png)
+<img src="docs/img/logo.png" width="200" height="200">
 
 # mim-tRNAseq
 [![Documentation Status](https://readthedocs.org/projects/mim-trnaseq/badge/?version=latest)](https://mim-trnaseq.readthedocs.io/en/latest/?badge=latest)

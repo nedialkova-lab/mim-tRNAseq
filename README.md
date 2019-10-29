@@ -1,4 +1,6 @@
-<img src="docs/img/logo.png" width="350" height="400" align="middle">
+<p align="center">
+	<img src="docs/img/logo.png" width="350" height="400">
+</p>
 
 # mim-tRNAseq
 [![Documentation Status](https://readthedocs.org/projects/mim-trnaseq/badge/?version=latest)](https://mim-trnaseq.readthedocs.io/en/latest/?badge=latest)

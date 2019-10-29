@@ -14,12 +14,15 @@ Modification-induced misincorporation based sequencing of tRNAs using high-throu
 
 This package is a semi-automated analysis pipeline for the quantification and analysis of tRNA expression. Given trimmed sequencing reads in fastq format, this pipeline will:
 
-* Cluster tRNAs, index modifications, and perform SNP-tolerant read alignment with [GSNAP](http://research-pub.gene.com/gmap/)
-* Calculate coverage information and plots (useful for QC)
-* Quantify expression
-* Calculate tRNA differential expression with [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html).
-* Analyse functional tRNA pools and tRNA completeness via 3'-CCA analysis
-* Comprehensive modifcation quantification and misincorporation signature analysis
+* Cluster tRNAs, index modifications, and perform SNP-tolerant read alignment with GSNAP_.
+* Calculate coverage information and plots (useful for QC).
+* Quantify expression.
+* Calculate tRNA differential expression with DESeq2_.
+* Analyse functional tRNA pools and tRNA completeness via 3'-CCA analysis.
+* Comprehensive modifcation quantification and misincorporation signature analysis.
+
+.. _GSNAP: http://research-pub.gene.com/gmap/
+.. _DESeq2: https://bioconductor.org/packages/release/bioc/html/DESeq2.html
 
 
 Index

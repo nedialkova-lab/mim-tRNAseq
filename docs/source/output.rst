@@ -9,35 +9,35 @@ The output are split into various subdirectories described below:
 
 Outputs for coverage analysis.
 
-*`sampleData\*.txt`: Sample data information with library size for coverage normalization.
-*`coverage_bygene.txt`: Coverage and normalized coverage per tRNA/cluster per 4% bin by gene length.
-*`coverage_byaa.txt`: Coverage and normalized coverage summed for isoacceptors per 4% bin by gene length.
-*`coverage_bycluster_norm.pdf`: Plot of normalized coverage along gene length for each tRNA/clustrer.
-*`coverage_byaa_line.pdf`: Coverage per amino acid group in line graph.
-*`coverage_byaa_norm.pdf`: Normalized coverage per amino acid and aligment file.
-*`coverage_byaa_norm_scaled.pdf`: Normalized coverage scaled realtive to second last bin (94%) for comparability between samples.
+* `sampleData\*.txt`: Sample data information with library size for coverage normalization.
+* `coverage_bygene.txt`: Coverage and normalized coverage per tRNA/cluster per 4% bin by gene length.
+* `coverage_byaa.txt`: Coverage and normalized coverage summed for isoacceptors per 4% bin by gene length.
+* `coverage_bycluster_norm.pdf`: Plot of normalized coverage along gene length for each tRNA/clustrer.
+* `coverage_byaa_line.pdf`: Coverage per amino acid group in line graph.
+* `coverage_byaa_norm.pdf`: Normalized coverage per amino acid and aligment file.
+* `coverage_byaa_norm_scaled.pdf`: Normalized coverage scaled realtive to second last bin (94%) for comparability between samples.
 
 **align**
 
 Read alignment outputs.
 
-*`mapping_stats.txt`: Alignment statistics from GSNAP alignment. Contains "NEW ALIGNMENT" when --remap is enabled.
-*`align.log`: Log file from GSNAP alignment.
-*`\*mult.bam`: bam file of multi-mapping read alignments per sample.
-*`\*uniq.bam`: bam file of uniquely mapping read alignments per sample.
-*`\*nomapping.bam`: bam file of unmapped reads per sample.
-*`Primary_alignstats.pdf`: Plot of alignment stats from first alignment round.
-*`Remap_alignstats.pdf`: Plot of alignment stats from read realignment if enabled.
+* `mapping_stats.txt`: Alignment statistics from GSNAP alignment. Contains "NEW ALIGNMENT" when --remap is enabled.
+* `align.log`: Log file from GSNAP alignment.
+* `\*mult.bam`: bam file of multi-mapping read alignments per sample.
+* `\*uniq.bam`: bam file of uniquely mapping read alignments per sample.
+* `\*nomapping.bam`: bam file of unmapped reads per sample.
+* `Primary_alignstats.pdf`: Plot of alignment stats from first alignment round.
+* `Remap_alignstats.pdf`: Plot of alignment stats from read realignment if enabled.
 
 **counts**
 
 Read count outputs.
 
-*`counts.txt`: `featureCounts` generated counts per tRNA/cluster.
-*`featureCounts.log`: Log file from `featureCounts` run.
-*`counts.txt.summary`: Reap assignment statistics from featureCounts run.
-*`Anticodon_counts.txt`: Read counts summed by tRNAs sharing anticodons.
-*`Isodecoder_counts.txt`: Deconvoluted isodecoder counts calculated from mismatch proportions. See methods in Behrens et al., 2020. Only produced if cluster-id < 1.
+* `counts.txt`: `featureCounts` generated counts per tRNA/cluster.
+* `featureCounts.log`: Log file from `featureCounts` run.
+* `counts.txt.summary`: Reap assignment statistics from featureCounts run.
+* `Anticodon_counts.txt`: Read counts summed by tRNAs sharing anticodons.
+* `Isodecoder_counts.txt`: Deconvoluted isodecoder counts calculated from mismatch proportions. See methods in Behrens et al., 2020. Only produced if cluster-id < 1.
 
 
 **indices**

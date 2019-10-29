@@ -9,9 +9,9 @@ The output are split into various subdirectories described below:
 
 This folder contains the indices required for GSNAP alignment.
 
-* tRNAgenome\ contains the index of mature, processed tRNA transcripts
-* snp_index\ contains the SNP index generated from modified positions, needed by GSNAP for SNP-tolerant alignment. Only generated if --snp-tolerance is enabled.
-* \*.log files contain log info from index generation
+* `tRNAgenome\` contains the index of mature, processed tRNA transcripts
+* `snp_index\` contains the SNP index generated from modified positions, needed by GSNAP for SNP-tolerant alignment. Only generated if --snp-tolerance is enabled.
+* `\*.log` files contain log info from index generation
 
 **annotation**
 

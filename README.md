@@ -20,8 +20,9 @@ Detailed methodology is shown in the image below, and described in Behrens et al
  
 ## Installation and usage
 
-Please see the full documentation for explanantions of dependencies, inputs formatting, and outputs.
 [![Documentation Status](https://readthedocs.org/projects/mim-trnaseq/badge/?version=latest)](https://mim-trnaseq.readthedocs.io/en/latest/?badge=latest)
+
+Please see the full documentation for explanantions of dependencies, inputs formatting, and outputs.
 
 To use mim-tRNAseq, please clone this git repository (`git clone https://github.com/drewjbeh/mim-tRNAseq.git`, or download zip and extract) and run the mim-seq.py script in the scripts/ folder.
 ```bash

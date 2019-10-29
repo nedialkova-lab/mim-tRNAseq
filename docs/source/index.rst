@@ -4,6 +4,7 @@ mim-tRNAseq
 
 .. image:: ../img/logo.png
    :align: center
+   :scale: 50%
 
 :Author: Drew Behrens
 

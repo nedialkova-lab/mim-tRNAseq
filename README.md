@@ -29,8 +29,8 @@ To use mim-tRNAseq, please clone this git repository (`git clone https://github.
 ./scripts/mim-seq.py
 ```
 
-**Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda
-This will significantly improve the installation and usage of mim-tRNAseq
+**Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda.
+This will significantly improve the installation and usage of mim-tRNAseq.
 
 An example command to run mim-tRNAseq may look as follows:
 ```bash

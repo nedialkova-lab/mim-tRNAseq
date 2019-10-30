@@ -2,7 +2,7 @@
 mim-tRNAseq
 ***********
 
-.. image:: ../img/logo.png
+.. image:: ../img/logo2.png
    :align: center
    :scale: 35%
 

@@ -313,15 +313,15 @@ if (nrow(coldata) == 1) {
         write.csv(resdata_isodecoder, file=paste(subdir_isodecoder, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))
       }
 
-      ## MA plot
+      # ## MA plot
 
-      png(paste(subdir_anticodon, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
-      plotMA(dds_anticodon)
-      dev.off()
+      # png(paste(subdir_anticodon, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
+      # plotMA(dds_anticodon)
+      # dev.off()
 
-      png(paste(subdir_isodecoder, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
-      plotMA(dds_isodecoder)
-      dev.off()
+      # png(paste(subdir_isodecoder, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
+      # plotMA(dds_isodecoder)
+      # dev.off()
     }
   }
 }

@@ -5,6 +5,8 @@ Outputs
 mim-tRNAseq automatically generates many data and figure output files, some are dependent on paramter options specified when running mim-tRNAseq.
 The output are split into various subdirectories described below:
 
+`mim-tRNAseq\*.log`: Log file for the run.
+
 **cov**
 
 Outputs for coverage analysis.
@@ -14,8 +16,8 @@ Outputs for coverage analysis.
 * `coverage_byaa.txt`: Coverage and normalized coverage summed for isoacceptors per 4% bin by gene length.
 * `coverage_bycluster_norm.pdf`: Plot of normalized coverage along gene length for each tRNA/clustrer.
 * `coverage_byaa_line.pdf`: Coverage per amino acid group in line graph.
-* `coverage_byaa_norm.pdf`: Normalized coverage per amino acid and aligment file.
-* `coverage_byaa_norm_scaled.pdf`: Normalized coverage scaled realtive to second last bin (94%) for comparability between samples.
+* `\*coverage_byaa_norm.pdf`: Normalized coverage per amino acid and aligment file. Available for mitochondrial tRNAs if -m is given.
+* `\*coverage_byaa_norm_scaled.pdf`: Normalized coverage scaled realtive to second last bin (94%) for comparability between samples. Available for mitochondrial tRNAs if -m is given.
 
 **align**
 
@@ -39,6 +41,41 @@ Read count outputs.
 * `Anticodon_counts.txt`: Read counts summed by tRNAs sharing anticodons.
 * `Isodecoder_counts.txt`: Deconvoluted isodecoder counts calculated from mismatch proportions. See methods in Behrens et al., 2020. Only produced if cluster-id < 1.
 
+**CCAanalysis**
+
+Only generated if --cca-analysis flag is present. Contains data and plots for 3'-CCA analysis
+
+* `\*ccaPlot.pdf`: Diverging bar plots indicating average proportions of 3'-CCA, 3'-CC, 3'-C and absent 3' ends for each condition. These proportions are calculated from uniquely aligned reads aligning to the 3' end of the reference transcript. If more than one condition is present in the sample file, there is one of these plots for each pairwise comparison. Otherwise, there is only one plot for the single condition. Percentages and vertical white line indicate average 3'-CCA proportions for the condition.
+* `dinuc_plot`: Proportions of dinuleotide ends for *all* aligned reads for each alignment file.
+* `CCAcounts.csv`: Data file used for plotting diverging bar plots. Counts of different 3' ends for each tRNA/cluster for each bam file.
+* `AlignedDinucProportions.csv`: Data file for plotting dinuc_plot. Counts of dinucleotide ends for each bam file. 
+
+**mods**
+
+Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
+
+* `\*comb_heatmap.pdf`: Combined RT stop and misincorporation heatmaps for all tRNAs/clusters passing --min-cov threshold, showing proportion of stops and misincorporations at canonical tRNA positions for all conditions. Available for mitochondrial tRNAs if -m is specified.
+* `\*misincProps/pdf`: Misincorporation proportions for each tRNA/cluster at selected conserved modified sites by identity of modified nucleotide. Available for mitochondrial tRNAs if -m is specified.
+* `\*misincSignatures_upstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucloetide and upstream nucleotide relative to RT direction. Available for mitochondrial tRNAs if -m is specified.
+* `\*misincSignatures_downstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucloetide and downstream nucleotide relative to RT direction. Available for mitochondrial tRNAs if -m is specified.
+* `mismatchTable.csv`: Data table for all misincorporation analyses. Includes tRNA/cluster, misincorporation type, proportion, coverage and canonical tRNA position information, among other useful information.
+* `RTstopTable.csv`: Data table for RT stop analyses. Includes tRNA/cluster, canonical tRNA position and proportion of reads that stop at each position.
+* `modContext.txt`: Nucleotide context information for selected modified positions. Note, `pos` here is not canonical position information but ungapped alignment positions for each tRNA/cluster.
+* `knownModsTable.csv`: Known modifications from Modomics and `additionalMods.txt` for each cluster. Used in new mods discovery.
+* `predictedMods.csv`: Newly predicted modified sites per tRNA/cluster based on misinc-thresh.
+
+**DESeq2**
+
+Differential tRNA expression analyses using DESeq2. Split into two separate analyses performed on counts at the isoacceptor and isodecoder level, respectively. Both folders contain the same outputs.
+
+* `qc-dispersions.png`: Diagnostic dispersion plot of isoacceptor/isodecoder expression dispersion before and after shrinkage of estimates towards the fitted estimates. See the DESeq2 analysis vignette here_ for details
+* `qc-sampledists.png`: Sample distance heatmap based on variance stabilizing transformed counts. Hierarchical clustering used for clusering samples. Scale indicates sample distances.
+* `qc-pca.png`: Principal component analysis plot for all samples according to normalized counts for isoacceptors/isodecoders.
+* `vst-transformedCounts.csv`: Variace stabilizing transfored count data used for sample clustering. Also useful for comparing tRNA expression, although normalized counts are easier to understand for this purpose.
+* `\*diffextr-countplot.pdf`: Count data plotted for each pairwise condition comparison. Significantly differentially expressed isoacceptors/isodecoders detected by DESeq2 (adjusted p-value < 0.05) indicated by coloured triangles.
+* `\*diffexpr-results.csv`: DESeq2 differential expression results for each pairwise condition comparison. Note, every pairwise comparison output also has normalized counts for *all* samples appended as the last set of columns.
+
+.. _here: https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#dispersion-plot-and-fitting-alternatives
 
 **indices**
 

@@ -159,6 +159,8 @@ mim-tRNAseq requires a few input files depending on the species of interest. Dat
 * Experiment sample file: User-generated tab-delimited file with 2 columns. The first is the absolute path to trimmed tRNAseq reads. The second is the condition name, used to group replicates (e.g. WT or knock-out etc)
 * OPTIONAL mitochondrial tRNA sequences: Can be obtained from the mitotRNAdb_ if available. First, find the organism of interest in the "Search Database" tab, select all sequences for organism, choose "Send FASTA" in the drop-down at the bottom of the results, and click "Submit".
 
+`additionalMods.txt` is automatically read in by mim-tRNAseq to add additional modifications to the modification index that may not be in Modomics yet. Some important modifications have already been added for certain species, mainly based on Clark et al. tRNA base methylation identification and quantification via high-throughput sequencing (2016), and Rafels-Ybern et al. Codon adaptation to tRNAs with Inosine modification at position 34 is widespread among Eukaryotes and present in two Bacterial phyla (2018).
+
 .. _Modomics: http://modomics.genesilico.pl/
 .. _gtRNAdb: http://gtrnadb.ucsc.edu/
 .. _tRNAscanSE: http://trna.ucsc.edu/tRNAscan-SE/

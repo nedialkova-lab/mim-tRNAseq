@@ -49,14 +49,18 @@ if (length(args)==0) {
 	ggsave(paste(out_dir, "coverage_byaa_norm.pdf", sep = ''), cov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
 
 	if (!is.na(mito_trnas)){
-		mitocov_byaa_norm = ggplot(subset(cov_byaa, grepl("mito", cov_byaa$aa) | grepl("nmt", cov_byaa$aa)), aes(x = bin, y = cov_norm, fill = aa, group = aa)) + 
-			geom_bar(stat = "identity", alpha = 0.8) + 
-			facet_wrap(~bam, ncol = 4) + 
-			xlab("Gene (%)") + ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
-			labs(fill = "Isotype") + 
-			scale_fill_manual(values = getPalette(mit_colourCount)) + 
-			theme_bw()
-		ggsave(paste(out_dir, "mitocoverage_byaa_norm.pdf", sep = ''), mitocov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
+		mito_cov_byaa = subset(cov_byaa, grepl("mito", cov_byaa$aa) | grepl("nmt", cov_byaa$aa))
+		if (nrow(mito_cov_byaa) != 0 ) {
+			mitocov_byaa_norm = ggplot(mito_cov_byaa, aes(x = bin, y = cov_norm, fill = aa, group = aa)) +
+				geom_bar(stat = "identity", alpha = 0.8) + 
+				facet_wrap(~bam, ncol = 4) + 
+				xlab("Gene (%)") + ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
+				labs(fill = "Isotype") + 
+				scale_fill_manual(values = getPalette(mit_colourCount)) + 
+				theme_bw()
+			ggsave(paste(out_dir, "mitocoverage_byaa_norm.pdf", sep = ''), mitocov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)	
+		}
+		
 	}
 
 	cyto_cov_byaa = subset(cov_byaa, !grepl("mito", cov_byaa$aa) & !grepl("nmt", cov_byaa$aa))
@@ -67,8 +71,7 @@ if (length(args)==0) {
 		cyto_cov_byaa[i,'cov_norm_scaled'] = cyto_cov_byaa[i,'cov_norm']/cyto_scale_factors[which(cyto_cov_byaa[i,'bam'] == cyto_scale_factors$bam),3]
 	}
 
-	if (!is.na(mito_trnas)){
-		mito_cov_byaa = subset(cov_byaa, grepl("mito", cov_byaa$aa) | grepl("nmt", cov_byaa$aa))
+	if (!is.na(mito_trnas) && nrow(mito_cov_byaa) != 0){
 		mito_cov_byaa_sum = aggregate(x = mito_cov_byaa$cov_norm, by = list(bin = mito_cov_byaa$bin, bam = mito_cov_byaa$bam), FUN = sum)
 		mito_scale_factors = mito_cov_byaa_sum[which(mito_cov_byaa_sum$bin == 96),] # 96 is second last bin of 4%
 		mito_cov_byaa$cov_norm_scaled = NA
@@ -81,7 +84,6 @@ if (length(args)==0) {
 		cov_byaa_scaled = cyto_cov_byaa
 	}
 	
-	
 	cov_byaa_norm_scaled = ggplot(subset(cov_byaa_scaled, !grepl("mito", cov_byaa_scaled$aa) & !grepl("nmt", cov_byaa_scaled$aa)), aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + 
 		geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
 		xlab("Gene (%)") + 
@@ -93,15 +95,18 @@ if (length(args)==0) {
 	ggsave(paste(out_dir, "coverage_byaa_norm_scaled.pdf", sep = ''), cov_byaa_norm_scaled, height = ceiling(facetCount/4) * 4, width = 14)
 
 	if (!is.na(mito_trnas)){
-		mitocov_byaa_norm_scaled = ggplot(subset(cov_byaa_scaled, grepl("mito", cov_byaa_scaled$aa) | grepl("nmt", cov_byaa_scaled$aa)), aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + 
-			geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
-			xlab("Gene (%)") + 
-			ylab("Scaled normalised coverage") + 
-			labs(fill = "Isotype") + 
-			scale_y_continuous(breaks = seq(0,1,0.25)) + 
-			scale_fill_manual(values = getPalette(mit_colourCount)) + 
-			theme_bw()
-		ggsave(paste(out_dir, "mitocoverage_byaa_norm_scaled.pdf", sep = ''), mitocov_byaa_norm_scaled, height = ceiling(facetCount/4) * 4, width = 14)
+		mitocov_byaa_scaled = subset(cov_byaa_scaled, grepl("mito", cov_byaa_scaled$aa) | grepl("nmt", cov_byaa_scaled$aa))
+		if (nrow(mitocov_byaa_scaled) != 0) {
+			mitocov_byaa_norm_scaled = ggplot(mitocov_byaa_scaled, aes(x = bin, y = cov_norm_scaled, fill = aa, group = aa)) + 
+				geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
+				xlab("Gene (%)") + 
+				ylab("Scaled normalised coverage") + 
+				labs(fill = "Isotype") + 
+				scale_y_continuous(breaks = seq(0,1,0.25)) + 
+				scale_fill_manual(values = getPalette(mit_colourCount)) + 
+				theme_bw()
+			ggsave(paste(out_dir, "mitocoverage_byaa_norm_scaled.pdf", sep = ''), mitocov_byaa_norm_scaled, height = ceiling(facetCount/4) * 4, width = 14)
+		}
 	}
 
 	cov_byaa$aa_groups = aa_groups[match(cov_byaa$aa, aa_groups$aa),2]

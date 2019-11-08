@@ -20,7 +20,7 @@ def filterCoverage (bedtool_cov, min_cov):
 	
 	filtered_list = list()
 	for i in bedtool_cov:
-		if int(i[6]) < min_cov:
+		if (int(i[6]) < min_cov) and not ("mito" in i[0]):
 			filtered_list.append(i[0])
 
 	return(filtered_list)
@@ -35,7 +35,7 @@ def bedtools_mp (tRNAbed, out_dir, min_cov, inputs):
 	log.info("Running bedtools coverage on {}...".format(inputs))
 	cov = a.coverage(b, s = True, counts = True)
 	filtered = filterCoverage(cov, min_cov)
-	cov_filtered = cov.filter(lambda x: int(x[6]) >= min_cov)
+	cov_filtered = cov.filter(lambda x: (int(x[6]) >= min_cov) or ("mito" in x[0]))
 	a_filtered = a.intersect(cov_filtered)
 	cov_pernucl_filtered = a_filtered.coverage(b, d = True, s = True).saveas(out_dir + inputs.split("/")[-1] + "_coverage.txt")
 	log.info("Coverage calculation complete for {}".format(inputs))	

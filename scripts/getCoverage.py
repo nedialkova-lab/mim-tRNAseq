@@ -138,7 +138,10 @@ def getCoverage(tRNAbed, sampleGroups, out_dir, max_multi, min_cov, control_cond
 	cov_mean_aa_controlcond = cov_mean_aa_controlcond[cov_mean_aa_controlcond.bam == bam]
 	cov_ratios = dict()
 	for aa, data in cov_mean_aa_controlcond.groupby('aa'):
-		ratio = float(data[data.bin == 8]['cov_norm']) / float(data[data.bin == 92]['cov_norm'])
+		try:
+			ratio = float(data[data.bin == 8]['cov_norm']) / float(data[data.bin == 92]['cov_norm'])
+		except ZeroDivisionError:
+			ratio = float(data[data.bin == 92]['cov_norm'])
 		cov_ratios[aa] = ratio
 	sorted_aa = sorted(cov_ratios, key = cov_ratios.get)
 	sorted_aa = "_".join(str(e) for e in sorted_aa)

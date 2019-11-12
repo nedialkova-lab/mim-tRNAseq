@@ -1,0 +1,4 @@
+./hek_1_42_on_sub.fastq.gz	HEK
+./hek_2_42_on_sub.fastq.gz	HEK
+./ips_1_42_on_sub.fastq.gz	iPS
+./ips_2_42_on_sub.fastq.gz	iPS

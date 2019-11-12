@@ -36,15 +36,15 @@ To use mim-tRNAseq, please clone this git repository (`git clone https://github.
 **Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda.
 This will significantly improve the installation and usage of mim-tRNAseq.
 
-An example command to run mim-tRNAseq may look as follows:
+An example command to run mim-tRNAseq may look as follows. This will run an analysis between iPSC and HEK293T cells on an example dataset included in the package:
 ```bash
 ./scripts/mim-seq.py -t data/hg19_eColitK/hg19_eColitK.fa -o data/hg19_eColitK/hg19_eschColi-tRNAs.out 
 -m data/hg19_eColitK/hg19-mitotRNAs.fa --snp-tolerance --cluster --cluster-id 0.97 --threads 15 
---min-cov 1000 --max-mismatches 0.1 --control-condition kiPS --cca-analysis -n hg19_mix 
---out-dir hg19_all_0.1_remap0.05_ID0.97 --max-multi 6 --remap --remap-mismatches 0.05 sampleData_hg19_all.txt
+--min-cov 500 --max-mismatches 0.1 --control-condition kiPS --cca-analysis -n hg19_mix 
+--out-dir hg19_iPSvsHEK --max-multi 4 --remap --remap-mismatches 0.05 sampleData_iPSvsHEK.txt
 ```
 
-Please see our CodeOcean capsule for an example run on real data.
+The run should take around 15 minutes on a server using 15 processors (--threads 15).
 
 ## Contact
 

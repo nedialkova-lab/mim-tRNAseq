@@ -1,5 +1,5 @@
 <p align="center">
-	<img src="docs/img/mimseq_ribbonstruct_2.png" width="450" height="450">
+	<img src="docs/img/mimseq_ribbon.png" width="450" height="450">
 </p>
 
 # mim-tRNAseq

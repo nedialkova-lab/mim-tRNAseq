@@ -4,7 +4,7 @@ Quick-start guide
 Installation
 ^^^^^^^^^^^^
 
-To use mim-tRNAseq, please clone this git repository (:code:`git clone https://github.com/drewjbeh/mim-tRNAseq.git`, or download zip and extract) and run the mim-seq.py script in the `scripts/` folder.
+To use mim-tRNAseq, please clone this git repository (:code:`git clone https://github.com/nedialkova-lab/mim-tRNAseq`, or download zip and extract) and run the mim-seq.py script in the `scripts/` folder.
 ::
 
 	./scripts/mim-seq.py

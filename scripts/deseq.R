@@ -283,7 +283,13 @@ if (nrow(coldata) == 1) {
         anticodon_cor = format(cor(baseMeanPerLvl_anticodon[,combinations[[i]][1]], baseMeanPerLvl_anticodon[,combinations[[i]][2]]), digits = 2)
         isodecoder_cor = format(cor(baseMeanPerLvl_isodecoder[,combinations[[i]][1]], baseMeanPerLvl_isodecoder[,combinations[[i]][2]]), digits = 2)
 
-        anticodon_dot = ggplot(subset(baseMeanPerLvl_anticodon, select = c(combinations[[i]], "sig", "comb")), aes_string(x = combinations[[i]][2], y = combinations[[i]][1])) +
+        # Convert x and y variables into symbols  to handle str and numeric variable names
+        x = sym(combinations[[i]][2])
+        y = sym(combinations[[i]][1])
+        anticodon_data = subset(baseMeanPerLvl_anticodon, select = c(combinations[[i]], "sig", "comb"))
+        isodecoder_data = subset(baseMeanPerLvl_isodecoder, select = c(combinations[[i]], "sig", "comb"))
+
+        anticodon_dot = ggplot(anticodon_data, aes_string(x, y)) +
           geom_point(aes(color = comb, shape = comb, size = sig)) +
           scale_x_log10() + scale_y_log10() + 
           #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
@@ -294,7 +300,7 @@ if (nrow(coldata) == 1) {
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", anticodon_cor), parse = TRUE)
 
-        isodecoder_dot = ggplot(subset(baseMeanPerLvl_isodecoder, select = c(combinations[[i]], "sig", "comb")), aes_string(x = combinations[[i]][2], y = combinations[[i]][1])) +
+        isodecoder_dot = ggplot(isodecoder_data, aes_string(x, y)) +
           geom_point(aes(color = comb, shape = comb, size = sig)) +
           scale_x_log10() + scale_y_log10() + 
           #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +

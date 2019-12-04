@@ -14,6 +14,7 @@ import re, copy, sys, os, shutil, subprocess, logging, glob
 from pathlib import Path
 import urllib.request
 from collections import defaultdict
+import pandas as pd
 import ssAlign
 
 log = logging.getLogger(__name__)
@@ -939,6 +940,31 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
 		seq = seq + 'CCA'
 
 	return(seq)
+
+def countReadsAnticodon(input_counts, out_dir):
+
+	# Counts per anticodon
+	count_dict = defaultdict(lambda: defaultdict(int))
+
+	with open(input_counts, "r") as counts_file:
+		for line in counts_file:
+			line = line.strip()
+			if not line.startswith("#"):
+				if line.startswith("isodecoder"):
+					sample_list = [samples for samples in line.split("\t")[1:]]
+				else:
+					anticodon = line.split("\t")[0]
+					anticodon = '-'.join(anticodon.split("-")[:-2])
+					col = 1
+					for sample in sample_list:
+						count_dict[anticodon][sample] += int(line.split("\t")[col])
+						col += 1
+
+	count_pd = pd.DataFrame.from_dict(count_dict, orient='index')
+	count_pd.index.name = 'Anticodon'
+	count_pd.to_csv(out_dir + 'Anticodon_counts.txt', sep = '\t')
+
+	log.info("** Read counts per anticodon saved to " + out_dir + "counts/Anticodon_counts.txt **")
 
 def tidyFiles (out_dir, cca):
 	

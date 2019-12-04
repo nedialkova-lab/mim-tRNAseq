@@ -13,9 +13,10 @@
 # github: https://github.com/drewjbeh/mim-tRNAseq
 
 import tRNAtools, tRNAmap, getCoverage, mmQuant, CCAanalysis, ssAlign, splitReads
-import sys, os, subprocess, logging, datetime
+import sys, os, subprocess, logging, datetime, copy
 import argparse
 from pyfiglet import figlet_format
+from collections import defaultdict
 
 def restrictedFloat(x):
 ## Method for restricting cluster_id argument to float between 0 and 1
@@ -81,9 +82,17 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	cov_table, filtered_list, sorted_aa = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov, control_cond)
 	getCoverage.plotCoverage(out, mito_trnas, sorted_aa)
 
+	# define unique mismatches/insertions to assign reads to unique tRNA sequences
+	if cluster and not cluster_id == 1:
+		cluster_dict2 = copy.deepcopy(cluster_dict) # copy so splitReadsIsodecoder does not edit main cluster_dict
+		unique_isodecoderMMs, splitBool, isodecoder_sizes = splitReads.splitReadsIsodecoder(isodecoder_count, tRNA_dict, cluster_dict2, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out, name)
+	else:
+		unique_isodecoderMMs = defaultdict(dict)
+		splitBool = list()
+
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines, clusterMMTable = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters)
+		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes)
 		Inosine_clusters = tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
@@ -95,12 +104,9 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	else:
 		log.info("\n*** New modifications not discovered as remap is not enabled ***\n")
 
-	# featureCounts
-	tRNAmap.countReads(bams_list, mode, threads, out)
-
 	# Misincorporation analysis
 	if snp_tolerance or not mismatches == 0.0:
-		new_mods, new_Inosines, clusterMMTable = mmQuant.generateModsTable(coverageData, out, threads, cov_table, min_cov, mismatch_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters)
+		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes)
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
@@ -117,10 +123,6 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 		if cca:
 			CCAanalysis.plotDinuc(out)
-
-	# split read counts by isodecoder
-	if cluster and not cluster_id == 1:
-		splitReads.splitReadsIsodecoder(isodecoder_count, clusterMMTable, tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out, name)
 
 	# DESeq2
 	sample_data = os.path.abspath(coverageData)

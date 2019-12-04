@@ -269,57 +269,6 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 
 	return(unique_bam, unique_count, alignstats_dict)
 
-def countReads(unique_bam_list, mode, threads, out_dir):
-
-	log.info('\n+-----------------------------------+\
-		\n| Counting reads with featureCounts |\
-		\n+-----------------------------------+')
-
-	# Counts per cluster
-
-	# Find tRNA gff produced earlier...
-	gff_file = glob.glob(out_dir + '*.gff')[0]
-
-	cmd = ["featureCounts", "-T", str(threads)] 
-
-	if mode == "none":
-		cmd.extend(["-a", gff_file, "-o", out_dir + "counts.txt"])
-		cmd.extend(unique_bam_list)
-	elif mode == "all":
-		cmd.extend(["-O", "-a", gff_file, "-o", out_dir + "counts.txt"])
-		cmd.extend(unique_bam_list)
-	elif mode == "fraction":
-		cmd.extend(["-O", "--fraction", "-a", gff_file, "-o", out_dir + "counts.txt"])
-		cmd.extend(unique_bam_list)
-
-	subprocess.check_call(cmd, stderr = open(out_dir + "featureCounts.log", "a"))
-
-	log.info("Read counts per tRNA/cluster saved to " + out_dir + "counts/counts.txt")
-
-	# Counts per anticodon
-
-	count_dict = defaultdict(lambda: defaultdict(int))
-
-	with open(out_dir + "counts.txt", "r") as counts_file:
-		for line in counts_file:
-			line = line.strip()
-			if not line.startswith("#"):
-				if line.startswith("Geneid"):
-					sample_list = [samples for samples in line.split("\t")[6:]]
-				else:
-					cluster = line.split("\t")[1]
-					isodecoder = '-'.join(cluster.split("-")[:-2])
-					col = 6
-					for sample in sample_list:
-						count_dict[isodecoder][sample] += int(line.split("\t")[col])
-						col += 1
-
-	count_pd = pd.DataFrame.from_dict(count_dict, orient='index')
-	count_pd.index.name = 'Geneid'
-	count_pd.to_csv(out_dir + 'Anticodon_counts.txt', sep = '\t')
-
-	log.info("Read counts per anticodon saved to " + out_dir + "counts/Anticodon_counts.txt")
-
 if __name__ == '__main__':
 	mainAlign(sys.argv[1:])
 

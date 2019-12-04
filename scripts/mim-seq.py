@@ -89,6 +89,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	else:
 		unique_isodecoderMMs = defaultdict(dict)
 		splitBool = list()
+		isodecoder_sizes = defaultdict(int)
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):

@@ -75,8 +75,8 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, filtere
 	for read in bam_file.fetch(until_eof=True):
 		query = read.query_name
 		reference = read.reference_name
-		if reference in filtered_list:
-			continue
+		#if reference in filtered_list:
+		#	continue
 
 		#########################
 		# Modification analysis #
@@ -264,8 +264,9 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 				ref_pos += new_offset 
 				# check for position in mismatch dictionary from clustering
 				# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
-				if identity in unique_isodecoderMMs[reference][ref_pos]:
-					reference = unique_isodecoderMMs[reference][ref_pos][identity]
+				if unique_isodecoderMMs:
+					if identity in unique_isodecoderMMs[reference][ref_pos]:
+						reference = unique_isodecoderMMs[reference][ref_pos][identity]
 				elif (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and interval.islower()):
 					temp[ref_pos+1] = identity
 				# move forward
@@ -395,6 +396,14 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 					known.write(cluster + "\t" + str(pos) + "\n")
 
 		stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')	
+		# add column to counts to indicate complete isodecoder split or not
+		countsTable_total['Single_isodecoder'] = "NA"
+		countsTable_total.index = countsTable_total.isodecoder
+		for cluster in countsTable_total['isodecoder']:
+			if cluster in splitBool:
+				countsTable_total.at[cluster, 'Single_isodecoder'] = "False"
+			else:
+				countsTable_total.at[cluster, 'Single_isodecoder'] = "True"
 		countsTable_total.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t", index = False)
 
 		if cca:

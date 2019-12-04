@@ -951,13 +951,13 @@ def countReadsAnticodon(input_counts, out_dir):
 			line = line.strip()
 			if not line.startswith("#"):
 				if line.startswith("isodecoder"):
-					sample_list = [samples for samples in line.split("\t")[1:]]
+					sample_list = [samples for samples in line.split("\t")[1:-1]]
 				else:
 					anticodon = line.split("\t")[0]
 					anticodon = '-'.join(anticodon.split("-")[:-2])
 					col = 1
 					for sample in sample_list:
-						count_dict[anticodon][sample] += int(line.split("\t")[col])
+						count_dict[anticodon][sample] += float(line.split("\t")[col])
 						col += 1
 
 	count_pd = pd.DataFrame.from_dict(count_dict, orient='index')

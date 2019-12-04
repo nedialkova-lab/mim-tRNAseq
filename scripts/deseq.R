@@ -59,13 +59,9 @@ setwd(file.path(outdir))
 # Filter out mito counts
 anticodon_countdata = read.table("Anticodon_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
 anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)),]
-if (cluster_id == 1) {
-  isodecoder_countdata = read.table("counts.txt", header=TRUE, row.names=1, check.names = FALSE)
-  isodecoder_countdata = isodecoder_countdata[, -c(1,2,3,4,5), drop = FALSE]
-} else {
-  isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
-  isodecoder_countdata$Single_isodecoder = NULL
-}
+isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+isodecoder_countdata = isodecoder_countdata[grepl("True", isodecoder_countdata$Single_isodecoder),]
+isodecoder_countdata$Single_isodecoder = NULL
 isodecoder_countdata = isodecoder_countdata[!grepl("mito", rownames(isodecoder_countdata)),]
 coldata = read.table(paste(sampleData, sep=""), header=FALSE, sep = "\t", row.names=1)
 

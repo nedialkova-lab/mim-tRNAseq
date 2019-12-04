@@ -25,7 +25,7 @@ def extraCCA():
 	extra_cca = list()
 	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
 	for record in stk:
-		if record.seq[-3:] == 'cca':
+		if record.seq[-3:] == 'cca': #lowercase here indicates alignment issue to other clusters
 			extra_cca.append(record.name)
 
 	os.remove(stkname)

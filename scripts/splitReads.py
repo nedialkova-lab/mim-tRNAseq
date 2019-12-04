@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import logging
+import ssAlign
 from collections import defaultdict
 
 #########################################################
@@ -105,8 +106,6 @@ def splitReadsIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dic
 							sequence = tRNA_dict[tRNA]['sequence'].upper()
 							detected_seqs.remove(sequence)
 
-	
-	#counts['Single_isodecoder'] = "NA"
 	# for all clusters in cluster_dict, isdecoder size is number of members remaining after updating in above code
 	# these include clusters with only one isodecoder - i.e. not in mismatch_dict, and clusters that could not be separated into isodecoders because no unique mismatch distinguishes them
 	splitBool = list()
@@ -115,9 +114,7 @@ def splitReadsIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dic
 		isodecoder_sizes[cluster] = cluster_size
 		remaining_isodecoders = set([data['sequence'].upper() for member, data in tRNA_dict.items() if member in members])
 		if len(remaining_isodecoders) > 1:
-			splitBool.append("False")
-		else:
-			splitBool.append("True")
+			splitBool.append(cluster)
 
 	# save isodecoder info for DESeq2
 	total_detected_isodecoders = 0
@@ -126,6 +123,12 @@ def splitReadsIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dic
 		for isodecoder, size in isodecoder_sizes.items():
 			isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
 			total_detected_isodecoders += 1
+
+	# write isodecoder fasta for alignment and context analysis
+	with open(out_dir + experiment_name + '_isodecoderTranscripts.fa', 'w') as tempSeqs:
+		for seq in isodecoder_sizes.keys():
+			tempSeqs.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
+	ssAlign.aligntRNA(tempSeqs.name, out_dir)
 
 	log.info(" Total deconvoluted unique tRNA sequences: {}".format(total_detected_isodecoders))
 

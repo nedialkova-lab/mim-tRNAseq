@@ -29,7 +29,7 @@ def restrictedFloat(x):
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
 def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, mode, cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, sample_data):
+	keep_temp, cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, sample_data):
 	
 # Main wrapper
 
@@ -58,7 +58,6 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	log.info("mim-tRNAseq run with command:")
 	log.info(" ".join(sys.argv))
 
-
 	########
 	# main #
 	########
@@ -78,10 +77,6 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
 		snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, mismatches, map_round)
 
-	# Coverage and plots
-	cov_table, filtered_list, sorted_aa = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov, control_cond)
-	getCoverage.plotCoverage(out, mito_trnas, sorted_aa)
-
 	# define unique mismatches/insertions to assign reads to unique tRNA sequences
 	if cluster and not cluster_id == 1:
 		cluster_dict2 = copy.deepcopy(cluster_dict) # copy so splitReadsIsodecoder does not edit main cluster_dict
@@ -93,21 +88,19 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes)
+		new_mods, new_Inosines, filtered_cov = mmQuant.generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes)
 		Inosine_clusters = tRNAtools.newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = tRNAtools.generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
 		bams_list, coverageData = tRNAmap.mainAlign(sample_data, name, genome_index_path, genome_index_name, \
 			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, remap_mismatches, map_round)
-		cov_table, filtered_list, sorted_aa = getCoverage.getCoverage(coverage_bed, coverageData, out, max_multi, min_cov, control_cond)
-		getCoverage.plotCoverage(out, mito_trnas, sorted_aa)
 		remap = False
 	else:
 		log.info("\n*** New modifications not discovered as remap is not enabled ***\n")
 
 	# Misincorporation analysis
 	if snp_tolerance or not mismatches == 0.0:
-		new_mods, new_Inosines = mmQuant.generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, filtered_list, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes)
+		new_mods, new_Inosines, filtered_cov = mmQuant.generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes)
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
@@ -124,6 +117,10 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 		if cca:
 			CCAanalysis.plotDinuc(out)
+
+	# Coverage and plots
+	sorted_aa = getCoverage.getCoverage(coverageData, out, min_cov, control_cond, filtered_cov)
+	getCoverage.plotCoverage(out, mito_trnas, sorted_aa)
 
 	# DESeq2
 	sample_data = os.path.abspath(coverageData)
@@ -195,13 +192,6 @@ if __name__ == '__main__':
 	outputs.add_argument('--keep-temp', required = False, dest='keep_temp', action = 'store_true', help = \
 		'Keeps multi-mapping and unmapped bam files from GSNAP alignments. Default is false.')
 
-	featurecounts = parser.add_argument_group("featureCounts options")
-	featurecounts.add_argument('--count-mode', metavar = 'featureCounts mode', required = False, dest = 'mode', help = \
-		"featureCounts mode to handle reads overlapping more than one feature. Choose from 'none' (multi-overlapping reads are not counted)\
-		,'all' (reads are assigned and counted for all overlapping features), or 'fraction' (each overlapping feature receives a fractional count\
-		of 1/y, where y is the number of features overlapping with the read). Default is 'none'",\
-	 	choices = ['none','all','fraction'])
-
 	bedtools = parser.add_argument_group("Bedtools coverage options")
 	bedtools.add_argument('--min-cov', metavar = 'Minimum coverage per cluster', required = False, dest = 'min_cov', type = int, \
 		help = "Minimum coverage per cluster to include this cluster in coverage plots, modification analysis, and 3'-CCA analysis. Clusters with \
@@ -222,7 +212,7 @@ if __name__ == '__main__':
 
 	parser.add_argument('sampledata', help = 'Sample data sheet in text format, tab-separated. Column 1: full path to fastq (or fastq.gz). Column 2: condition/group.')
 
-	parser.set_defaults(threads=1, out="./", mode = 'none', max_multi = 3, min_cov = 0, mito = '')
+	parser.set_defaults(threads=1, out="./", max_multi = 3, min_cov = 0, mito = '')
 
 
 	#############################
@@ -255,5 +245,5 @@ if __name__ == '__main__':
 		else:
 			mimseq(args.trnas, args.trnaout, args.name, args.out, args.cluster, args.cluster_id, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
-				args.keep_temp, args.mode, args.cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
+				args.keep_temp, args.cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
 				args.misinc_thresh, args.mito, args.sampledata)

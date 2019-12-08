@@ -356,7 +356,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 			modTable = pd.read_csv(bam + "mismatchTable.csv", header = 0, sep = "\t")
 			modTable['canon_pos'] = modTable['pos'].map(cons_pos_dict)
 			for cluster in Inosine_clusters:
-				modTable.at[(modTable.canon_pos == '34') & (modTable['type'] == 'G') & (modTable.cluster == cluster), 'proportion'] = 1 - sum(modTable[(modTable.canon_pos == '34') & (modTable['type'] != 'G') & (modTable.cluster == cluster)]['proportion'].dropna())
+				modTable.at[(modTable.canon_pos == '34') & (modTable['type'] == 'G') & (modTable.isodecoder == cluster), 'proportion'] = 1 - sum(modTable[(modTable.canon_pos == '34') & (modTable['type'] != 'G') & (modTable.isodecoder == cluster)]['proportion'].dropna())
 			os.remove(bam + "mismatchTable.csv")
 
 			stopTable = pd.read_csv(bam + "RTstopTable.csv", header = 0, sep = "\t")

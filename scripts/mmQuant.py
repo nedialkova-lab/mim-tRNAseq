@@ -201,7 +201,8 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		stopTable_prop_melt['condition'] = condition
 		stopTable_prop_melt['bam'] = inputs
 		stopTable_prop_melt.pos = pd.to_numeric(stopTable_prop_melt.pos)
-
+		
+		stopTable_prop_melt.dropna(inplace = True)
 		stopTable_prop_melt = addNA(stopTable_prop_melt, tRNA_struct, cluster_dict, "stops")
 		stopTable_prop_melt = stopTable_prop_melt[['isodecoder', 'pos', 'proportion', 'condition', 'bam']]
 
@@ -230,7 +231,9 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 				for cluster, data in cca_dict.items():
 					if not end in data.keys():
 						cca_dict[cluster][end] = 0
-					# write CCA outputs for current bam
+
+			# write CCA outputs for current bam
+			for cluster, data in cca_dict.items():
 					for dinuc, count in data.items():
 						if (dinuc.upper() == "CC") or (dinuc.upper() == "CA") or (dinuc.upper() == "C") or (dinuc == "Absent"):
 							CCAvsCC_counts.write(cluster + "\t" + dinuc + "\t" + inputs + "\t" + condition + "\t" + str(count) + "\n")
@@ -415,6 +418,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 			dinuc_table.columns = ['dinuc', 'proportion', 'sample']
 			dinuc_table.to_csv(out_dir + "CCAanalysis/AlignedDinucProportions.csv", sep = "\t", index = False, na_rep = 'NA')
 			CCAvsCC_table.columns = ['gene', 'end', 'sample', 'condition', 'count']
+			CCAvsCC_table = CCAvsCC_table[~CCAvsCC_table.gene.isin(filtered)]
 			CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
 		# Anticodon counts

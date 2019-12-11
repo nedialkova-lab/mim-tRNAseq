@@ -110,7 +110,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		read_pos = 0
 		temp = defaultdict()
 		old_reference = reference
-		temp, ref_pos, read_pos, reference = countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict)
+		temp, ref_pos, read_pos, reference = countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict, remap)
 
 		# read counts, stops and coverage
 		counts[inputs][reference] += 1
@@ -163,6 +163,8 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		for isodecoder, values in stopTable.items()
 				}
 
+	print(modTable_prop['Saccharomyces_cerevisiae_tRNA-Ser-AGA-2-1'])
+				
 	# if remapping is enabled, find uknown mod sites
 	if remap:
 		new_mods, new_Inosines = unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable_prop, misinc_thresh, cov, min_cov, tRNA_dict)
@@ -245,7 +247,8 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 
 	return(new_mods, new_Inosines)
 
-def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict):
+def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict, remap):
+# Loop though mismatches in read and return new reference for splitting reads and/or count mods
 	
 	for index, interval in enumerate(md_list):
 		if not index == 0:
@@ -260,22 +263,26 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 			elif interval.isalpha(): # is a mismatch
 				identity = read_seq[read_pos]
 				ref_pos += new_offset 
-				# check for position in mismatch dictionary from clustering
-				# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
-				if (unique_isodecoderMMs) and (identity in unique_isodecoderMMs[reference][ref_pos]):
+				# update reference for isodecoder splitting if cluster_id not 1 and remap is disabed or this is round 2 of alignment (avoid errors in adding new mods for clusters)
+				if (unique_isodecoderMMs) and (identity in unique_isodecoderMMs[reference][ref_pos]) and (not remap):
 					reference = unique_isodecoderMMs[reference][ref_pos][identity]
+				# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
 				elif (ref_pos not in mismatch_dict[reference]) or (ref_pos in mismatch_dict[reference] and interval.islower()):
 					temp[ref_pos+1] = identity
 				# move forward
 				read_pos += 1
 				ref_pos += 1
 		elif interval.startswith('^'):
+			identity = 'insertion'
+			if (unique_isodecoderMMs) and (identity in unique_isodecoderMMs[reference][ref_pos]) and (not remap):
+				reference = unique_isodecoderMMs[reference][ref_pos][identity]
 			insertion = len(interval) - 1
 			ref_pos += insertion
 
 	return(temp, ref_pos, read_pos, reference)
 
 def addNA(table, tRNA_struct, cluster_dict, data_type):
+# fill mods and stops tables with 'NA' for gapped alignment
 	
 	grouped = table.groupby('isodecoder')
 	for name, group in grouped:

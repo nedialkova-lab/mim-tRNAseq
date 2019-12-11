@@ -510,7 +510,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 							member_Inosines = tRNA_dict[member_name]["InosinePos"]
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + member_Inosines))
-							cluster_dict[cluster_name].append(member_name)			
+							cluster_dict[cluster_name].append(member_name)	
 
 		clusterbed.close()
 

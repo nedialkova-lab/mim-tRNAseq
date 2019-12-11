@@ -98,7 +98,7 @@ def splitReadsIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dic
 						# update cluster_dict by keeping only tRNAs not in current isodecoder group
 						cluster_dict[cluster] = [tRNA for tRNA in cluster_dict[cluster] if not tRNA in isodecoder_items]
 						curr_isodecoders += 1
-						unique_isodecoderMMs[cluster][pos][identity] = tRNAs[0]
+						unique_isodecoderMMs[cluster][insertion][identity] = tRNAs[0]
 
 					# Otherwise remove the sequence from detected_seqs so that it can be processed again for a mismatch position at which it is unique
 					elif len(tRNAs) > 1:

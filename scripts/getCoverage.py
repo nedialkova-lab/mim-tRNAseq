@@ -15,9 +15,9 @@ from multiprocessing import Pool
 log = logging.getLogger(__name__)
 
 def filterCoverage (cov_table, min_cov):
-# returns isodecoders as list from counts table with less than min_cov reads
+# returns isodecoders as list from counts table with less than min_cov reads (excluding mito clusters)
 	
-	filtered_list = list(cov_table[(cov_table.values < min_cov).any(1)].index)
+	filtered_list = list(cov_table[(cov_table.values < min_cov).any(1) & (~cov_table.index.str.contains('mito'))].index)
 
 	log.info("{} clusters filtered out according to minimum coverage threshold: {}".format(len(filtered_list), min_cov))
 

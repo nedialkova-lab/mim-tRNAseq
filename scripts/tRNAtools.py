@@ -595,7 +595,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 		\n| Parsing new mods |\
 		\n+------------------+")	
 
-	new_snps = 0
+	new_snps_num = 0
 	new_inosines = 0
 	newInosine_lists = defaultdict(list)
 
@@ -619,9 +619,9 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 			tRNA_dict[cluster]['modified'] = list(set(tRNA_dict[cluster]['modified'] + l[cluster]))
 			old_mods = len(mod_lists[cluster])
 			mod_lists[cluster] = list(set(mod_lists[cluster] + l[cluster]))
-			new_snps += len(mod_lists[cluster]) - old_mods
+			new_snps_num += len(mod_lists[cluster]) - old_mods
 
-	log.info("{} new predicted modifications".format(new_snps))
+	log.info("{} new predicted modifications".format(new_snps_num))
 
 	# write file of new predicted mods
 	predictedMods = open(out_dir + "mods/predictedMods.csv", "w")

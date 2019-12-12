@@ -144,6 +144,8 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 				dinuc = "Absent"
 				cca_dict[reference][dinuc] += 1
 
+	print(cov)
+
 	## Edit misincorportation and stop data before writing
 
 	# build dictionaries for mismatches and stops, normalizing to total coverage per nucleotide
@@ -162,13 +164,12 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 						}
 		for isodecoder, values in stopTable.items()
 				}
-
-	print(modTable_prop['Saccharomyces_cerevisiae_tRNA-Ser-AGA-2-1'])
 				
-	# if remapping is enabled, find uknown mod sites
-	if remap:
-		new_mods, new_Inosines = unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable_prop, misinc_thresh, cov, min_cov, tRNA_dict)
-	else:
+	# find unknown mod sites
+	new_mods, new_Inosines = unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable_prop, misinc_thresh, cov, min_cov, tRNA_dict)
+	
+	# format and output mods and stops if remap is disabled (i.e. also occurs after round 2 of mapping)
+	if not remap:
 		new_mods = {}
 		new_Inosines = {}
 
@@ -184,10 +185,11 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		modTable_prop_melt.pos = pd.to_numeric(modTable_prop_melt.pos)
 		# add coverage per nucelotide from cov
 		cov_table = pd.DataFrame.from_dict(cov)
-		cov_table.dropna(inplace = True)
 		cov_table['pos'] = cov_table.index
 		cov_table['pos'] = cov_table['pos'].astype(int)
 		cov_table_melt = cov_table.melt(id_vars='pos', var_name='isodecoder', value_name='cov')
+		cov_table_melt.dropna(inplace = True)
+		print(cov_table_melt.head())
 		cov_table_melt['bam'] = inputs
 		cov_table_melt = cov_table_melt[['isodecoder', 'pos', 'bam', 'cov']]
 		cov_table_melt.to_csv(out_dir + inputs.split("/")[-1] + "_coverage.txt", sep = "\t", index = False)
@@ -291,7 +293,14 @@ def addNA(table, tRNA_struct, cluster_dict, data_type):
 			if data_type == 'mods':
 				new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1], 'cov':'NA'})
 			elif data_type == 'stops':
-				new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1]}, index=[0])
+				try:
+					new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':group.condition.iloc[0], 'bam':group.bam.iloc[0]}, index=[0])
+				except IndexError:
+					print(table.loc[table.isodecoder == name])
+					print(group.condition)
+					print(group.condition.iloc[0])
+					print(group.bam)
+					print(group.bam.iloc[0])
 			if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
 				if not pos == max(tRNA_struct.loc[name].index):
 					table.loc[(table.isodecoder == name) & (table.pos >= pos), 'pos'] += 1

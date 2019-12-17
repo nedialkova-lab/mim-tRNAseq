@@ -56,6 +56,7 @@ if (length(args)==0) {
 				facet_wrap(~bam, ncol = 4) + 
 				xlab("Gene (%)") + ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
 				labs(fill = "Isotype") + 
+				guides(fill=guide_legend(ncol=2)) +
 				scale_fill_manual(values = getPalette(mit_colourCount)) + 
 				theme_bw()
 			ggsave(paste(out_dir, "mitocoverage_byaa_norm.pdf", sep = ''), mitocov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)	
@@ -101,7 +102,8 @@ if (length(args)==0) {
 				geom_bar(stat = "identity", alpha = 0.8) + facet_wrap(~bam, ncol = 4) + 
 				xlab("Gene (%)") + 
 				ylab("Scaled normalised coverage") + 
-				labs(fill = "Isotype") + 
+				labs(fill = "Isotype") +
+				guides(fill=guide_legend(ncol=2)) + 
 				scale_y_continuous(breaks = seq(0,1,0.25)) + 
 				scale_fill_manual(values = getPalette(mit_colourCount)) + 
 				theme_bw()

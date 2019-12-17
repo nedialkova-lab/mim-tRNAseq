@@ -116,7 +116,6 @@ def plotCoverage(out_dir, mito_trnas, sorted_aa):
 	
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	command = ["Rscript", script_path + "/coveragePlot.R", out_dir + "coverage_bygene.txt", out_dir + "coverage_byaa.txt", out_dir, sorted_aa, mito_trnas]
-	print(command)
 	try:
 	#with StreamLogger.StreamLogger(logging.INFO) as out:
 		subprocess.check_call(command)

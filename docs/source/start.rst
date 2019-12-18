@@ -25,8 +25,6 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 +-----------------+-------------------+-----------+
 |Tool             | Version >=        | Link      |
 +=================+===================+===========+
-| Subread package | 1.6.2             | subread_  |
-+-----------------+-------------------+-----------+
 | GMAP-GSNAP      | 2019-02-26        | GSNAP_    |
 +-----------------+-------------------+-----------+
 | samtools        | 1.7               | samtools_ |
@@ -42,7 +40,6 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 | BLAST           | 2.7.1             | BLAST_    |
 +-----------------+-------------------+-----------+
 
-.. _subread: http://subread.sourceforge.net/
 .. _GSNAP: http://research-pub.gene.com/gmap/
 .. _samtools: http://www.htslib.org/
 .. _usearch: https://www.drive5.com/usearch/
@@ -116,8 +113,6 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 +------------+------------+-------------+
 | pyfiglet   | 0.7.5      | pyfiglet_   |
 +------------+------------+-------------+
-| pybedtools | 0.7.10     | pybedtools_ |
-+------------+------------+-------------+
 | pysam      | 0.14.1     | pysam_      |
 +------------+------------+-------------+
 | pandas     | 0.22.0     | pandas_     |
@@ -127,7 +122,6 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 
 .. _Biopython: https://biopython.org/
 .. _pyfiglet: https://pypi.org/project/pyfiglet/0.7/
-.. _pybedtools: https://daler.github.io/pybedtools/
 .. _pysam: https://pysam.readthedocs.io/en/latest/api.html
 .. _pandas: https://pandas.pydata.org/
 .. _NumPy: https://numpy.org/

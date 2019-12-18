@@ -14,6 +14,7 @@ import re, copy, sys, os, shutil, subprocess, logging, glob
 from pathlib import Path
 import urllib.request
 from collections import defaultdict
+import pandas as pd
 import ssAlign
 
 log = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 	modomics_file = getModomics()
 	modomics_dict = {}
 	perSpecies_count = defaultdict(int)
-	for line in modomics_file.splitlines():
+	for line in modomics_file:
 		line = line.strip()
 		sameIDcount = 0
 
@@ -152,20 +153,6 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 				modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
 				modomics_dict[curr_id]["InosinePos"] = inosinePos
 
-				# If 'N' in anticodon then duplicate entry 4 times for each possibility
-				# anticodon = curr_id.split('-')[2]
-				# if 'N' in anticodon:
-				# 	for rep in ['A','C','G','T']:
-				# 		duplicate_item = str(curr_id.split('-')[0]) + '-' + str(curr_id.split('-')[1]) + '-' + str(anticodon.replace('N', rep))
-				# 		duplicate_unmod_seq = modomics_dict[curr_id]['unmod_sequence'].replace('N',rep)
-				# 		duplicate_anticodon = modomics_dict[curr_id]['anticodon'].replace('N', rep)
-				# 		modomics_dict[duplicate_item] = copy.deepcopy(modomics_dict[curr_id])
-				# 		modomics_dict[duplicate_item]['unmod_sequence'] = duplicate_unmod_seq
-				# 		modomics_dict[duplicate_item]['anticodon'] = duplicate_anticodon
-				# 	del modomics_dict[curr_id]
-				# else:
-				# 	duplicate_item = curr_id
-
 	for species in perSpecies_count:
 		log.info('Number of Modomics entries for {}: {}'.format(species, perSpecies_count[species]))
 
@@ -176,10 +163,11 @@ def getModomics():
 
 	try:
 		with urllib.request.urlopen('http://modomics.genesilico.pl/sequences/list/?type_field=tRNA&subtype=all&species=all&display_ascii=Display+as+ASCII&nomenclature=abbrev') as response:
-			modomics = response.read().decode()
+			modomics = response.read().decode().splitlines()
 	except Exception as e:
-		logging.error("Error in {}".format("fetching modomics"), exc_info=e)
-		raise
+		logging.error("Error in {}".format("fetching modomics. Using local files..."))
+		modomics = open("./data/modomics", "r")
+		
 
 	return modomics
 
@@ -509,7 +497,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 							member_Inosines = tRNA_dict[member_name]["InosinePos"]
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + member_Inosines))
-							cluster_dict[cluster_name].append(member_name)			
+							cluster_dict[cluster_name].append(member_name)	
 
 		clusterbed.close()
 
@@ -594,7 +582,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 		\n| Parsing new mods |\
 		\n+------------------+")	
 
-	new_snps = 0
+	new_snps_num = 0
 	new_inosines = 0
 	newInosine_lists = defaultdict(list)
 
@@ -618,19 +606,9 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 			tRNA_dict[cluster]['modified'] = list(set(tRNA_dict[cluster]['modified'] + l[cluster]))
 			old_mods = len(mod_lists[cluster])
 			mod_lists[cluster] = list(set(mod_lists[cluster] + l[cluster]))
-			new_snps += len(mod_lists[cluster]) - old_mods
+			new_snps_num += len(mod_lists[cluster]) - old_mods
 
-	log.info("{} new predicted modifications".format(new_snps))
-
-	# write file of new predicted mods
-	predictedMods = open(out_dir + "mods/predictedMods.csv", "w")
-	predictedMods.write("cluster\tpos\tidentity\tmisinc\n")
-	with open(out_dir + "mods/predictedModstemp.csv", "r") as predictedTemp:
-		for line in predictedTemp:
-			cluster, pos, misinc = line.split("\t")
-			identity = str(tRNA_dict[cluster]['sequence'][int(pos)])
-			predictedMods.write(cluster + "\t" + str(pos) + "\t" + identity + "\t" + str(misinc) + "\n")
-	os.remove(out_dir + "mods/predictedModstemp.csv")
+	log.info("{} new predicted modifications".format(new_snps_num))
 
 	# rewrite SNP index
 	total_snps = 0
@@ -651,11 +629,6 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 		tRNA_ref = out_dir + experiment_name + '_tRNATranscripts.fa'
 	
 	tRNA_seqs = SeqIO.to_dict(SeqIO.parse(tRNA_ref, 'fasta'))	
-
-	# edit A to G for updated inosines list
-	# for cluster in Inosine_lists:
-	# 	for pos in Inosine_lists[cluster]:
-	# 		tRNA_seqs[cluster].seq = tRNA_seqs[cluster].seq[0:pos] + "G" + tRNA_seqs[cluster].seq[pos+1:]
 
 	# rewrite tRNA transcript reference
 	with open(tRNA_ref, "w") as transcript_fasta:
@@ -681,7 +654,7 @@ def additionalModsParser(input_species, out_dir):
 			additionalMods[tRNA]['species'] = species
 
 	# initialise dictionaries of structure (with and without gapped numbering) and anticodon positions to define canonical mod sites
-	tRNA_struct, cons_pos_list, cons_pos_dict = ssAlign.tRNAclassifier(out_dir)
+	tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict = ssAlign.tRNAclassifier(out_dir)
 	tRNA_struct_nogap = ssAlign.tRNAclassifier_nogaps()
 	cons_anticodon = ssAlign.getAnticodon()
 
@@ -939,6 +912,31 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
 		seq = seq + 'CCA'
 
 	return(seq)
+
+def countReadsAnticodon(input_counts, out_dir):
+
+	# Counts per anticodon
+	count_dict = defaultdict(lambda: defaultdict(int))
+
+	with open(input_counts, "r") as counts_file:
+		for line in counts_file:
+			line = line.strip()
+			if not line.startswith("#"):
+				if line.startswith("isodecoder"):
+					sample_list = [samples for samples in line.split("\t")[1:-1]]
+				else:
+					anticodon = line.split("\t")[0]
+					anticodon = '-'.join(anticodon.split("-")[:-2])
+					col = 1
+					for sample in sample_list:
+						count_dict[anticodon][sample] += float(line.split("\t")[col])
+						col += 1
+
+	count_pd = pd.DataFrame.from_dict(count_dict, orient='index')
+	count_pd.index.name = 'Anticodon'
+	count_pd.to_csv(out_dir + 'Anticodon_counts.txt', sep = '\t')
+
+	log.info("** Read counts per anticodon saved to " + out_dir + "counts/Anticodon_counts.txt **")
 
 def tidyFiles (out_dir, cca):
 	

@@ -25,7 +25,7 @@ def extraCCA():
 	extra_cca = list()
 	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
 	for record in stk:
-		if record.seq[-3:] == 'cca':
+		if record.seq[-3:] == 'cca': #lowercase here indicates alignment issue to other clusters
 			extra_cca.append(record.name)
 
 	os.remove(stkname)
@@ -35,20 +35,7 @@ def extraCCA():
 def tRNAclassifier(out):
 
 	struct_dict = structureParser()
-	tRNA_struct = defaultdict(dict)
-
-	# Loop thorugh every tRNA in alignment and create dictionary entry for pos - structure information (1-based to match to mismatchTable from mmQuant)
 	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
-	for record in stk:
-		tRNA = record.id
-		seq = record.seq
-		bases = ["A", "C", "G", "U"]
-
-		for i, letter in enumerate(seq, 1):
-			if letter.upper() in bases:
-				tRNA_struct[tRNA][i] = struct_dict[i]
-			else:
-				tRNA_struct[tRNA][i] = 'gap'
 
 	# Get canonical tRNA position numbering (cons_pos_list). Useful to retain cononical numbering of tRNA positions (i.e. anticodon at 34 - 36, m1A 58 etc...)
 	# Return list of characters with pos or '-'. To be used in all plots with positional data such as heatmaps for stops or modifications.
@@ -116,7 +103,25 @@ def tRNAclassifier(out):
 
 	cons_pos_list = "_".join(cons_pos_list)
 
-	return(tRNA_struct, cons_pos_list, cons_pos_dict)
+	# Loop thorugh every tRNA in alignment and create dictionary entry for pos-structure and pos-canonpos information (1-based to match to mismatchTable from mmQuant)
+	tRNA_struct = defaultdict(dict)
+	tRNA_ungap2canon = defaultdict(dict)
+
+	for record in stk:
+		tRNA = record.id
+		seq = record.seq
+		ungapped_pos = 0
+		bases = ["A", "C", "G", "U"]
+
+		for i, letter in enumerate(seq, 1):
+			if letter.upper() in bases:
+				tRNA_ungap2canon[tRNA][ungapped_pos] = cons_pos_dict[i]
+				ungapped_pos += 1
+				tRNA_struct[tRNA][i] = struct_dict[i]
+			else:
+				tRNA_struct[tRNA][i] = 'gap'
+
+	return(tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict)
 
 def tRNAclassifier_nogaps():
 
@@ -182,7 +187,7 @@ def clusterAnticodon(cons_anticodon, cluster):
 def modContext(out):
 # outputs file of defined mods of interest pos, identity and context sequence for each cluster
 
-	tRNA_struct, cons_pos_list, cons_pos_dict = tRNAclassifier(out)
+	tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict = tRNAclassifier(out)
 	anticodon = getAnticodon_1base()
 
 	# Define positions of conserved mod sites in gapped alignment for each tRNA

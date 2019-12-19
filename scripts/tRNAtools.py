@@ -153,8 +153,8 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 				modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
 				modomics_dict[curr_id]["InosinePos"] = inosinePos
 
-	for species in perSpecies_count:
-		log.info('Number of Modomics entries for {}: {}'.format(species, perSpecies_count[species]))
+	for s in perSpecies_count:
+		log.info('Number of Modomics entries for {}: {}'.format(s, perSpecies_count[s]))
 
 	return(tRNA_dict,modomics_dict, species)
 

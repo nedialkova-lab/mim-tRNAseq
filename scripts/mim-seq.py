@@ -236,6 +236,8 @@ if __name__ == '__main__':
 		print(figlet_format('mim-tRNAseq', font='standard'))
 		print(" Modification-induced misincorporation analysis of tRNA sequencing data\n")
 		args = parser.parse_args()
+		if args.pretrnas:
+			args.cca = False
 		# Check that control_cond exists in sample data
 		conditions = list()
 		with open(args.sampledata, "r") as sampleData:

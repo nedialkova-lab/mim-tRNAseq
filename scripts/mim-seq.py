@@ -237,7 +237,12 @@ if __name__ == '__main__':
 		print(" Modification-induced misincorporation analysis of tRNA sequencing data\n")
 		args = parser.parse_args()
 		if args.pretrnas:
-			args.cca = False
+			if args.cca:
+				log.warning("Disabling CCA analysis in pre-tRNA mode...")
+				args.cca = False
+			if args.cluster:
+				log.warning("Disabling tRNA clustering in pre-tRNA mode...")
+				args.cluster = False
 		# Check that control_cond exists in sample data
 		conditions = list()
 		with open(args.sampledata, "r") as sampleData:

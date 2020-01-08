@@ -337,6 +337,12 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		log.info("{:,} A to G replacements in reference sequences for inosine modifications".format(total_inosines))
 		# empty mismatch dict to avoid error when returning it from this function
 		mismatch_dict = defaultdict(list)
+		insert_dict = defaultdict(lambda: defaultdict(list))
+		isodecoder_count = defaultdict()
+		mod_lists = dict()
+		Inosine_lists = dict()
+		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list))
+		cluster_dict = defaultdict(list)
 
 	##########################
 	# Cluster tRNA sequences #

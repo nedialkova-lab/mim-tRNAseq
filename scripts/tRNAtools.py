@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 def dd():
 	return(defaultdict())
 
-def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off):
+def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, pretrnas):
 # tRNA sequence files parser and dictionary building
 
 	# Generate modification reference table
@@ -51,7 +51,10 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 		species.add(' '.join(seq.split('_')[0:2]))
 		# only add to dictionary if not nmt or undetermined sequence
 		if not (re.search('Und', seq) or re.search('nmt', seq)):
-			tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
+			if not pretrnas:
+				tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
+			else:
+				tRNAseq = str(temp_dict[seq].seq)
 			# if re.search('nmt', seq):
 			# 	seq = seq.split("-")[0] + "_" + "-".join(seq.split("-")[1:])
 			# 	loc_type = "mitochondrial"
@@ -172,7 +175,7 @@ def getModomics():
 	return modomics
 
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False):
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0
@@ -184,7 +187,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
-	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off)
+	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, pretrnas)
 	temp_dir = out_dir + "/tmp/"
 
 	try:

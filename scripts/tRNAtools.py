@@ -169,7 +169,7 @@ def getModomics():
 			modomics = response.read().decode().splitlines()
 	except Exception as e:
 		logging.error("Error in {}".format("fetching modomics. Using local files..."))
-		modomics = open("./data/modomics", "r")
+		modomics = open("./data/modomics", "r+", encoding = "utf-8")
 		
 
 	return modomics

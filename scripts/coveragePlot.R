@@ -138,7 +138,7 @@ if (length(args)==0) {
 
   	plots = dlply(cov_bygene , "Cluster", `%+%`, e1 = plot_func)
   	multi = marrangeGrob(plots, nrow = 3, ncol = 1)
-  	ggsave(paste(out_dir, "coverage_bycluster_norm.pdf", sep = ''), multi, height = 12, width = 14)
+  	ggsave(paste(out_dir, "coverage_byUniquetRNA_norm.pdf", sep = ''), multi, height = 12, width = 14)
 
 
 }

@@ -682,52 +682,15 @@ def additionalModsParser(input_species, out_dir):
 			anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
 
 			for mod in data['mods']:
-				if mod == "m1A58":
-					cons_pos = '58'
-					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
-					if not mod_site == 'NA':
-						additionalMods_parse[cluster]['mods'].append(mod_site)
-						additionalMods_parse[cluster]['species'].append(data['species'])
-				if mod == "m2,2G26":
-					cons_pos = '26'
-					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
-					if not mod_site == 'NA':
-						additionalMods_parse[cluster]['mods'].append(mod_site)
-						additionalMods_parse[cluster]['species'].append(data['species'])
-				if mod == "m1G9":
-					cons_pos = '9'
-					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
-					if not mod_site == 'NA':
-						additionalMods_parse[cluster]['mods'].append(mod_site)
-						additionalMods_parse[cluster]['species'].append(data['species'])
-				if mod == "m1G37":
-					cons_pos = '37'
-					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
-					if not mod_site == 'NA':
-						additionalMods_parse[cluster]['mods'].append(mod_site)
-						additionalMods_parse[cluster]['species'].append(data['species'])
-				if mod == 'm3C32':
-					cons_pos = '32'
-					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
-					if not mod_site == 'NA':
-						additionalMods_parse[isodecoder]['mods'].append(mod_site)
-						additionalMods_parse[isodecoder]['species'].append(data['species'])
-				if mod == 'm3C47':
-					cons_pos = '47'
-					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
-					if not mod_site == 'NA':
-						additionalMods_parse[cluster]['mods'].append(mod_site)
-						additionalMods_parse[cluster]['species'].append(data['species'])
+				cons_pos = re.search('.*?[A|C|G|U|I]([0-9].*)', mod).group(1)
+				mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+				if not mod_site == 'NA':
+					additionalMods_parse[cluster]['mods'].append(mod_site)
+					additionalMods_parse[cluster]['species'].append(data['species'])
 				if mod == 'I34':
 					mod_site = min(anticodon)
 					additionalInosines[cluster]['InosinePos'].append(mod_site)
 					additionalInosines[cluster]['species'].append(data['species'])
-				if mod == 'm3C20':
-					cons_pos = '20'
-					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
-					if not mod_site == 'NA':
-						additionalMods_parse[cluster]['mods'].append(mod_site)
-						additionalMods_parse[cluster]['species'].append(data['species'])
 			
 	return(additionalMods_parse, additionalInosines)
 

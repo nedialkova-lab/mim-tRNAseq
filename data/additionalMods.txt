@@ -28,3 +28,4 @@ Mus musculus	Pro-AGG	I34
 Mus musculus	Thr-AGT	I34
 Mus musculus	Ser-AGA	I34
 Mus musculus	Leu-AAG	I34
+Saccharomyces cerevisiae	Gln-TTG	mcm5s2U34

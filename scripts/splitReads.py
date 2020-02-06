@@ -133,3 +133,4 @@ def splitReadsIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dic
 	log.info(" Total deconvoluted unique tRNA sequences: {}".format(total_detected_isodecoders))
 
 	return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
+

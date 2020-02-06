@@ -30,7 +30,11 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 	cons_anticodon = ssAlign.getAnticodon()
 	
 	for isodecoder, data in modTable.items():
-		cluster = [parent for parent, child in cluster_dict.items() if isodecoder in child][0]
+		if cluster_dict:
+			cluster = [parent for parent, child in cluster_dict.items() if isodecoder in child][0]
+		# if cluster_dict is empty, then clustering is disabled and in this case isodecoder in modTable is the "cluster"
+		else:
+			cluster = isodecoder
 		anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
 		for pos, type in data.items():
 			cov = cov_table[isodecoder][pos]
@@ -230,7 +234,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 				temp_add = temp_add.append({'isodecoder':isodecoder, inputs:0}, ignore_index = True)
 		counts_table = counts_table.append(temp_add)
 
-		counts_table.to_csv(inputs + "countTable.csv", sep = "\t", index = False, na_rep = "NA")
+		counts_table.to_csv(inputs + "countTable.csv", sep = "\t", index = False, na_rep = "0")
 		modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 		stopTable_prop_melt.to_csv(inputs + "RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
@@ -439,7 +443,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 				countsTable_total.at[cluster, 'Single_isodecoder'] = "False"
 			else:
 				countsTable_total.at[cluster, 'Single_isodecoder'] = "True"
-		countsTable_total.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t", index = True)
+		countsTable_total.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t", index = True, na_rep = "0")
 
 		# map canon_pos for each isodecoder ungapped pos to newMods
 		tRNA_ungap2canon_table = pd.DataFrame.from_dict(tRNA_ungap2canon, orient = "index")

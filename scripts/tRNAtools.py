@@ -310,7 +310,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			# Build snp_records as before but with cluster names and non-redundant sets of modifications
 			# Position is 1-based for iit_store i.e. pos + 1
 			for (index, pos) in enumerate(mod_lists[seq]):
-				snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
+				if "Gln-TTG" in seq and pos + 1 == 34:
+					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "C")
+				else:
+					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
 
 		for seq in Inosine_lists:
 			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == seq and tRNA_dict[seq]['species'] in v['species']}
@@ -339,8 +342,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		mismatch_dict = defaultdict(list)
 		insert_dict = defaultdict(lambda: defaultdict(list))
 		isodecoder_count = defaultdict()
-		mod_lists = dict()
-		Inosine_lists = dict()
+		mod_lists = {tRNA:list() for tRNA in tRNA_dict.keys()}
+		Inosine_lists = {tRNA:data['InosinePos'] for tRNA, data in tRNA_dict.items()}
 		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list))
 		cluster_dict = defaultdict(list)
 
@@ -547,7 +550,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			for (index, pos) in enumerate(mod_lists[cluster]):
 				# Build snp_records as before but with cluster names and non-redundant sets of modifications
 				# Position is 1-based for iit_store i.e. pos + 1
-				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
+				if "Gln-TTG" in cluster and pos + 1 == 34:
+					snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "C")
+				else:
+					snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
 
 		for cluster in Inosine_lists:
 			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == cluster and tRNA_dict[cluster]['species'] in v['species']}
@@ -584,7 +590,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, isodecoder_count, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
 
-def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster):
+def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, clustering):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index
 
 	log.info("\n+------------------+ \
@@ -632,7 +638,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 		 	total_snps += len(Inosine_lists[cluster])
 
 	# read in reference transcripts for inosine editing - use cluster to determine correct file
-	if cluster:
+	if clustering:
 		tRNA_ref = out_dir + experiment_name + '_clusterTranscripts.fa'
 	else:
 		tRNA_ref = out_dir + experiment_name + '_tRNATranscripts.fa'

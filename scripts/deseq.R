@@ -115,6 +115,7 @@ if (nrow(coldata) == 1) {
     isoacceptorInfo$rn = rownames(isoacceptorInfo)
 
     # cluster_id == 1 means that mim-seq clusters are already representative of isodecoders, therefore get isodecoder info directly from custerInfo
+    # cluster_id == '' means clustering is disabled
     if (cluster_id == 1){
       isodecoderFile = list.files(path="./", pattern="clusterInfo.txt", full.names=T)
       isodecoderInfo = read.table(isodecoderFile[1], header=T)
@@ -122,12 +123,12 @@ if (nrow(coldata) == 1) {
       isodecoderInfo = isodecoderInfo[, 'cluster_size', drop = F]
       colnames(isodecoderInfo) = 'size'
       isodecoderInfo$rn = rownames(isodecoderInfo)
-    } else {
-    isodecoderFile = list.files(path="./", pattern="isodecoderInfo.txt", full.names=T)
-    isodecoderInfo = read.table(isodecoderFile[1], header=T, row.names=1)
-    isodecoderInfo = isodecoderInfo[ , 'size', drop=F]
-    isodecoderInfo$rn = rownames(isodecoderInfo)
-    }
+      } else {
+      isodecoderFile = list.files(path="./", pattern="isodecoderInfo.txt", full.names=T)
+      isodecoderInfo = read.table(isodecoderFile[1], header=T, row.names=1)
+      isodecoderInfo = isodecoderInfo[ , 'size', drop=F]
+      isodecoderInfo$rn = rownames(isodecoderInfo)
+    } 
 
     # Analysis with DESeq2 ----------------------------------------------------
 
@@ -158,7 +159,7 @@ if (nrow(coldata) == 1) {
       write.csv(resdata_isodecoder, file=paste(subdir_isodecoder, paste(toString(unique(coldata$condition)), 'normCounts.csv', sep="-"), sep="/"), row.names = FALSE)
 
 
-    } else {
+      } else {
       dds_anticodon = DESeqDataSetFromMatrix(countData=anticodon_countdata, colData=coldata, design=~condition)
       dds_isodecoder = DESeqDataSetFromMatrix(countData=isodecoder_countdata, colData=coldata, design=~condition)
 

@@ -317,7 +317,7 @@ def addNA(table, tRNA_struct, cluster_dict, data_type):
 
 	return(table)
 
-def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes):
+def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -466,8 +466,8 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 			CCAvsCC_table = CCAvsCC_table[~CCAvsCC_table.gene.isin(filtered)]
 			CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
-		# Anticodon counts
-		tRNAtools.countReadsAnticodon(out_dir + "Isodecoder_counts.txt", out_dir)
+		# Anticodon and/or isodecoder counts counts
+		tRNAtools.countReads(out_dir + "Isodecoder_counts.txt", out_dir, isodecoder_sizes, clustering, tRNA_dict)
 
 		log.info("** Read counts per isodecoder saved to " + out_dir + "counts/Isodecoder_counts.txt **")
 

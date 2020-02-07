@@ -891,10 +891,11 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
 
 	return(seq)
 
-def countReadsAnticodon(input_counts, out_dir):
+def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict):
 
 	# Counts per anticodon
-	count_dict = defaultdict(lambda: defaultdict(int))
+	count_dict_anticodon = defaultdict(lambda: defaultdict(int))
+	count_dict_isodecoder = defaultdict(lambda: defaultdict(int))
 
 	with open(input_counts, "r") as counts_file:
 		for line in counts_file:
@@ -903,16 +904,31 @@ def countReadsAnticodon(input_counts, out_dir):
 				if line.startswith("isodecoder"):
 					sample_list = [samples for samples in line.split("\t")[1:-1]]
 				else:
-					anticodon = line.split("\t")[0]
-					anticodon = '-'.join(anticodon.split("-")[:-2])
+					isodecoder = line.split("\t")[0]
+					anticodon = '-'.join(isodecoder.split("-")[:-2])
 					col = 1
 					for sample in sample_list:
-						count_dict[anticodon][sample] += float(line.split("\t")[col])
+						count_dict_anticodon[anticodon][sample] += float(line.split("\t")[col])
+						if not clustering:
+							count_dict_isodecoder[isodecoder][sample] = float(line.split("\t")[col])
 						col += 1
 
-	count_pd = pd.DataFrame.from_dict(count_dict, orient='index')
-	count_pd.index.name = 'Anticodon'
-	count_pd.to_csv(out_dir + 'Anticodon_counts.txt', sep = '\t')
+	count_anticodon_pd = pd.DataFrame.from_dict(count_dict_anticodon, orient='index')
+	count_anticodon_pd.index.name = 'Anticodon'
+	count_anticodon_pd.to_csv(out_dir + 'Anticodon_counts.txt', sep = '\t')
+
+	if not clustering:
+		new_count_isodecoder = defaultdict(lambda: defaultdict(int))
+		for isodecoder in isodecoder_sizes:
+			sameSeq = [tRNAs for tRNAs in tRNA_dict.keys() if tRNA_dict[tRNAs]['sequence'] == tRNA_dict[isodecoder]['sequence']]
+			for i in sameSeq:
+				for lib in count_dict_isodecoder[isodecoder].keys():
+					new_count_isodecoder[isodecoder][lib] += count_dict_isodecoder[i][lib]
+
+		count_isodecoder_pd = pd.DataFrame.from_dict(new_count_isodecoder, orient='index')
+		count_isodecoder_pd.index.name = 'isodecoder'
+		count_isodecoder_pd['Single_isodecoder'] = "True"
+		count_isodecoder_pd.to_csv(out_dir + 'Isodecoder_counts.txt', sep = '\t')
 
 	log.info("** Read counts per anticodon saved to " + out_dir + "counts/Anticodon_counts.txt **")
 

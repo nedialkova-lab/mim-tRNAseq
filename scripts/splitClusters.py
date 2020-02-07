@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 def dd():
 	return(defaultdict(dict))
 
-def splitReadsIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out_dir, experiment_name):
+def splitIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out_dir, experiment_name):
 
 	log.info("\n+------------------------------------------------------------------------------+\
 		\n| Characterizing cluster mismatches for read splitting by unique tRNA sequence |\
@@ -133,4 +133,24 @@ def splitReadsIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dic
 	log.info(" Total deconvoluted unique tRNA sequences: {}".format(total_detected_isodecoders))
 
 	return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
+
+def getIsodecoderSizes(out_dir, experiment_name, tRNAdict):
+	# get isodecoder sizes for tRNA sequences - useful for when clustering is disabled and above function is not applicable
+
+	isodecoder_sizes = defaultdict(int)
+	already_added = set()
+	for tRNA in tRNAdict:
+		if tRNA not in already_added:
+			sameSeq = [tRNAs for tRNAs, data in tRNAdict.items() if data['sequence'] == tRNAdict[tRNA]['sequence']]
+			already_added.update(sameSeq)
+			isodecoder_sizes[tRNA] = len(sameSeq)
+
+	with open(out_dir + experiment_name + "isodecoderInfo.txt", "w") as isodecoderInfo:
+		isodecoderInfo.write("Isodecoder\tsize\n")
+		for isodecoder, size in isodecoder_sizes.items():
+			isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
+
+	return(isodecoder_sizes)
+
+
 

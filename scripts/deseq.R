@@ -227,6 +227,32 @@ if (nrow(coldata) == 1) {
         coord_fixed()
       ggsave(paste(subdir_isodecoder, "qc-pca.png", sep="/"), height = 7, width = 8)
 
+      # Gene expression heatmaps
+      
+      cols = as.data.frame(colData(dds_isodecoder)[,'condition'])
+      rownames(cols) <- colnames(dds_isodecoder)
+      names(cols) <- "Condition"
+      isodecoder_mat <- assay(vsd_isodecoder)
+      isodecoder_mat = (isodecoder_mat - rowMeans(isodecoder_mat))
+      isodecoder_mat[is.na(isodecoder_mat)] = 0
+      isodecoder_mat = isodecoder_mat[,order(cols$Condition)]
+      pheatmap(isodecoder_mat, cluster_rows = TRUE, cluster_cols = FALSE, show_rownames = FALSE, 
+               annotation_col = cols, filename = paste(subdir_isodecoder, "Isodecoder_vst_hm.png", sep="/"), 
+               color = colorRampPalette(rev(brewer.pal(n = 11, name = "RdBu")))(100), 
+               show_colnames = FALSE)
+      
+      cols = as.data.frame(colData(dds_anticodon)[,'condition'])
+      rownames(cols) = colnames(dds_anticodon)
+      names(cols) <- "Condition"
+      anticodon_mat <- assay(vsd_anticodon)
+      anticodon_mat = (anticodon_mat - rowMeans(anticodon_mat))
+      rownames(anticodon_mat) = paste(unlist(strsplit(rownames(anticodon_mat), "-"))[3*(1:nrow(anticodon_mat))-1],unlist(strsplit(rownames(anticodon_mat), "-"))[3*(1:nrow(anticodon_mat))], sep = "-")
+      anticodon_mat[is.na(anticodon_mat)] = 0
+      anticodon_mat = anticodon_mat[,order(cols$Condition)]
+      pheatmap(anticodon_mat, cluster_rows = TRUE, cluster_cols = FALSE, annotation_col = cols, 
+               filename = paste(subdir_anticodon, "Anticodon_vst_hm.png", sep="/"), 
+               color = colorRampPalette(rev(brewer.pal(n = 11, name = "RdBu")))(100), show_colnames = FALSE)
+
       # Get combinations of coditions for various DE contrasts
       ordered_levels = levels(lastlevel(unique(dds_anticodon$condition), control_cond))
       combinations = combn(ordered_levels, 2, simplify=FALSE)

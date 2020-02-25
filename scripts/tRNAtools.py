@@ -564,9 +564,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			total_inosines += len(Inosine_lists[cluster])
 
 		# edit ref seqs A to G at inosine positions
-		for cluster in Inosine_lists:
-			for pos in Inosine_lists[cluster]:
-				final_centroids[cluster].seq = final_centroids[cluster].seq[0:pos] + "G" + final_centroids[cluster].seq[pos+1:]
+		#for cluster in Inosine_lists:
+		#	for pos in Inosine_lists[cluster]:
+		#		final_centroids[cluster].seq = final_centroids[cluster].seq[0:pos] + "G" + final_centroids[cluster].seq[pos+1:]
 
 		Inosine_clusters = [cluster for cluster, inosines in Inosine_lists.items() if len(inosines) > 0]
 

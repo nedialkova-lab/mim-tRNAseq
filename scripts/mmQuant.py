@@ -110,12 +110,24 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		if cigar_list[1].upper() == "S".upper():
 			soft_clip = int(cigar_list[0])
 			read_seq = read.query_sequence[soft_clip:]
+			del cigar_list[0:2]
 		else:
 			read_seq = read.query_sequence 
 
 		if cigar_list[-1].upper() == "S".upper():
 			soft_clip = int(cigar_list[-2])
 			read_seq = read_seq[:-soft_clip]
+			del cigar_list[-3:-1]
+
+		# remove insertions in read from the sequence (MD tags do not account for deletions and effect misinc. identity matching)
+		read_ins_pos = 0
+		for index, i in enumerate(cigar_list):
+			if i.isdigit():
+				read_ins_pos += int(i)
+			elif i.isalpha() and i.upper() == 'I':
+				ins_size = int(cigar_list[index-1])
+				read_seq = read_seq[0:read_ins_pos-ins_size] + read_seq[read_ins_pos:]
+				read_ins_pos -= ins_size
 
 		# get offset of read mapping position to reference start in order to adjust mismatch position, and end of alignment for coverage calculation
 		# (offset is simply start position of read alignment realtive to reference)
@@ -451,6 +463,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 		tRNA_ungap2canon_table = tRNA_ungap2canon_table.melt(var_name='pos', value_name='canon_pos', id_vars='index')
 		tRNA_ungap2canon_table.columns = ['isodecoder', 'pos', 'canon_pos']
 		newMods_total = pd.merge(newMods_total, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
+		newMods_total = newMods_total[~newMods_total.isodecoder.isin(filtered)]
 		# make pivot table from mods and add A, C, G, T misinc. proportions for new mods
 		pivot = modTable_total.pivot_table(index = ['isodecoder', 'bam', 'canon_pos'], columns = 'type', values = 'proportion')
 		pivot = pivot.reset_index()

@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 def dd():
 	return(defaultdict(dict))
 
-def splitIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out_dir, experiment_name):
+def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out_dir, experiment_name):
 
 	log.info("\n+------------------------------------------------------------------------------+\
 		\n| Characterizing cluster mismatches for read splitting by unique tRNA sequence |\
@@ -28,23 +28,20 @@ def splitIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dict, in
 
 	isodecoder_sizes = defaultdict(int)
 	unique_isodecoderMMs = defaultdict(dd)
-	total_isodecoders = 0
 
 	log.info("** Assessing mismatches between cluster members and parent... **")
 
 	for cluster, mismatches in mismatch_dict.items():
 		mismatches = sorted(mismatches, reverse = True)
-		isodecoder_num = isodecoder_count[cluster] 
-		total_isodecoders += isodecoder_num
 		curr_isodecoders = 1 # automatically start at 1 which is the cluster parent
 		detected_seqs = defaultdict(list)
 		detected_seqs = [tRNA_dict[cluster]['sequence']] # list of detected sequences - add parent automatically
 		detected_clusters = [cluster] # list of detected/accounted for isodecoders - also automatically add parent here
 		cluster_members = {tRNA:data['sequence'] for tRNA, data in tRNA_dict.items() if tRNA in cluster_dict[cluster]}
-		parent_size = len([tRNA for tRNA, sequence in cluster_members.items() if sequence == tRNA_dict[cluster]['sequence']]) # number of sequences identical to parent - i.e. size of parent isodecoder group
-		
+		parent_size = len([tRNA for tRNA, sequence in cluster_members.items() if sequence.upper() == tRNA_dict[cluster]['sequence'].upper()]) # number of sequences identical to parent - i.e. size of parent isodecoder group
+		isodecoder_num = len(set([sequences.upper() for sequences in cluster_members.values()]))
 		# for each mismatch position, find sequences with unique mismatch position and type comapred to other cluster members and record mismatch type
-		# use this msmatch to find misinc proportion and split reads
+		# use this mismatch to find misinc proportion and split reads
 		for pos in mismatches:
 			if curr_isodecoders < isodecoder_num: # do this until all isodecoders for cluster have been found, then stop
 				type_count = defaultdict(list)
@@ -65,7 +62,7 @@ def splitIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dict, in
 					if len(tRNAs) == 1:
 						new_cluster_counts = list()
 						detected_clusters.append(tRNAs[0])
-						isodecoder_items = [tRNA for tRNA, sequence in cluster_members.items() if sequence == tRNA_dict[tRNAs[0]]['sequence']]
+						isodecoder_items = [tRNA for tRNA, sequence in cluster_members.items() if sequence.upper() == tRNA_dict[tRNAs[0]]['sequence'].upper()]
 						isodecoder_sizes[tRNAs[0]] = len(isodecoder_items)
 						# update cluster_dict by keeping only tRNAs not in current isodecoder group
 						cluster_dict[cluster] = [tRNA for tRNA in cluster_dict[cluster] if not tRNA in isodecoder_items]
@@ -92,7 +89,7 @@ def splitIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dict, in
 					if len(tRNAs) == 1:
 						new_cluster_counts = list()
 						detected_clusters.append(tRNAs[0])
-						isodecoder_items = [tRNA for tRNA, sequence in cluster_members.items() if sequence == tRNA_dict[tRNAs[0]]['sequence']]
+						isodecoder_items = [tRNA for tRNA, sequence in cluster_members.items() if sequence.upper() == tRNA_dict[tRNAs[0]]['sequence'].upper()]
 						isodecoder_size = len(isodecoder_items)
 						isodecoder_sizes[tRNAs[0]] = isodecoder_size
 						# update cluster_dict by keeping only tRNAs not in current isodecoder group
@@ -130,7 +127,10 @@ def splitIsodecoder(isodecoder_count, tRNA_dict, cluster_dict, mismatch_dict, in
 			tempSeqs.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
 	ssAlign.aligntRNA(tempSeqs.name, out_dir)
 
-	log.info(" Total deconvoluted unique tRNA sequences: {}".format(total_detected_isodecoders))
+	total_isodecoders = len(set([data["sequence"].upper() for tRNA,data in tRNA_dict.items()]))
+
+	log.info("Total unique tRNA sequenes in input: {}".format(total_isodecoders))
+	log.info("Total deconvoluted unique tRNA sequences: {}".format(total_detected_isodecoders))
 
 	return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
 

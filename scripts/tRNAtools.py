@@ -341,7 +341,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		# empty mismatch dict to avoid error when returning it from this function
 		mismatch_dict = defaultdict(list)
 		insert_dict = defaultdict(lambda: defaultdict(list))
-		isodecoder_count = defaultdict()
 		mod_lists = {tRNA:list() for tRNA in tRNA_dict.keys()}
 		Inosine_lists = {tRNA:data['InosinePos'] for tRNA, data in tRNA_dict.items()}
 		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list))
@@ -391,7 +390,6 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for exclusion from misincorporation analysis in mmQuant)
 		insert_dict = defaultdict(lambda: defaultdict(list)) # dictionary of insertions in cluster parents - these are not recorded as mismatches but are needed in order to split read counts into isodecoders
 		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list)) # for each cluster, list of members that mismatch at each position corresonding to mismatch dict - used for splitting read counts into isodecoders (splitReads.py)
-		isodecoder_count = defaultdict() # dictionary that counts the number of unique sequences in each cluster - used for splitting read counts into isodecoders (splitReads.py)
 		cluster_num = 0
 		total_snps = 0
 		total_inosines = 0
@@ -519,14 +517,11 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			clusterInfo.write("tRNA\tcluster_num\tcluster_size\tparent\n")
 			isoacceptorInfo.write("Isoacceptor\tsize\n")
 			for key, value in cluster_dict.items():
-				uniquecluster_seqs = set()
 				cluster_num = list(cluster_dict.keys()).index(key)
 				for member in value:
-					uniquecluster_seqs.add(tRNA_dict[member]['sequence'].upper())
 					clusterInfo.write("{}\t{}\t{}\t{}\n".format(member, cluster_num, len(value), key))
 					isoacceptor_group = '-'.join(member.split("-")[:-2])
 					isoacceptor_dict[isoacceptor_group] += 1
-				isodecoder_count[key] = len(uniquecluster_seqs)
 			for key, value in isoacceptor_dict.items():
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 		with open(str(out_dir + experiment_name + '_clusterTranscripts.fa'), "w") as clusterTranscripts:
@@ -588,7 +583,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, isodecoder_count, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
+	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
 
 def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, clustering):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index

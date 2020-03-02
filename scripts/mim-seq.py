@@ -67,7 +67,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# Parse tRNA and modifications, generate SNP index
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
-	coverage_bed, snp_tolerance, mismatch_dict, insert_dict, isodecoder_count, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
+	coverage_bed, snp_tolerance, mismatch_dict, insert_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
 	= tRNAtools.modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans, pretrnas)
 	ssAlign.structureParser()
 	# Generate GSNAP indices
@@ -80,7 +80,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	# define unique mismatches/insertions to assign reads to unique tRNA sequences
 	if cluster and not cluster_id == 1:
 		cluster_dict2 = copy.deepcopy(cluster_dict) # copy so splitReadsIsodecoder does not edit main cluster_dict
-		unique_isodecoderMMs, splitBool, isodecoder_sizes = splitClusters.splitIsodecoder(isodecoder_count, tRNA_dict, cluster_dict2, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out, name)
+		unique_isodecoderMMs, splitBool, isodecoder_sizes = splitClusters.splitIsodecoder(tRNA_dict, cluster_dict2, mismatch_dict, insert_dict, cluster_perPos_mismatchMembers, out, name)
 	elif cluster and cluster_id == 1:
 		unique_isodecoderMMs = defaultdict(dict)
 		splitBool = list()

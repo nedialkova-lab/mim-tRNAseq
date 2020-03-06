@@ -209,6 +209,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		modTable_prop_melt['condition'] = condition
 		modTable_prop_melt['bam'] = inputs
 		modTable_prop_melt.pos = pd.to_numeric(modTable_prop_melt.pos)
+
 		# add coverage per nucelotide from cov
 		cov_table = pd.DataFrame.from_dict(cov)
 		cov_table['pos'] = cov_table.index
@@ -230,7 +231,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		stopTable_prop_melt['condition'] = condition
 		stopTable_prop_melt['bam'] = inputs
 		stopTable_prop_melt.pos = pd.to_numeric(stopTable_prop_melt.pos)
-		
+
 		stopTable_prop_melt.dropna(inplace = True)
 		stopTable_prop_melt = addNA(stopTable_prop_melt, tRNA_struct, cluster_dict, "stops")
 		stopTable_prop_melt = stopTable_prop_melt[['isodecoder', 'pos', 'proportion', 'condition', 'bam']]

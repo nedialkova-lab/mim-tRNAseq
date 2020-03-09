@@ -310,10 +310,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			# Build snp_records as before but with cluster names and non-redundant sets of modifications
 			# Position is 1-based for iit_store i.e. pos + 1
 			for (index, pos) in enumerate(mod_lists[seq]):
-				if "Gln-TTG" in seq and pos + 1 == 34:
-					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "C")
-				else:
-					snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
+				#if "Gln-TTG" in seq and pos + 1 == 34:
+				#	snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "C")
+				#else:
+				snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + tRNA_dict[seq]['sequence'][pos].upper() + "N")
 
 		for seq in Inosine_lists:
 			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == seq and tRNA_dict[seq]['species'] in v['species']}
@@ -545,10 +545,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			for (index, pos) in enumerate(mod_lists[cluster]):
 				# Build snp_records as before but with cluster names and non-redundant sets of modifications
 				# Position is 1-based for iit_store i.e. pos + 1
-				if "Gln-TTG" in cluster and pos + 1 == 34:
-					snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "C")
-				else:
-					snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
+				#if "Gln-TTG" in cluster and pos + 1 == 34:
+				#	snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "C")
+				#else:
+				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N")
 
 		for cluster in Inosine_lists:
 			additionalInosines_sub = {k:v for k, v in additionalInosines.items() if k == cluster and tRNA_dict[cluster]['species'] in v['species']}
@@ -683,16 +683,18 @@ def additionalModsParser(input_species, out_dir):
 			anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
 
 			for mod in data['mods']:
-				cons_pos = re.search('.*?[A|C|G|U|I]([0-9].*)', mod).group(1)
-				mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
-				if not mod_site == 'NA':
-					additionalMods_parse[cluster]['mods'].append(mod_site)
-					additionalMods_parse[cluster]['species'].append(data['species'])
+				if not 'I' in mod:
+					cons_pos = re.search('.*?[A|C|G|U]([0-9].*)', mod).group(1)
+					mod_site = getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
+					if not mod_site == 'NA':
+						additionalMods_parse[cluster]['mods'].append(mod_site)
+						additionalMods_parse[cluster]['species'].append(data['species'])
+
 				if mod == 'I34':
 					mod_site = min(anticodon)
 					additionalInosines[cluster]['InosinePos'].append(mod_site)
 					additionalInosines[cluster]['species'].append(data['species'])
-			
+
 	return(additionalMods_parse, additionalInosines)
 
 def getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap):

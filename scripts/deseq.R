@@ -29,7 +29,7 @@ volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="bot
 lastlevel = function(f, control) {
     if (!is.factor(f)) stop("input for contrast combinations not a factor")
     orig_levels = levels(f)
-    if (! control %in% orig_levels) stop("control must be a level of f")
+    if (! control %in% orig_levels) stop("Control must be a level of data - potentially removed due to single replicate. Control condition must have replicates!")
     new_levels = c(setdiff(orig_levels, control), control)
     factor(f, levels = new_levels)
 }

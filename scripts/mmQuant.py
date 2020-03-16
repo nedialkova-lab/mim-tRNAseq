@@ -11,6 +11,7 @@ import pysam
 import tRNAtools
 from getCoverage import *
 from multiprocessing import Pool
+import multiprocessing.pool
 from functools import partial
 import pandas as pd
 import numpy as np
@@ -18,6 +19,20 @@ from collections import defaultdict
 import ssAlign
 
 log = logging.getLogger(__name__)
+
+# custom classes to allow non-demonic processes allowing children processes to spawn more children sub-processes (i.e. multiprocessing within multiprocessing)
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+class MyPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
 
 def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thresh, cov_table, min_cov, tRNA_dict, remap):
 # find unknown modifications with a total misincorporation threshold >= misinc_thresh
@@ -67,7 +82,7 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 
 	return(new_mods_cluster, new_inosines_cluster)
 
-def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_struct, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, inputs):
+def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_struct, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, threads, inputs):
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -175,6 +190,9 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 	## Edit misincorportation and stop data before writing
 
 	# build dictionaries for mismatches and stops, normalizing to total coverage per nucleotide
+	# readthroughTable is similar to stops but normalised by coverage at each base
+	# This reflects the proportion of reads at a given site that stop at this site, as opposed to the proportion of all reads for the reference that stop here
+
 	modTable_prop = {isodecoder: {pos: {
 				group: count / cov[isodecoder][pos]
 				  for group, count in data.items() if group in ['A','C','G','T']
@@ -190,6 +208,13 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 						}
 		for isodecoder, values in stopTable.items()
 				}
+
+	readthroughTable = {isodecoder: {
+			pos: count / cov[isodecoder][pos]
+			for pos, count in values.items()
+						}
+		for isodecoder, values in stopTable.items()
+				}
 				
 	# find unknown mod sites
 	new_mods, new_Inosines = unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable_prop, misinc_thresh, cov, min_cov, tRNA_dict, remap)
@@ -201,7 +226,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 
 		log.info('Building modification, stop and count data tables for {}'.format(inputs))
 
-		# reformat modTable, add gaps and structure, and save to temp file
+		# reformat modTable and add gaps
 		reform = {(outerKey, innerKey): values for outerKey, innerDict in modTable_prop.items() for innerKey, values in innerDict.items()}
 		modTable_prop_df = pd.DataFrame.from_dict(reform)
 		modTable_prop_df['type'] = modTable_prop_df.index
@@ -221,10 +246,17 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		cov_table_melt.to_csv(out_dir + inputs.split("/")[-1] + "_coverage.txt", sep = "\t", index = False)
 		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_melt, on = ['isodecoder', 'pos', 'bam'], how = 'left')
 
-		modTable_prop_melt = addNA(modTable_prop_melt, tRNA_struct, cluster_dict, "mods")
+		# split and parallelize addNA
+		names, dfs = splitTable(modTable_prop_melt)
+		pool = Pool(threads)
+		func = partial(addNA, tRNA_struct, cluster_dict, "mods")
+		modTable_prop_melt = pd.concat(pool.starmap(func, zip(names, dfs)))
+		pool.close()
+		pool.join()
+		#modTable_prop_melt = addNA(modTable_prop_melt, tRNA_struct, cluster_dict, "mods")
 		modTable_prop_melt = modTable_prop_melt[['isodecoder','pos', 'type','proportion','condition', 'bam', 'cov']]
 
-		# reformat stopTable, add gaps and structure, and save to temp file
+		# reformat stopTable and add gaps 
 		stopTable_prop_df = pd.DataFrame.from_dict(stopTable_prop)
 		stopTable_prop_df['pos'] = stopTable_prop_df.index
 		stopTable_prop_melt = stopTable_prop_df.melt(id_vars='pos', var_name='isodecoder', value_name='proportion')
@@ -232,9 +264,33 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		stopTable_prop_melt['bam'] = inputs
 		stopTable_prop_melt.pos = pd.to_numeric(stopTable_prop_melt.pos)
 
+		# split and parallelize addNA
 		stopTable_prop_melt.dropna(inplace = True)
-		stopTable_prop_melt = addNA(stopTable_prop_melt, tRNA_struct, cluster_dict, "stops")
+		names, dfs = splitTable(stopTable_prop_melt)
+		pool = Pool(threads)
+		func = partial(addNA, tRNA_struct, cluster_dict, "stops")
+		stopTable_prop_melt = pd.concat(pool.starmap(func, zip(names, dfs)))
+		pool.close()
+		pool.join()
+		#stopTable_prop_melt = addNA(stopTable_prop_melt, tRNA_struct, cluster_dict, "stops")
 		stopTable_prop_melt = stopTable_prop_melt[['isodecoder', 'pos', 'proportion', 'condition', 'bam']]
+
+		# reformat readthroughTable
+		readthroughTable = pd.DataFrame.from_dict(readthroughTable)
+		readthroughTable['pos'] = readthroughTable.index
+		readthroughTable_melt = readthroughTable.melt(id_vars='pos', var_name='isodecoder', value_name='proportion')
+		readthroughTable_melt['condition'] = condition
+		readthroughTable_melt['bam'] = inputs
+		readthroughTable_melt.pos = pd.to_numeric(readthroughTable_melt.pos)
+
+		# split and parallelize addNA
+		readthroughTable_melt.dropna(inplace = True)
+		names, dfs = splitTable(readthroughTable_melt)
+		pool = Pool(threads)
+		func = partial(addNA, tRNA_struct, cluster_dict, "readthrough")
+		readthroughTable_melt = pd.concat(pool.starmap(func, zip(names, dfs)))
+		pool.close()
+		pool.join()
 
 		# build temp counts DataFrame
 		counts_table = pd.DataFrame.from_dict(counts)
@@ -247,9 +303,11 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 				temp_add = temp_add.append({'isodecoder':isodecoder, inputs:0}, ignore_index = True)
 		counts_table = counts_table.append(temp_add)
 
+		# save tables to temp files per sample
 		counts_table.to_csv(inputs + "countTable.csv", sep = "\t", index = False, na_rep = "0")
 		modTable_prop_melt.to_csv(inputs + "mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 		stopTable_prop_melt.to_csv(inputs + "RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')
+		readthroughTable_melt.to_csv(inputs + "readthroughTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		if cca:
 			# write dinuc proportions for current bam
@@ -274,6 +332,15 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 	log.info('Analysis complete for {}...'.format(inputs))
 
 	return(new_mods, new_Inosines)
+
+def splitTable(table):
+# splits various tables so that addNA can be run in parallel on groupby objects
+
+	split_table = table.groupby('isodecoder')
+	dfs = [group for name, group in split_table]
+	names = [name for name, group in split_table]
+
+	return(names, dfs)
 
 def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict, remap):
 # Loop though mismatches in read and return new reference for splitting reads and/or count mods
@@ -310,25 +377,44 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 
 	return(temp, ref_pos, read_pos, reference)
 
-def addNA(table, tRNA_struct, cluster_dict, data_type):
+def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 # fill mods and stops tables with 'NA' for gapped alignment
-	
-	grouped = table.groupby('isodecoder')
-	for name, group in grouped:
-		#cluster = [parent for parent, child in cluster_dict.items() if name in child][0]
-		for pos in tRNA_struct.loc[name].index:
-			if data_type == 'mods':
-				new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1], 'cov':'NA'})
-			elif data_type == 'stops':
-				new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':group.condition.iloc[0], 'bam':group.bam.iloc[0]}, index=[0])
-			if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
-				if not pos == max(tRNA_struct.loc[name].index):
-					table.loc[(table.isodecoder == name) & (table.pos >= pos), 'pos'] += 1
+
+	#cluster = [parent for parent, child in cluster_dict.items() if name in child][0]
+	for pos in tRNA_struct.loc[name].index:
+		if data_type == 'mods':
+			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':table.condition.iloc[1], 'bam':table.bam.iloc[1], 'cov':'NA'})
+		elif data_type == 'stops':
+			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':table.condition.iloc[0], 'bam':table.bam.iloc[0]}, index=[0])
+		if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
+			if not pos == max(tRNA_struct.loc[name].index):
+				table.loc[(table.isodecoder == name) & (table.pos >= pos), 'pos'] += 1
+			if not data_type == "readthrough":
 				table = table.append(new)
-			if not any(table.loc[table.isodecoder == name].pos == pos):
-				table = table.append(new)
+		if not any(table.loc[table.isodecoder == name].pos == pos) and not (data_type == "readthrough"):
+			table = table.append(new)
 
 	return(table)
+
+# def addNAOLD(tRNA_struct, cluster_dict, data_type_dict, table):
+# # fill mods and stops tables with 'NA' for gapped alignment
+
+# 	grouped = table.groupby('isodecoder')
+# 	for name, group in grouped:
+# 		#cluster = [parent for parent, child in cluster_dict.items() if name in child][0]
+# 		for pos in tRNA_struct.loc[name].index:
+# 			if data_type == 'mods':
+# 				new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1], 'cov':'NA'})
+# 			elif data_type == 'stops':
+# 				new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':group.condition.iloc[0], 'bam':group.bam.iloc[0]}, index=[0])
+# 			if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
+# 				if not pos == max(tRNA_struct.loc[name].index):
+# 					table.loc[(table.isodecoder == name) & (table.pos >= pos), 'pos'] += 1
+# 				table = table.append(new)
+# 			if not any(table.loc[table.isodecoder == name].pos == pos):
+# 				table = table.append(new)
+
+# 	return(table)
 
 def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering):
 # Wrapper function to call countMods_mp with multiprocessing
@@ -372,9 +458,11 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 	tRNA_struct_df = pd.DataFrame(tRNA_struct).unstack().rename_axis(('cluster', 'pos')).rename('struct')
 	tRNA_struct_df = pd.DataFrame(tRNA_struct_df)
 
-	# initiate multiprocessing pool and run with bam names
-	pool = Pool(multi)
-	func = partial(bamMods_mp, out_dir, min_cov, baminfo, mismatch_dict, cluster_dict, cca, tRNA_struct_df, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes)
+	# initiate custom non-daemonic multiprocessing pool and run with bam names
+	pool = MyPool(multi)
+	# to avoid assigning too many threads, divide available threads by number of processes
+	threadsForMP = int(threads/multi)
+	func = partial(bamMods_mp, out_dir, min_cov, baminfo, mismatch_dict, cluster_dict, cca, tRNA_struct_df, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, threadsForMP)
 	new_mods, new_Inosines = zip(*pool.map(func, bamlist))
 	pool.close()
 	pool.join()
@@ -386,6 +474,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 		modTable_total = pd.DataFrame()
 		countsTable_total = pd.DataFrame()
 		stopTable_total = pd.DataFrame()
+		readthroughTable_total = pd.DataFrame()
 		newMods_total = pd.DataFrame()
 
 		dinuc_table = pd.DataFrame()
@@ -406,15 +495,20 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 			stopTable['canon_pos'] = stopTable['pos'].map(cons_pos_dict)
 			os.remove(bam + "RTstopTable.csv")
 
+			readthroughTable = pd.read_csv(bam + "readthroughTable.csv", header = 0, sep = "\t")
+			readthroughTable['canon_pos'] = readthroughTable['pos'].map(cons_pos_dict)
+			os.remove(bam + "readthroughTable.csv")
+
 			countsTable = pd.read_csv(bam + "countTable.csv", header = 0, sep = "\t")
 			os.remove(bam + "countTable.csv")
 
 			newModsTable = pd.read_csv(bam + "_predictedModstemp.csv", header = None, names = ['isodecoder', 'pos', 'identity', 'bam'], sep = "\t")
 			os.remove(bam + "_predictedModstemp.csv")
 
-			# add individual temp files to main big table
+			# add individual temp files to main concatenated table
 			modTable_total = modTable_total.append(modTable)
 			stopTable_total = stopTable_total.append(stopTable)
+			readthroughTable_total = readthroughTable_total.append(readthroughTable)
 			if countsTable_total.empty:
 				countsTable_total = countsTable_total.append(countsTable)
 			else:
@@ -447,7 +541,10 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 					known.write(cluster + "\t" + str(pos) + "\n")
 
 		stopTable_total = stopTable_total[~stopTable_total.isodecoder.isin(filtered)]
-		stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')	
+		stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')
+
+		readthroughTable_total = readthroughTable_total[~readthroughTable_total.isodecoder.isin(filtered)]
+		readthroughTable_total.to_csv(out_dir + "mods/readthroughTable.csv", sep = "\t", index = False, na_rep = 'NA')	
 		
 		# add column to counts to indicate complete isodecoder split or not
 		countsTable_total['Single_isodecoder'] = "NA"

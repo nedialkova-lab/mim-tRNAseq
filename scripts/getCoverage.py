@@ -92,8 +92,8 @@ def getCoverage(sampleGroups, out_dir, min_cov, control_cond, filtered_cov):
 	cov_mean_aa = cov_mean_aa.drop(columns='level_1')
 	cov_mean_aa['bin'] = cov_mean_aa.groupby(['aa','condition','bam'])['pos'].transform(lambda x: pd.qcut(x, 25, labels=range(4,104,4)))
 	cov_mean_aa = cov_mean_aa.groupby(['aa', 'bin', 'condition', 'bam']).mean()
-	cov_mean_aa	= cov_mean_aa.reset_index()
 	cov_mean_aa = cov_mean_aa.dropna()
+	cov_mean_aa	= cov_mean_aa.reset_index()
 	cov_mean_aa.to_csv(out_dir + "coverage_byaa.txt", sep = "\t", index = False)
 	
 	# 5' to 3' coverage ratio calculation for ordering AAs on coverage plot

@@ -325,10 +325,11 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 		Inosine_clusters = [cluster for cluster, inosines in Inosine_lists.items() if len(inosines) > 0]
 
-		# edit ref seqs A to G at inosine positions
-		for seq in Inosine_lists:
-			for pos in Inosine_lists[seq]:
-				seq_records[seq].seq = seq_records[seq].seq[0:pos] + "G" + seq_records[seq].seq[pos+1:]
+		# edit ref seqs A to G at inosine positions only if snp_tolerance is enabled
+		if snp_tolerance:
+			for seq in Inosine_lists:
+				for pos in Inosine_lists[seq]:
+					seq_records[seq].seq = seq_records[seq].seq[0:pos] + "G" + seq_records[seq].seq[pos+1:]
 
 		with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
 			SeqIO.write(seq_records.values(), temptRNATranscripts, "fasta")
@@ -558,10 +559,11 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 			total_inosines += len(Inosine_lists[cluster])
 
-		# edit ref seqs A to G at inosine positions
-		#for cluster in Inosine_lists:
-		#	for pos in Inosine_lists[cluster]:
-		#		final_centroids[cluster].seq = final_centroids[cluster].seq[0:pos] + "G" + final_centroids[cluster].seq[pos+1:]
+		# edit ref seqs A to G at inosine positions if snp_tolerance is enabled
+		if snp_tolerance:
+			for cluster in Inosine_lists:
+				for pos in Inosine_lists[cluster]:
+					final_centroids[cluster].seq = final_centroids[cluster].seq[0:pos] + "G" + final_centroids[cluster].seq[pos+1:]
 
 		Inosine_clusters = [cluster for cluster, inosines in Inosine_lists.items() if len(inosines) > 0]
 

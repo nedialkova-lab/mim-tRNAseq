@@ -40,8 +40,8 @@ An example command to run mim-tRNAseq may look as follows. This will run an anal
 ```bash
 ./scripts/mim-seq.py -t data/hg19_eColitK/hg19_eColitK.fa -o data/hg19_eColitK/hg19_eschColi-tRNAs.out 
 -m data/hg19_eColitK/hg19-mitotRNAs.fa --snp-tolerance --cluster --cluster-id 0.97 --threads 15 
---min-cov 2000 --max-mismatches 0.1 --control-condition iPS --cca-analysis -n hg19_mix 
---out-dir hg19_iPSvsHEK --max-multi 4 --remap --remap-mismatches 0.05 sampleData_iPSvsHEK.txt
+--min-cov 2000 --max-mismatches 0.1 --control-condition HEK293T --cca-analysis -n hg19_mix 
+--out-dir hg19_HEKvsK562 --max-multi 4 --remap --remap-mismatches 0.05 sampleData_HEKvsK562.txt
 ```
 
 The run should take around 15 minutes on a server using 15 processors (--threads 15).

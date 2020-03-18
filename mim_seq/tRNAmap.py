@@ -34,7 +34,7 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 	sampleDict = defaultdict()
 	unique_bam_list = list()
 	alignstats_total = defaultdict(list)
-	coverageData = open(out_dir + sampleData.split(".")[0] + "_cov." + sampleData.split(".")[-1], "w")
+	coverageData = open(out_dir + sampleData.split("/")[-1].split(".")[0] + "_cov." + sampleData.split(".")[-1], "w")
 	with open(sampleData, "r") as sampleData:
 		for line in sampleData:
 			line = line.strip()

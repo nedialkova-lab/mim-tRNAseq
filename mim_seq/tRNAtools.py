@@ -4,6 +4,7 @@
 # Utilities for tRNA modification parsing, transcript building, and SNP indexing #
 ##################################################################################
 
+from __future__ import absolute_import
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -15,7 +16,7 @@ from pathlib import Path
 import urllib.request
 from collections import defaultdict
 import pandas as pd
-import ssAlign
+from .ssAlign import aligntRNA, extraCCA, tRNAclassifier, tRNAclassifier_nogaps, getAnticodon, clusterAnticodon
 
 log = logging.getLogger(__name__)
 
@@ -169,7 +170,8 @@ def getModomics():
 			modomics = response.read().decode().splitlines()
 	except Exception as e:
 		logging.error("Error in {}".format("fetching modomics. Using local files..."))
-		modomics = open("./data/modomics", "r+", encoding = "utf-8")
+		modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
+		modomics = open(modomics_path, "r+", encoding = "utf-8")
 		
 
 	return modomics
@@ -206,8 +208,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		for seq in tRNA_dict:
 			tempSeqs.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
 
-	ssAlign.aligntRNA(tempSeqs.name, out_dir)
-	extra_cca = ssAlign.extraCCA()
+	aligntRNA(tempSeqs.name, out_dir)
+	extra_cca = extraCCA()
 
 	for record in extra_cca:
 		tRNA_dict[record]['sequence'] = tRNA_dict[record]['sequence'][:-3]
@@ -292,7 +294,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			for key, value in isoacceptor_dict.items():
 				isoacceptorInfo.write(key + "\t" + str(value) + "\n")
 		# generate Stockholm alignment file for all tRNA transcripts and parse additional mods file
-		ssAlign.aligntRNA(temptRNATranscripts.name, out_dir)
+		aligntRNA(temptRNATranscripts.name, out_dir)
 		additionalMods, additionalInosines = additionalModsParser(species, out_dir)
 		# add additional SNPs from extra file to list of modified positions, and ensure non-redundancy with set()
 		# index SNPs
@@ -529,7 +531,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			SeqIO.write(final_centroids.values(), clusterTranscripts, "fasta")
 
 		# generate Stockholm alignment file for cluster transcripts and process additional mods file
-		ssAlign.aligntRNA(clusterTranscripts.name, out_dir)
+		aligntRNA(clusterTranscripts.name, out_dir)
 		additionalMods, additionalInosines = additionalModsParser(species, out_dir)
 
 		log.info("{} clusters created from {} tRNA sequences".format(len(cluster_dict),len(tRNA_dict)))
@@ -653,7 +655,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 def additionalModsParser(input_species, out_dir):
 # Reads in manual addition of modifcations in /data/additionalMods.txt
 
-	mods ='/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1]) + '/data/additionalMods.txt'
+	mods = os.path.dirname(os.path.realpath(__file__)) + '/data/additionalMods.txt'
 	mods = open(mods, 'r')
 	additionalMods = defaultdict(lambda: defaultdict(list))
 
@@ -666,9 +668,9 @@ def additionalModsParser(input_species, out_dir):
 			additionalMods[tRNA]['species'] = species
 
 	# initialise dictionaries of structure (with and without gapped numbering) and anticodon positions to define canonical mod sites
-	tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict = ssAlign.tRNAclassifier(out_dir)
-	tRNA_struct_nogap = ssAlign.tRNAclassifier_nogaps()
-	cons_anticodon = ssAlign.getAnticodon()
+	tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict = tRNAclassifier(out_dir)
+	tRNA_struct_nogap = tRNAclassifier_nogaps()
+	cons_anticodon = getAnticodon()
 
 	# dictionary storing additional mods per tRNA cluster with corrected positions
 	additionalMods_parse = defaultdict(lambda: defaultdict(list))
@@ -682,7 +684,7 @@ def additionalModsParser(input_species, out_dir):
 			if not no_gap_struct: # test if struct is empty, i.e. if isodecoder from additional mods does not exist in tRNA dictionary
 				continue
 			gap_struct = [value for key, value in tRNA_struct.items() if key == cluster and 'nmt' not in key]			
-			anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
+			anticodon = clusterAnticodon(cons_anticodon, cluster)
 
 			for mod in data['mods']:
 				if not 'I' in mod:

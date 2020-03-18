@@ -1,9 +1,10 @@
  #! /usr/bin/env python3
 
+from __future__ import absolute_import
 import pandas as pd
 import numpy as np
 import logging
-import ssAlign
+from .ssAlign import aligntRNA
 from collections import defaultdict
 
 #########################################################
@@ -125,7 +126,7 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 	with open(out_dir + experiment_name + '_isodecoderTranscripts.fa', 'w') as tempSeqs:
 		for seq in isodecoder_sizes.keys():
 			tempSeqs.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
-	ssAlign.aligntRNA(tempSeqs.name, out_dir)
+	aligntRNA(tempSeqs.name, out_dir)
 
 	total_isodecoders = len(set([data["sequence"].upper() for tRNA,data in tRNA_dict.items()]))
 

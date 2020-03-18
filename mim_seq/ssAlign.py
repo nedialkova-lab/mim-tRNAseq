@@ -15,7 +15,7 @@ def aligntRNA(tRNAseqs, out):
 # run cmalign to generate Stockholm file for tRNA sequences
 	global stkname
 	stkname = tRNAseqs.split(".fa")[0] + '_align.stk'
-	cmfile ='/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1]) + '/data/tRNAmatureseq.cm'
+	cmfile = os.path.dirname(os.path.realpath(__file__)) + '/data/tRNAmatureseq.cm'
 	cmcommand = ['cmalign', '-o', stkname, '--nonbanded', '-g', cmfile, tRNAseqs]
 	subprocess.check_call(cmcommand, stdout = open(out + 'cm.log', 'w'))
 

@@ -5,18 +5,19 @@
 #    also includes counting of CCA vs CC ends required for CCA analysis   #
 ###########################################################################
 
+from __future__ import absolute_import
 import os, logging
 import re
 import pysam
-import tRNAtools
-from getCoverage import *
+from .tRNAtools import countReads
+from .getCoverage import getBamList, filterCoverage
 from multiprocessing import Pool
 import multiprocessing.pool
 from functools import partial
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-import ssAlign
+from .ssAlign import getAnticodon, clusterAnticodon, tRNAclassifier
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 	new_inosines_cluster = defaultdict(list)
 	new_mods_isodecoder = defaultdict(list)
 	new_inosines_isodecoder = defaultdict(list)
-	cons_anticodon = ssAlign.getAnticodon()
+	cons_anticodon = getAnticodon()
 	
 	for isodecoder, data in modTable.items():
 		if cluster_dict:
@@ -50,7 +51,7 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 		# if cluster_dict is empty, then clustering is disabled and in this case isodecoder in modTable is the "cluster"
 		else:
 			cluster = isodecoder
-		anticodon = ssAlign.clusterAnticodon(cons_anticodon, cluster)
+		anticodon = clusterAnticodon(cons_anticodon, cluster)
 		for pos, type in data.items():
 			cov = cov_table[isodecoder][pos]
 			if (sum(modTable[isodecoder][pos].values()) >= misinc_thresh and cov >= min_cov and pos-1 not in knownTable[cluster]): # misinc above threshold, cov above threshold and not previously known
@@ -454,7 +455,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 		multi = len(baminfo)
 
 	# get tRNA struct info from ssAlign
-	tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict = ssAlign.tRNAclassifier(out_dir)
+	tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict = tRNAclassifier(out_dir)
 	tRNA_struct_df = pd.DataFrame(tRNA_struct).unstack().rename_axis(('cluster', 'pos')).rename('struct')
 	tRNA_struct_df = pd.DataFrame(tRNA_struct_df)
 
@@ -578,7 +579,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 			CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
 		# Anticodon and/or isodecoder counts counts
-		tRNAtools.countReads(out_dir + "Isodecoder_counts.txt", out_dir, isodecoder_sizes, clustering, tRNA_dict)
+		countReads(out_dir + "Isodecoder_counts.txt", out_dir, isodecoder_sizes, clustering, tRNA_dict)
 
 		log.info("** Read counts per isodecoder saved to " + out_dir + "counts/Isodecoder_counts.txt **")
 

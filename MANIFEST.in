@@ -5,5 +5,5 @@ include mim_seq/ccaPlots.R
 include mim_seq/modPlot.R
 include mim_seq/modifications
 include mim_seq/facet_share.R
-include *.fastq.gz
+#include *.fastq.gz
 include sampleData_HEKvsK562.txt

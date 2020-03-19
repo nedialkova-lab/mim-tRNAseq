@@ -1,9 +1,8 @@
 include README.md
-include mim_seq/deseq.R
-include mim_seq/coveragePlot.R
-include mim_seq/ccaPlots.R
-include mim_seq/modPlot.R
-include mim_seq/modifications
-include mim_seq/facet_share.R
-#include *.fastq.gz
+include mimseq/deseq.R
+include mimseq/coveragePlot.R
+include mimseq/ccaPlots.R
+include mimseq/modPlot.R
+include mimseq/modifications
+include mimseq/facet_share.R
 include sampleData_HEKvsK562.txt

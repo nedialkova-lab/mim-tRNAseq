@@ -12,7 +12,7 @@ if sys.version_info.major != 3:
              "running Python %d." % sys.version_info.major)
 
 # load version info
-exec(open("mim_seq/version.py").read())
+exec(open("mimseq/version.py").read())
 
 # assemble package data files
 def package_files(directory):
@@ -22,9 +22,9 @@ def package_files(directory):
             paths.append(os.path.join('..', path, filename))
     return paths
 
-extra_files = package_files('mim_seq/data')
+extra_files = package_files('mimseq/data')
 
-setup(name='mim_seq',
+setup(name='mimseq',
 	version=__version__,
 	description='Custom high-throughput tRNA sequencing alignment and quantification pipeline based on modification induced misincorporation cDNA synthesis.',
 	#long_description=readme(),
@@ -32,12 +32,12 @@ setup(name='mim_seq',
 	author='Drew Behrens',
 	author_email='abehrens@biochem.mpg.de',
 	license='GPLv3',
-	packages=['mim_seq'],
-	package_dir={'mim_seq': 'mim_seq'},
+	packages=['mimseq'],
+	package_dir={'mimseq': 'mimseq'},
 	package_data={'': extra_files},
 #	data_files = [('fastq', ['mimseq_hek_1.fastq.gz','mimseq_hek_2.fastq.gz','mimseq_k562_1.fastq.gz','mimseq_k562_2.fastq.gz']),
 #				  ('sampledata', ['sampleData_HEKvsK562.txt'])],
-	entry_points={"console_scripts": ["mimseq = mim_seq:mimseq.main"]},
+	entry_points={"console_scripts": ["mimseq = mimseq:mimseq.main"]},
 	include_package_data=True,
 	install_requires=[
 		"biopython",
@@ -46,7 +46,8 @@ setup(name='mim_seq',
 		"pyfiglet",
 		"pysam",
 		"seaborn",
-		"matplotlib"],
+		"matplotlib",
+		"pybedtools"],
 	classifiers=[
 		"Development Status :: 4 - Beta",
 		"Environment :: Console",

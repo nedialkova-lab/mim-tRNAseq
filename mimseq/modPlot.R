@@ -189,7 +189,7 @@ for (i in unique(mods_agg$condition)) {
   
   signature_plot_upstream = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = new_prop, fill = type)) + 
     geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
-    geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
+    geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4, outlier.shape = NA) +
     facet_grid(upstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
     theme_bw() +
     labs(y = "Proportion") + 
@@ -206,7 +206,7 @@ for (i in unique(mods_agg$condition)) {
   
   signature_plot_downstream = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = new_prop, fill = type)) + 
     geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
-    geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
+    geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4, outlier.shape = NA) +
     facet_grid(downstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
     theme_bw() +
     labs(y = "Proportion") + 
@@ -231,7 +231,7 @@ for (i in unique(mods_agg$condition)) {
     sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))
     mito_signature_plot_upstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
       geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
-      geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
+      geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4, outlier.shape = NA) +
       facet_grid(upstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
       theme_bw() +
       labs(y = "Proportion") + 
@@ -249,7 +249,7 @@ for (i in unique(mods_agg$condition)) {
     
     mito_signature_plot_downstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
       geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
-      geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4) +
+      geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4, outlier.shape = NA) +
       facet_grid(downstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
       theme_bw() +
       labs(y = "Proportion") + 

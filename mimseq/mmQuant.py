@@ -288,7 +288,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		readthroughTable_melt.dropna(inplace = True)
 		names, dfs = splitTable(readthroughTable_melt)
 		pool = Pool(threads)
-		func = partial(addNA, tRNA_struct, cluster_dict, "readthrough")
+		func = partial(addNA, tRNA_struct, cluster_dict, "stops") #"readthrough")
 		readthroughTable_melt = pd.concat(pool.starmap(func, zip(names, dfs)))
 		pool.close()
 		pool.join()
@@ -390,9 +390,9 @@ def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 		if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
 			if not pos == max(tRNA_struct.loc[name].index):
 				table.loc[(table.isodecoder == name) & (table.pos >= pos), 'pos'] += 1
-			if not data_type == "readthrough":
-				table = table.append(new)
-		if not any(table.loc[table.isodecoder == name].pos == pos) and not (data_type == "readthrough"):
+			#if not data_type == "readthrough":
+			table = table.append(new)
+		if not any(table.loc[table.isodecoder == name].pos == pos): #and not (data_type == "readthrough"):
 			table = table.append(new)
 
 	return(table)

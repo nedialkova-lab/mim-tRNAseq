@@ -561,6 +561,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 		tRNA_ungap2canon_table = tRNA_ungap2canon_table.reset_index()
 		tRNA_ungap2canon_table = tRNA_ungap2canon_table.melt(var_name='pos', value_name='canon_pos', id_vars='index')
 		tRNA_ungap2canon_table.columns = ['isodecoder', 'pos', 'canon_pos']
+		tRNA_ungap2canon_table['pos'] = tRNA_ungap2canon_table['pos'].astype(int)
 		newMods_total = pd.merge(newMods_total, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
 		newMods_total = newMods_total[~newMods_total.isodecoder.isin(filtered)]
 		# make pivot table from mods and add A, C, G, T misinc. proportions for new mods

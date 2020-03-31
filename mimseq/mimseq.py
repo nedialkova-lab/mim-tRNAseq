@@ -35,7 +35,7 @@ def restrictedFloat(x):
 	except ValueError:
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
-def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
+def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
 	keep_temp, cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, pretrnas, sample_data):
 	
 # Main wrapper
@@ -78,7 +78,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 	= modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, snp_tolerance, cluster, cluster_id, posttrans, pretrnas)
 	structureParser()
 	# Generate GSNAP indices
-	genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
+	genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
 
 	# Align
 	bams_list, coverageData = mainAlign(sample_data, name, genome_index_path, genome_index_name, \
@@ -102,7 +102,7 @@ def mimseq(trnas, trnaout, name, out, cluster, cluster_id, posttrans, control_co
 		new_mods, new_Inosines, filtered_cov = generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
 		Inosine_clusters = newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
 		map_round = 2
-		genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(name, out, map_round, snp_tolerance, cluster)
+		genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
 		bams_list, coverageData = mainAlign(sample_data, name, genome_index_path, genome_index_name, \
 			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, remap_mismatches, map_round)
 		remap = False
@@ -267,33 +267,32 @@ def main():
 		if not args.species and not (args.trnas or args.trnaout):
 			parser.error('Must specify valid --species argument or supply -t (tRNA sequences) and -o (tRNAscan out file)!')						
 		else:
-			print("check species")
 			if args.species:
 				if args.species == 'Hsap':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19_eColitK/hg19_eColitK.fa"
-					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19_eColitK/hg19_eschColi-tRNAs.out"
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19_eColitK/hg19-mitotRNAs.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19_eColitK.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19_eschColi-tRNAs.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19-mitotRNAs.fa"
 				if args.species == 'Scer':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3_eColitK/sacCer3_eschColitK.fa"
-					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3_eColitK/sacCer3_eschColi-tRNAs.out"
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3_eColitK/sacCer3-mitotRNAs.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-eColitK/sacCer3_eschColitK.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-eColitK/sacCer3_eschColi-tRNAs.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-eColitK/sacCer3-mitotRNAs.fa"
 				if args.species == 'Mmus':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10_eColitK/mm10_eColitK-tRNAs.fa"
-					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10_eColitK/mm10_eschColi-tRNAs.out"
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10_eColitK/mm10-mitotRNAs.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10_eColitK-tRNAs.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10_eschColi-tRNAs.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10-mitotRNAs.fa"
 				if args.species == 'Spom':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/schiPomb_eColitK/schiPomb_972H-tRNAs.fa"
-					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/schiPomb_eColitK/schiPomb_eschColi-tRNAs.out"
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/schiPomb_eColitK/schiPomb-mitotRNAs.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/schiPomb-eColitK/schiPomb_972H-tRNAs.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/schiPomb-eColitK/schiPomb_eschColi-tRNAs.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/schiPomb-eColitK/schiPomb-mitotRNAs.fa"
 				if args.species == 'Dmel':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6_eColitK/dm6_eColitK-tRNAs.fa"
-					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6_eColitK/dm6_eschColi-tRNAs.out"
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6_eColitK/dm6-mitotRNAs.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6-eColitK/dm6_eColitK-tRNAs.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6-eColitK/dm6_eschColi-tRNAs.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6-eColitK/dm6-mitotRNAs.fa"
 				if args.species == 'Ecol':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi_K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.fa"
-					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi_K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.out"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi-K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi-K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.out"
 					args.mito = ''
-			mimseq(args.trnas, args.trnaout, args.name, args.out, args.cluster, args.cluster_id, \
+			mimseq(args.trnas, args.trnaout, args.name, args.species, args.out, args.cluster, args.cluster_id, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
 				args.keep_temp, args.cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
 				args.misinc_thresh, args.mito, args.pretrnas, args.sampledata)

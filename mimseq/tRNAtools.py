@@ -720,7 +720,7 @@ def getModSite(cluster, cons_pos, cons_pos_dict, tRNA_struct, tRNA_struct_nogap)
 	
 	return(mod_site)
 
-def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = False, cluster = False):
+def generateGSNAPIndices(species, name, out_dir, map_round, snp_tolerance = False, cluster = False):
 # Builds genome and snp index files required by GSNAP
 
 	if map_round == 1:
@@ -733,7 +733,7 @@ def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = Fa
 		\n| Regenerating GSNAP indices |\
 		\n+----------------------------+")
 
-	genome_index_path = out_dir + experiment_name + "_tRNAgenome"
+	genome_index_path = out_dir + species + "_tRNAgenome"
 	genome_index_name = genome_index_path.split("/")[-1]
 	
 	try:
@@ -742,15 +742,15 @@ def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = Fa
 		log.warning("Genome index folder found! Rebuilding index anyway...")
 	
 	if cluster:
-		genome_file = out_dir + experiment_name + "_clusterTranscripts.fa"
+		genome_file = out_dir + name + "_clusterTranscripts.fa"
 	else:
-		genome_file = out_dir + experiment_name + "_tRNATranscripts.fa"
+		genome_file = out_dir + name + "_tRNATranscripts.fa"
 
-	index_cmd = ["gmap_build", "-q", "1", "-D", out_dir, "-d", experiment_name + "_tRNAgenome", genome_file]
+	index_cmd = ["gmap_build", "-q", "1", "-D", out_dir, "-d", species + "_tRNAgenome", genome_file]
 	subprocess.check_call(index_cmd, stderr = open(out_dir + "genomeindex.log", "w"), stdout = subprocess.DEVNULL) 
 	log.info("Genome indices done...")
 
-	snp_index_path = out_dir + experiment_name + "snp_index"
+	snp_index_path = out_dir + species + "snp_index"
 
 	if snp_tolerance:
 
@@ -759,13 +759,13 @@ def generateGSNAPIndices(experiment_name, out_dir, map_round, snp_tolerance = Fa
 		except FileExistsError:
 			log.warning("SNP index folder found! Rebuilding index anyway...")
 
-		snp_file = out_dir + experiment_name + "_modificationSNPs.txt"
+		snp_file = out_dir + name + "_modificationSNPs.txt"
 		snp_index_name = snp_file.split("/")[-1]. split(".txt")[0]
 		ps = subprocess.Popen(('cat', snp_file), stdout = subprocess.PIPE, stderr = subprocess.DEVNULL)
 		index_cmd = ["iit_store", "-o", snp_index_path + "/" + snp_index_name]
 		subprocess.check_call(index_cmd, stdin = ps.stdout, stdout = open(out_dir + "snpindex.log", "w"), stderr = subprocess.DEVNULL)
-		index_cmd = ["snpindex", "-q", "1", "-D", genome_index_path, "-d", experiment_name + "_tRNAgenome", "-V", snp_index_path, \
-					"-v", experiment_name + "_modificationSNPs", snp_index_path + "/" + experiment_name + \
+		index_cmd = ["snpindex", "-q", "1", "-D", genome_index_path, "-d", species + "_tRNAgenome", "-V", snp_index_path, \
+					"-v", name + "_modificationSNPs", snp_index_path + "/" + name + \
 					"_modificationSNPs.iit"]
 		subprocess.check_call(index_cmd, stderr = open(out_dir + "snpindex.log", "w"), stdout = subprocess.DEVNULL)
 		log.info("SNP indices done...")

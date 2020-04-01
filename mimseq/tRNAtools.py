@@ -664,6 +664,11 @@ def additionalModsParser(input_species, out_dir):
 		line = line.strip()
 		species, tRNA, mods = line.split("\t")
 		if species in input_species:
+			if "mito" in tRNA:
+				tRNA = tRNA.replace("mito", "")
+				additionalMods[tRNA]['type'] = "mito"
+			else:
+				additionalMods[tRNA]['type'] = "cytosolic"
 			additionalMods[tRNA]['mods'] = mods.split(";")
 			additionalMods[tRNA]['species'] = species
 
@@ -678,7 +683,10 @@ def additionalModsParser(input_species, out_dir):
 
 	# for each additional modification in dictionary, define mod site based on conserved location relative to structural features
 	for isodecoder, data in additionalMods.items():
-		clusters = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key]
+		if data['type'] == "mito":
+			clusters = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key and "mito" in key]
+		else:
+			clusters = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key and "mito" not in key]
 		for cluster in clusters:
 			no_gap_struct = [value for key, value in tRNA_struct_nogap.items() if key == cluster and 'nmt' not in key]
 			if not no_gap_struct: # test if struct is empty, i.e. if isodecoder from additional mods does not exist in tRNA dictionary

@@ -99,7 +99,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines, filtered_cov = generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
+		new_mods, new_Inosines, filtered_cov = generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, insert_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
 		Inosine_clusters = newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
@@ -111,7 +111,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 
 	# Misincorporation analysis
 	if snp_tolerance or not mismatches == 0.0:
-		new_mods, new_Inosines, filtered_cov = generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
+		new_mods, new_Inosines, filtered_cov = generateModsTable(coverageData, out, threads, min_cov, mismatch_dict, insert_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 

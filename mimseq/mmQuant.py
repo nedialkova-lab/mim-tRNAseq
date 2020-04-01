@@ -83,7 +83,7 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 
 	return(new_mods_cluster, new_inosines_cluster)
 
-def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_struct, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, threads, inputs):
+def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict, cca, tRNA_struct, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, threads, inputs):
 # modification counting and table generation, and CCA analysis
 	
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -154,7 +154,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		ref_pos = 0
 		read_pos = 0
 		temp = defaultdict()
-		temp, ref_pos, read_pos, reference = countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict, remap)
+		temp, ref_pos, read_pos, reference = countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict, insert_dict, remap)
 
 		# read counts, stops and coverage
 		counts[inputs][reference] += 1
@@ -246,6 +246,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 		cov_table_melt = cov_table_melt[['isodecoder', 'pos', 'bam', 'cov']]
 		cov_table_melt.to_csv(out_dir + inputs.split("/")[-1] + "_coverage.txt", sep = "\t", index = False)
 		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_melt, on = ['isodecoder', 'pos', 'bam'], how = 'left')
+		modTable_prop_melt.to_csv(inputs + "preNA.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		# split and parallelize addNA
 		names, dfs = splitTable(modTable_prop_melt)
@@ -343,10 +344,11 @@ def splitTable(table):
 
 	return(names, dfs)
 
-def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict, remap):
+def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, unique_isodecoderMMs, mismatch_dict, insert_dict, remap):
 # Loop though mismatches in read and return new reference for splitting reads and/or count mods
 	
 	old_reference = reference
+	insertions = list()
 	for index, interval in enumerate(md_list):
 		if not index == 0:
 			new_offset = 0
@@ -371,10 +373,20 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 				ref_pos += 1
 		elif interval.startswith('^'):
 			identity = 'insertion'
+			#insertions.extend([x + ref_pos for x in range(len(interval) - 1)]) # register all insertions (including consecutive insertions) to be checked later against cluster parent
+			insertions.append(ref_pos)
 			if (unique_isodecoderMMs) and (identity in unique_isodecoderMMs[old_reference][ref_pos]) and (not remap):
 				reference = unique_isodecoderMMs[old_reference][ref_pos][identity]
 			insertion = len(interval) - 1
 			ref_pos += insertion
+
+	# handle insertions between cluster parent and members present in read (different from insertions in read only)
+	# i.e. once new ref is found above and this member has an insertion relative to parent, subtract 1 from all misinc positions after the insertion
+	# corrects for difference in length between member and parent
+	if (not reference == old_reference) and (insertions):
+		for i in insertions:
+			if reference in insert_dict[old_reference][i]:
+				temp = {(k - 1 if k > i else k):v for k,v in temp.items()}
 
 	return(temp, ref_pos, read_pos, reference)
 
@@ -417,7 +429,7 @@ def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 
 # 	return(table)
 
-def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering):
+def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, insert_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -463,7 +475,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, cl
 	pool = MyPool(multi)
 	# to avoid assigning too many threads, divide available threads by number of processes
 	threadsForMP = int(threads/multi)
-	func = partial(bamMods_mp, out_dir, min_cov, baminfo, mismatch_dict, cluster_dict, cca, tRNA_struct_df, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, threadsForMP)
+	func = partial(bamMods_mp, out_dir, min_cov, baminfo, mismatch_dict, insert_dict, cluster_dict, cca, tRNA_struct_df, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, threadsForMP)
 	new_mods, new_Inosines = zip(*pool.map(func, bamlist))
 	pool.close()
 	pool.join()

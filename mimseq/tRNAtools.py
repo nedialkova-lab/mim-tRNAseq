@@ -26,6 +26,10 @@ log = logging.getLogger(__name__)
 def dd():
 	return(defaultdict())
 
+# same as above but specifically for list type defaultdicts (see insert_dict below)
+def dd_list():
+	return(defaultdict(list))
+
 def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, pretrnas):
 # tRNA sequence files parser and dictionary building
 
@@ -343,7 +347,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		log.info("{:,} A to G replacements in reference sequences for inosine modifications".format(total_inosines))
 		# empty mismatch dict to avoid error when returning it from this function
 		mismatch_dict = defaultdict(list)
-		insert_dict = defaultdict(lambda: defaultdict(list))
+		insert_dict = defaultdict(dd_list)
 		mod_lists = {tRNA:list() for tRNA in tRNA_dict.keys()}
 		Inosine_lists = {tRNA:data['InosinePos'] for tRNA, data in tRNA_dict.items()}
 		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list))
@@ -391,7 +395,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		snp_records = list()
 		cluster_dict = defaultdict(list) # info about clusters and members
 		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for exclusion from misincorporation analysis in mmQuant)
-		insert_dict = defaultdict(lambda: defaultdict(list)) # dictionary of insertions in cluster parents - these are not recorded as mismatches but are needed in order to split read counts into isodecoders
+		insert_dict = defaultdict(dd_list) # dictionary of insertions in cluster parents - these are not recorded as mismatches but are needed in order to split read counts into isodecoders
 		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list)) # for each cluster, list of members that mismatch at each position corresonding to mismatch dict - used for splitting read counts into isodecoders (splitReads.py)
 		cluster_num = 0
 		total_snps = 0
@@ -484,7 +488,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 										adjust_pos_ins -= 1
 								new_insert = insert + adjust_pos_len + adjust_pos_ins
 								member_seq = member_seq[ :new_insert] + cluster_seq[insert] + member_seq[new_insert: ]
-								insert_dict[cluster_name][new_insert-1].append(member_name)
+								#insert_dict[cluster_name][new_insert-1].append(member_name)
+								insert_dict[cluster_name][new_insert].append(member_name)
 								#cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]

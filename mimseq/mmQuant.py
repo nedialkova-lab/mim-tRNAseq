@@ -211,7 +211,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, cluster_dict, cca, tRNA_st
 				}
 
 	readthroughTable = {isodecoder: {
-			pos: count / cov[isodecoder][pos]
+			pos: 1 - (count / cov[isodecoder][pos]) # 1 - stops gives readthrough
 			for pos, count in values.items()
 						}
 		for isodecoder, values in stopTable.items()

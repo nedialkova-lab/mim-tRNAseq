@@ -246,7 +246,6 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		cov_table_melt = cov_table_melt[['isodecoder', 'pos', 'bam', 'cov']]
 		cov_table_melt.to_csv(out_dir + inputs.split("/")[-1] + "_coverage.txt", sep = "\t", index = False)
 		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_melt, on = ['isodecoder', 'pos', 'bam'], how = 'left')
-		modTable_prop_melt.to_csv(inputs + "preNA.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		# split and parallelize addNA
 		names, dfs = splitTable(modTable_prop_melt)

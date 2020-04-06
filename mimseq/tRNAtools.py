@@ -488,8 +488,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 										adjust_pos_ins -= 1
 								new_insert = insert + adjust_pos_len + adjust_pos_ins
 								member_seq = member_seq[ :new_insert] + cluster_seq[insert] + member_seq[new_insert: ]
-								#insert_dict[cluster_name][new_insert-1].append(member_name)
-								insert_dict[cluster_name][new_insert].append(member_name)
+								insert_dict[cluster_name][new_insert-1].append(member_name)
+								#insert_dict[cluster_name][new_insert].append(member_name)
 								#cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]

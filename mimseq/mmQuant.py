@@ -381,10 +381,11 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 
 	# handle insertions between cluster parent and members present in read (different from insertions in read only)
 	# i.e. once new ref is found above and this member has an insertion relative to parent, subtract 1 from all misinc positions after the insertion
-	# corrects for difference in length between member and parent
+	# corrects for difference in length between member and parent. 
+	# Note that 1 bp up and down from the insertion are checked to account for differences in insertion due to short read aligner, and usearch clustering
 	if (not reference == old_reference) and (insertions):
 		for i in insertions:
-			if reference in insert_dict[old_reference][i]:
+			if reference in (insert_dict[old_reference][i] or insert_dict[old_reference][i+1] or insert_dict[old_reference][i-1]):
 				temp = {(k - 1 if k > i else k):v for k,v in temp.items()}
 
 	return(temp, ref_pos, read_pos, reference)

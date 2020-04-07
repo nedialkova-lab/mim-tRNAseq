@@ -362,7 +362,7 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 				identity = read_seq[read_pos]
 				ref_pos += new_offset 
 				# update reference for isodecoder splitting if cluster_id not 1 and remap is disabed or this is round 2 of alignment (avoid errors in adding new mods for clusters)
-				if (unique_isodecoderMMs) and (identity in unique_isodecoderMMs[old_reference][ref_pos]) and (not remap):
+				if (unique_isodecoderMMs) and (identity.upper() in unique_isodecoderMMs[old_reference][ref_pos]) and (not remap):
 					reference = unique_isodecoderMMs[old_reference][ref_pos][identity]
 				# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
 				elif (ref_pos not in mismatch_dict[old_reference]): #or (ref_pos in mismatch_dict[old_reference] and interval.islower()):

@@ -68,7 +68,7 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 						# update cluster_dict by keeping only tRNAs not in current isodecoder group
 						cluster_dict[cluster] = [tRNA for tRNA in cluster_dict[cluster] if not tRNA in isodecoder_items]
 						curr_isodecoders += 1
-						unique_isodecoderMMs[cluster][pos][identity] = tRNAs[0]
+						unique_isodecoderMMs[cluster][pos][identity.upper()] = tRNAs[0]
 
 					# Otherwise remove the sequence from detected_seqs so that it can be processed again for another mismatch position at which it might be unique
 					elif len(tRNAs) > 1:
@@ -132,6 +132,8 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 
 	log.info("Total unique tRNA sequenes in input: {}".format(total_isodecoders))
 	log.info("Total deconvoluted unique tRNA sequences: {}".format(total_detected_isodecoders))
+
+	print(unique_isodecoderMMs['Homo_sapiens_tRNA-Gly-TCC-1-1'])
 
 	return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
 

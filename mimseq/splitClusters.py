@@ -81,10 +81,14 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 			if curr_isodecoders < isodecoder_num:
 				type_count = defaultdict(list)
 				insert_members = {tRNA:sequence for tRNA, sequence in cluster_members.items() if tRNA in members}
-				for tRNA, sequence in insert_members.items():
-					if (not sequence.upper() in detected_seqs) and (not tRNA in detected_clusters):
-						type_count['insertion'].append(tRNA)
-						detected_seqs.append(sequence.upper())
+				# check if insertion is specific to one isodecoder by finding the length of the set of isodecoder numbers from insert_members 
+				# (isodecoder numbers given as second last value in tRNA name - e.g. tRNA-Phe-GAA-X-1 where X = isodecoder number)
+				isodecoders_withIns = len(set([num for tRNA in list(insert_members.keys()) for num in tRNA.split("-")[-2]]))
+				if isodecoders_withIns == 1:
+					for tRNA, sequence in insert_members.items():
+						if (not sequence.upper() in detected_seqs) and (not tRNA in detected_clusters):
+							type_count['insertion'].append(tRNA)
+							detected_seqs.append(sequence.upper())
 
 				for identity, tRNAs in type_count.items():
 					if len(tRNAs) == 1:
@@ -133,7 +137,7 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 	log.info("Total unique tRNA sequenes in input: {}".format(total_isodecoders))
 	log.info("Total deconvoluted unique tRNA sequences: {}".format(total_detected_isodecoders))
 
-	print(unique_isodecoderMMs['Homo_sapiens_tRNA-Gly-TCC-1-1'])
+	print(unique_isodecoderMMs['Homo_sapiens_tRNA-Phe-GAA-4-1'])
 
 	return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
 

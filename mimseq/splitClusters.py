@@ -51,9 +51,11 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 					# do not process same sequence or cluster twice
 					if (not sequence.upper() in detected_seqs) and (not tRNA in detected_clusters):
 						# catch IndexError exception when cluster parent is longer than member and mismatch position lies outiside cluster member length
-						# in these cases just ignore this specific mismatch_member tRNA as the mismatch in question does not apply to this memeber
+						# in these cases just ignore this specific mismatch_member tRNA as the mismatch in question does not apply to this member
 						try:
-							type_count[sequence[pos]].append(tRNA)
+							# find number of inserts before mismatch in question to ensure that the correct identity in the member is sliced by subtracting from the mismatch pos in the parent
+							ins_num = len(set([ins for ins in insert_dict[cluster] if tRNA in insert_dict[cluster][ins] and ins < pos]))
+							type_count[sequence[pos-ins_num]].append(tRNA)
 							detected_seqs.append(sequence.upper())
 						except IndexError:
 							continue
@@ -137,8 +139,6 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 	log.info("Total unique tRNA sequenes in input: {}".format(total_isodecoders))
 	log.info("Total deconvoluted unique tRNA sequences: {}".format(total_detected_isodecoders))
 
-	print(unique_isodecoderMMs['Homo_sapiens_tRNA-Phe-GAA-4-1'])
-
 	return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
 
 def getIsodecoderSizes(out_dir, experiment_name, tRNAdict):
@@ -158,6 +158,3 @@ def getIsodecoderSizes(out_dir, experiment_name, tRNAdict):
 			isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
 
 	return(isodecoder_sizes)
-
-
-

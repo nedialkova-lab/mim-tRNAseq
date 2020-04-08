@@ -13,6 +13,7 @@
 # github: https://github.com/nedialkova-lab/mim-tRNAseq
 
 from __future__ import absolute_import
+from . import version
 from .tRNAtools import modsToSNPIndex, generateGSNAPIndices, newModsParser, tidyFiles
 from .tRNAmap import mainAlign
 from .getCoverage import getCoverage, plotCoverage
@@ -62,7 +63,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 			logging.StreamHandler()
 		])
 	log = logging.getLogger(__name__)
-	log.info("mim-tRNAseq run with command:")
+	log.info("mim-tRNAseq v{} run with command:".format(version.__version__))
 	log.info(" ".join(sys.argv))
 
 	########
@@ -226,8 +227,9 @@ def main():
 	remapping.add_argument('--misinc-thresh', metavar = 'threshold for unannotated mods', dest = 'misinc_thresh', type = restrictedFloat, nargs = '?', default = 0.1,\
 		required = False, help = 'Threshold of total misincorporation rate at a position in a cluster used to call unannotated modifications. Value between 0 and 1, default is 0.1  (10%% misincorporation).')
 
+	parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version.__version__), help = 'Show version number and exit')
 	parser.add_argument('sampledata', help = 'Sample data sheet in text format, tab-separated. Column 1: full path to fastq (or fastq.gz). Column 2: condition/group.')
-
+	
 	parser.set_defaults(threads=1, out="./", max_multi = 3, min_cov = 0, mito = '')
 
 	#########################################

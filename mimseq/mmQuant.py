@@ -396,7 +396,7 @@ def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 	#cluster = [parent for parent, child in cluster_dict.items() if name in child][0]
 	for pos in tRNA_struct.loc[name].index:
 		if data_type == 'mods':
-			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':table.condition.iloc[1], 'bam':table.bam.iloc[1], 'cov':'NA'})
+			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':table.condition.iloc[1], 'bam':table.bam.iloc[1]})
 		elif data_type == 'stops':
 			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':table.condition.iloc[0], 'bam':table.bam.iloc[0]}, index=[0])
 		if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':

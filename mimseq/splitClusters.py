@@ -63,7 +63,6 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 				# Only process tRNAs which are unique in a specific mismatch at a position, thereby using this mismacth to uniquely assign reads to only this isodecoder
 				for identity, tRNAs in type_count.items():
 					if len(tRNAs) == 1:
-						new_cluster_counts = list()
 						detected_clusters.append(tRNAs[0])
 						isodecoder_items = [tRNA for tRNA, sequence in cluster_members.items() if sequence.upper() == tRNA_dict[tRNAs[0]]['sequence'].upper()]
 						isodecoder_sizes[tRNAs[0]] = len(isodecoder_items)
@@ -94,7 +93,6 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 
 				for identity, tRNAs in type_count.items():
 					if len(tRNAs) == 1:
-						new_cluster_counts = list()
 						detected_clusters.append(tRNAs[0])
 						isodecoder_items = [tRNA for tRNA, sequence in cluster_members.items() if sequence.upper() == tRNA_dict[tRNAs[0]]['sequence'].upper()]
 						isodecoder_size = len(isodecoder_items)
@@ -110,7 +108,7 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 							sequence = tRNA_dict[tRNA]['sequence'].upper()
 							detected_seqs.remove(sequence)
 
-	# for all clusters in cluster_dict, isdecoder size is number of members remaining after updating in above code
+	# for all clusters in cluster_dict, isodecoder size is number of members remaining after updating in above code
 	# these include clusters with only one isodecoder - i.e. not in mismatch_dict, and clusters that could not be separated into isodecoders because no unique mismatch distinguishes them
 	splitBool = list()
 	for cluster, members in cluster_dict.items():
@@ -126,7 +124,8 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 		isodecoderInfo.write("Isodecoder\tsize\n")
 		for isodecoder, size in isodecoder_sizes.items():
 			isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
-			total_detected_isodecoders += 1
+			if not isodecoder in splitBool:
+				total_detected_isodecoders += 1
 
 	# write isodecoder fasta for alignment and context analysis
 	with open(out_dir + experiment_name + '_isodecoderTranscripts.fa', 'w') as tempSeqs:

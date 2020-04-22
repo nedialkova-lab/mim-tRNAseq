@@ -245,7 +245,6 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		cov_table_melt['bam'] = inputs
 		cov_table_melt = cov_table_melt[['isodecoder', 'pos', 'bam', 'cov']]
 		cov_table_melt.to_csv(out_dir + inputs.split("/")[-1] + "_coverage.txt", sep = "\t", index = False)
-		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_melt, on = ['isodecoder', 'pos', 'bam'], how = 'left')
 
 		# split and parallelize addNA
 		names, dfs = splitTable(modTable_prop_melt)
@@ -255,6 +254,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		pool.close()
 		pool.join()
 		#modTable_prop_melt = addNA(modTable_prop_melt, tRNA_struct, cluster_dict, "mods")
+		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_melt, on = ['isodecoder', 'pos', 'bam'], how = 'left')
 		modTable_prop_melt = modTable_prop_melt[['isodecoder','pos', 'type','proportion','condition', 'bam', 'cov']]
 
 		# reformat stopTable and add gaps 

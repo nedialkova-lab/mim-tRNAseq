@@ -6,3 +6,4 @@ include mimseq/modPlot.R
 include mimseq/modifications
 include mimseq/facet_share.R
 include sampleData_HEKvsK562.txt
+recursive-include mimseq/data *

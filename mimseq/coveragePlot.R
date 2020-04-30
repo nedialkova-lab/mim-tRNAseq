@@ -44,6 +44,7 @@ if (length(args)==0) {
 		xlab("Gene (%)") + 
 		ylab("Normalised coverage (coverage/uniquely mapped reads)") + 
 		labs(fill = "Isotype") + 
+		guides(fill=guide_legend(ncol=2)) + 
 		scale_fill_manual(values = getPalette(cyt_colourCount)) + 
 		theme_bw()
 	ggsave(paste(out_dir, "coverage_byaa_norm.pdf", sep = ''), cov_byaa_norm, height = ceiling(facetCount/4) * 4, width = 14)
@@ -90,6 +91,7 @@ if (length(args)==0) {
 		xlab("Gene (%)") + 
 		ylab("Scaled normalised coverage") + 
 		labs(fill = "Isotype") + 
+		guides(fill=guide_legend(ncol=2)) + 
 		scale_y_continuous(breaks = seq(0,1,0.25)) + 
 		scale_fill_manual(values = getPalette(cyt_colourCount)) + 
 		theme_bw()

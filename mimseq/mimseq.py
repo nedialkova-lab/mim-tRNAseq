@@ -107,8 +107,8 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 		bams_list, coverageData = mainAlign(sample_data, name, genome_index_path, genome_index_name, \
 			snp_index_path, snp_index_name, out, threads, snp_tolerance, keep_temp, remap_mismatches, map_round)
 		remap = False
-	else:
-		log.info("\n*** New modifications not discovered as remap is not enabled ***\n")
+	#else:
+	#	log.info("\n*** New modifications not discovered as remap is not enabled ***\n")
 
 	# Misincorporation analysis
 	if snp_tolerance or not mismatches == 0.0:

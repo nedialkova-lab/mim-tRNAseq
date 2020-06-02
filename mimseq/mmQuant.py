@@ -61,6 +61,9 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 					if (tRNA_dict[isodecoder]['sequence'][pos-1] == 'A' and list(modTable[isodecoder][pos].keys())[list(modTable[isodecoder][pos].values()).index(max(modTable[isodecoder][pos].values()))] == 'G' and pos-1 == min(anticodon)):
 						new_inosines_cluster[cluster].append(pos-1)
 						new_inosines_isodecoder[isodecoder].append(pos-1)
+					elif (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) <= 0.98):
+						new_mods_cluster[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
+						new_mods_isodecoder[isodecoder].append(pos-1)
 				else:
 					new_mods_cluster[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
 					new_mods_isodecoder[isodecoder].append(pos-1)
@@ -362,7 +365,7 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 				identity = read_seq[read_pos]
 				ref_pos += new_offset 
 				# update reference for isodecoder splitting if cluster_id not 1 and remap is disabed or this is round 2 of alignment (avoid errors in adding new mods for clusters)
-				if (unique_isodecoderMMs) and (identity.upper() in unique_isodecoderMMs[old_reference][ref_pos]) and (not remap):
+				if (unique_isodecoderMMs) and (identity.upper() in unique_isodecoderMMs[old_reference][ref_pos]): #and (not remap):
 					reference = unique_isodecoderMMs[old_reference][ref_pos][identity]
 				# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
 				elif (ref_pos not in mismatch_dict[old_reference]): #or (ref_pos in mismatch_dict[old_reference] and interval.islower()):

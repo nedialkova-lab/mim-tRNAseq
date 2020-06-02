@@ -154,7 +154,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 
 				# Return list of modified nucl indices and add to modomics_dict
 				# add unmodified seq to modomics_dict by lookup to modifications
-				nonMod = ['A','C','G','T','-']
+				nonMod = ['A','C','G','T','-','I']
 				modPos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x not in nonMod]
 				inosinePos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x == 'I']
 				modomics_dict[curr_id]['modified'] = modPos

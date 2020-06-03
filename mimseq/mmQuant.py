@@ -52,7 +52,7 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 		else:
 			cluster = isodecoder
 		anticodon = clusterAnticodon(cons_anticodon, cluster)
-		for pos, type in data.items():
+		for pos, nucl in data.items():
 			cov = cov_table[isodecoder][pos]
 			if (sum(modTable[isodecoder][pos].values()) >= misinc_thresh and cov >= min_cov and pos-1 not in knownTable[cluster]): # misinc above threshold, cov above threshold and not previously known
 				# if one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
@@ -68,15 +68,16 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 					new_mods_cluster[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
 					new_mods_isodecoder[isodecoder].append(pos-1)
 
-	with open(inputs + "_predictedModstemp.csv", "a") as predMods:
-		#predMods.write("isodecoder\tpos\tidentity\tbam\n")
-		for isodecoder, data in new_mods_isodecoder.items():
-			for pos in data:
-				predMods.write(isodecoder + "\t" + \
-					str(pos) + "\t" + \
-					str(tRNA_dict[isodecoder]['sequence'][int(pos)]) + "\t" + \
-					inputs.split("/")[-1] + "\n")
-		if not remap: # only write inosines on second round (or if remap is disabled) to prevent writing entries twice
+	if not remap: # only write new mods on second round (or if remap is disabled) to prevent writing incorrectly called mods on round 1
+		with open(inputs + "_predictedModstemp.csv", "a") as predMods:
+			#predMods.write("isodecoder\tpos\tidentity\tbam\n")
+			for isodecoder, data in new_mods_isodecoder.items():
+				for pos in data:
+					predMods.write(isodecoder + "\t" + \
+						str(pos) + "\t" + \
+						str(tRNA_dict[isodecoder]['sequence'][int(pos)]) + "\t" + \
+						inputs.split("/")[-1] + "\n")
+		
 			for isodecoder, data in new_inosines_isodecoder.items():
 				for pos in data:
 					predMods.write(isodecoder + "\t" + \
@@ -554,7 +555,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 			known.write("cluster\tpos\n")
 			for cluster, data in knownTable.items():
 				for pos in data:
-					known.write(cluster + "\t" + str(pos) + "\n")
+					known.write(cluster + "\t" + str(pos+1) + "\n")
 
 		stopTable_total = stopTable_total[~stopTable_total.isodecoder.isin(filtered)]
 		stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')

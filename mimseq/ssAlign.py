@@ -226,7 +226,7 @@ def modContext(out):
 		outfile.write("cluster\tpos\tidentity\tupstream\tdownstream\n")
 		for cluster, data in upstream_dict.items():
 			for pos, base in data.items():
-				outfile.write(cluster + "\t" + str(pos) + "\t" + base[0] + "\t" + base[1] + "\t" + base[2] + "\n")
+				outfile.write("-".join(cluster.split("-")[:-1]) + "\t" + str(pos) + "\t" + base[0] + "\t" + base[1] + "\t" + base[2] + "\n")
 
 	mod_sites = str("_".join(str(e) for e in mod_sites))
 

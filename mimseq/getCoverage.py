@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 
 def filterCoverage (cov_table, min_cov):
 # returns isodecoders as list from counts table with less than min_cov reads (excluding mito clusters)
-	
 	filtered_list = list(cov_table[(cov_table.values < min_cov).any(1) & (~cov_table.index.str.contains('mito'))].index)
 
 	log.info("{} clusters filtered out according to minimum coverage threshold: {}".format(len(filtered_list), min_cov))
@@ -55,9 +54,10 @@ def getCoverage(sampleGroups, out_dir, min_cov, control_cond, filtered_cov):
 
 		coverage = pd.read_csv(out_dir + bam.split("/")[-1] + "_coverage.txt", index_col = 0, sep = "\t") 
 		coverage['aa'] = coverage.index.format()
-		coverage.loc[coverage.aa.str.contains('mito'), 'aa'] = "mito" + coverage[coverage.aa.str.contains('mito')].aa.str.split("-").str[-4]
-		coverage.loc[coverage.aa.str.contains('nmt'), 'aa'] = "nmt" + coverage[coverage.aa.str.contains('nmt')].aa.str.split("-").str[-4]
-		coverage.loc[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('nmt'), 'aa'] = coverage[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('nmt')].aa.str.split("-").str[-4]
+		coverage.loc[coverage.aa.str.contains('chr'), 'aa'] = coverage[coverage.aa.str.contains('chr')].aa.str.split("-").str[-4]
+		coverage.loc[coverage.aa.str.contains('mito'), 'aa'] = "mito" + coverage[coverage.aa.str.contains('mito')].aa.str.split("-").str[-3]
+		coverage.loc[coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr'), 'aa'] = "nmt" + coverage[coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr')].aa.str.split("-").str[-3]
+		coverage.loc[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr'), 'aa'] = coverage[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr')].aa.str.split("-").str[-3]
 		coverage = coverage[['pos','cov','aa','bam']]
 		coverage['condition'] = info[0]
 		coverage['cov'] = coverage['cov'].astype(float)

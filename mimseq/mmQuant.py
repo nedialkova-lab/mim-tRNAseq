@@ -550,17 +550,20 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 		# filter and output tables
 		modTable_total = modTable_total[~modTable_total.isodecoder.isin(filtered)]
 		#modTable_total.drop(modTable_total[modTable_total['isodecoder'] in filtered].index, inplace = True)
+		modTable_total['isodecoder'] = "-".join(modTable_total['isodecoder'].split("-")[:-1])
 		modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 		with open(out_dir + "mods/allModsTable.csv", "w") as known:
 			known.write("cluster\tpos\n")
 			for cluster, data in knownTable.items():
 				for pos in data:
-					known.write(cluster + "\t" + str(pos+1) + "\n")
+					known.write("-".join(cluster.split("-")[:-1]) + "\t" + str(pos+1) + "\n")
 
 		stopTable_total = stopTable_total[~stopTable_total.isodecoder.isin(filtered)]
+		stopTable_total['isodecoder'] = "-".join(stopTable_total['isodecoder'].split("-")[:-1])
 		stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		readthroughTable_total = readthroughTable_total[~readthroughTable_total.isodecoder.isin(filtered)]
+		readthroughTable_total['isodecoder'] = "-".join(readthroughTable_total['isodecoder'].split("-")[:-1])
 		readthroughTable_total.to_csv(out_dir + "mods/readthroughTable.csv", sep = "\t", index = False, na_rep = 'NA')	
 		
 		# add column to counts to indicate complete isodecoder split or not
@@ -570,6 +573,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 				countsTable_total.at[cluster, 'Single_isodecoder'] = "False"
 			else:
 				countsTable_total.at[cluster, 'Single_isodecoder'] = "True"
+		countsTable_total['isodecoder'] = "-".join(countsTable_total['isodecoder'].split("-")[:-1])
 		countsTable_total.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t", index = True, na_rep = "0")
 
 		# map canon_pos for each isodecoder ungapped pos to newMods
@@ -586,6 +590,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 		pivot['bam'].replace(out_dir, "", regex = True, inplace = True)
 		newMods_total = pd.merge(newMods_total, pivot, on = ['isodecoder', 'canon_pos', 'bam'], how = "left")
 		newMods_total.drop(columns = ['pos'], inplace = True)
+		newMods_total['isodecoder'] = "-".join(newMods_total['isodecoder'].split("-")[:-1])
 		newMods_total.to_csv(out_dir + 'mods/predictedMods.csv', sep = "\t", index = False, na_rep = "NA")
 
 		if cca:
@@ -593,6 +598,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 			dinuc_table.to_csv(out_dir + "CCAanalysis/AlignedDinucProportions.csv", sep = "\t", index = False, na_rep = 'NA')
 			CCAvsCC_table.columns = ['gene', 'end', 'sample', 'condition', 'count']
 			CCAvsCC_table = CCAvsCC_table[~CCAvsCC_table.gene.isin(filtered)]
+			CCAvsCC_table['gene'] = "-".join(CCAvsCC_table['gene'].split("-")[:-1])
 			CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
 		# Anticodon and/or isodecoder counts counts

@@ -918,8 +918,8 @@ def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict):
 				if line.startswith("isodecoder"):
 					sample_list = [samples for samples in line.split("\t")[1:-1]]
 				else:
-					isodecoder = line.split("\t")[0]
-					anticodon = '-'.join(isodecoder.split("-")[:-2])
+					isodecoder = line.split("\t")[0]."-".join(split("-")[:-1])
+					anticodon = '-'.join(isodecoder.split("-")[:-1])
 					col = 1
 					for sample in sample_list:
 						count_dict_anticodon[anticodon][sample] += float(line.split("\t")[col])
@@ -936,6 +936,7 @@ def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict):
 		for isodecoder in isodecoder_sizes:
 			sameSeq = [tRNAs for tRNAs in tRNA_dict.keys() if tRNA_dict[tRNAs]['sequence'] == tRNA_dict[isodecoder]['sequence']]
 			for i in sameSeq:
+				i = "-".join(i.split("-")[:-1])
 				for lib in count_dict_isodecoder[isodecoder].keys():
 					new_count_isodecoder[isodecoder][lib] += count_dict_isodecoder[i][lib]
 

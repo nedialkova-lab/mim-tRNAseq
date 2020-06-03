@@ -550,7 +550,7 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 		modTable_total = modTable_total[~modTable_total.isodecoder.isin(filtered)]
 		#modTable_total.drop(modTable_total[modTable_total['isodecoder'] in filtered].index, inplace = True)
 		modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
-		with open(out_dir + "mods/knownModsTable.csv", "w") as known:
+		with open(out_dir + "mods/allModsTable.csv", "w") as known:
 			known.write("cluster\tpos\n")
 			for cluster, data in knownTable.items():
 				for pos in data:

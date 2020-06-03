@@ -62,7 +62,7 @@ Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
 * `RTstopTable.csv`: Data table for RT stop analyses. Includes tRNA/cluster, canonical tRNA position and proportion of reads that stop at each position (normalised to total coverage of the reference sequence). This gives the relative frequence of reads stopping at all positions for a reference, the sum of which should equal 1.
 * `readthroughTable.csv`: Data table similar to `RTstopTable.csv` except the proportion here represents the proportion of reads that stop at a site normalised to the total read coverage at that site only. 1 - this value will therefore give the reads that contain readthrough at each position.
 * `modContext.txt`: Nucleotide context information for selected modified positions. Note, `pos` here is not canonical position information but ungapped alignment positions for each tRNA/cluster.
-* `knownModsTable.csv`: Known modifications from Modomics and `additionalMods.txt` for each cluster. Used in new mods discovery.
+* `allModsTable.csv`: All known modifications from Modomics and `additionalMods.txt` and newly detected mim-tRNAseq modifications for each cluster. Used in new mods discovery.
 * `predictedMods.csv`: Newly predicted modified sites per tRNA/cluster based on misinc-thresh.
 
 **DESeq2**

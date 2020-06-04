@@ -116,13 +116,14 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 		isodecoder_sizes[cluster] = cluster_size
 		remaining_isodecoders = set([data['sequence'].upper() for member, data in tRNA_dict.items() if member in members])
 		if len(remaining_isodecoders) > 1:
-			splitBool.append(cluster)
+			splitBool.append("-".join(cluster.split("-")[:-1]))
 
 	# save isodecoder info for DESeq2
 	total_detected_isodecoders = 0
 	with open(out_dir + experiment_name + "isodecoderInfo.txt", "w") as isodecoderInfo:
 		isodecoderInfo.write("Isodecoder\tsize\n")
 		for isodecoder, size in isodecoder_sizes.items():
+			isodecoder = "-".join(isodecoder.split("-")[:-1])
 			isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
 			if not isodecoder in splitBool:
 				total_detected_isodecoders += 1
@@ -130,7 +131,7 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 	# write isodecoder fasta for alignment and context analysis
 	with open(out_dir + experiment_name + '_isodecoderTranscripts.fa', 'w') as tempSeqs:
 		for seq in isodecoder_sizes.keys():
-			tempSeqs.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
+			tempSeqs.write(">" + "-".join(seq.split("-")[:-1]) + "\n" + tRNA_dict[seq]['sequence'] + "\n")
 	aligntRNA(tempSeqs.name, out_dir)
 
 	total_isodecoders = len(set([data["sequence"].upper() for tRNA,data in tRNA_dict.items()]))

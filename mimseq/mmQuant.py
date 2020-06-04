@@ -68,8 +68,12 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 			cov = cov_table[isodecoder][pos]
 			if (sum(modTable[isodecoder][pos].values()) >= misinc_thresh and cov >= min_cov and pos-1 not in knownTable[cluster]): # misinc above threshold, cov above threshold and not previously known
 				# if one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
-				if (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) >= 0.98):
+				if (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) >= 0.95):
 					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list and modification SNPs file (see tRNAtools.ModsParser())
+					print(isodecoder)
+					print(cluster)
+					print(anticodon)
+					print("#####")
 					if (tRNA_dict[isodecoder]['sequence'][pos-1] == 'A' and list(modTable[isodecoder][pos].keys())[list(modTable[isodecoder][pos].values()).index(max(modTable[isodecoder][pos].values()))] == 'G' and pos-1 == min(anticodon)):
 						new_inosines_cluster[cluster].append(pos-1)
 						new_inosines_isodecoder[isodecoder].append(pos-1)

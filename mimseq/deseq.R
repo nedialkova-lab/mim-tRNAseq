@@ -60,11 +60,11 @@ setwd(file.path(outdir))
 # Import data from counts and sampleData
 # Filter out mito counts
 anticodon_countdata = read.table("Anticodon_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
-anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)),]
+anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)), ,drop = FALSE]
 isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
 isodecoder_countdata = isodecoder_countdata[grepl("True", isodecoder_countdata$Single_isodecoder),]
 isodecoder_countdata$Single_isodecoder = NULL
-isodecoder_countdata = isodecoder_countdata[!grepl("mito", rownames(isodecoder_countdata)),]
+isodecoder_countdata = isodecoder_countdata[!grepl("mito", rownames(isodecoder_countdata)), ,drop = FALSE]
 coldata = read.table(paste(sampleData, sep=""), header=FALSE, sep = "\t", row.names=1)
 
 coldata = data.frame(row.names=rownames(coldata), condition = coldata[,1])

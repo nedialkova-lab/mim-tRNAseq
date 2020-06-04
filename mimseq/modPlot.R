@@ -25,6 +25,7 @@ if (mito_trnas == ''){
 }
 cons_pos = args[3]
 cons_pos = unlist(strsplit(cons_pos, "_"))
+cons_pos = cons_pos[!grepl("-",cons_pos)]
 misinc_thresh = as.numeric(args[4])
 
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
@@ -35,6 +36,7 @@ mods$isodecoder = sub(".*_mito_tRNA-","mito",mods$isodecoder)
 mods$isodecoder = sub(".*_nmt_tRNA-","nmt",mods$isodecoder)
 mods$isodecoder = sub(".*_tRNA-","",mods$isodecoder)
 mods$isodecoder = ifelse(mods$isodecoder == 'eColiLys-TTT-1-1', 'eColiLys', mods$isodecoder)
+mods = mods[!grepl("-", mods$canon_pos),]
 mods_agg = aggregate(mods$proportion, by = list(isodecoder=mods$isodecoder, pos=mods$pos, bam=mods$bam, condition=mods$condition, canon_pos=mods$canon_pos), FUN = sum)
 mods_agg = aggregate(mods_agg$x, by = list(isodecoder=mods_agg$isodecoder, pos=mods_agg$pos, condition=mods_agg$condition, canon_pos=mods_agg$canon_pos), FUN = mean)
 
@@ -46,6 +48,7 @@ stops$isodecoder = sub(".*_mito_tRNA-","mito",stops$isodecoder)
 stops$isodecoder = sub(".*_nmt_tRNA-","nmt",stops$isodecoder)
 stops$isodecoder = sub(".*_tRNA-","",stops$isodecoder)
 stops$isodecoder = ifelse(stops$isodecoder == 'eColiLys-TTT-1-1', 'eColiLys', stops$isodecoder)
+stops = stops[!grepl("-", stops$canon_pos),]
 stops_agg = aggregate(stops$proportion, by = list(isodecoder=stops$isodecoder, pos=stops$pos, condition=stops$condition, canon_pos=stops$canon_pos), FUN = mean)
 
 # read in context info created by ssAlign module

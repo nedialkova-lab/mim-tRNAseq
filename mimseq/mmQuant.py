@@ -63,22 +63,19 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 		# if cluster_dict is empty, then clustering is disabled and in this case isodecoder in modTable is the "cluster"
 		else:
 			cluster = isodecoder
-		anticodon = clusterAnticodon(cons_anticodon, cluster)
+		short_isodecoder = "-".join(isodecoder.split("-")[:-1]) if not "chr" in isodecoder else isodecoder
+		anticodon = clusterAnticodon(cons_anticodon, short_isodecoder)
 		for pos, nucl in data.items():
 			cov = cov_table[isodecoder][pos]
 			if (sum(modTable[isodecoder][pos].values()) >= misinc_thresh and cov >= min_cov and pos-1 not in knownTable[cluster]): # misinc above threshold, cov above threshold and not previously known
 				# if one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
-				if (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) >= 0.95):
+				if (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) > 0.95):
 					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list and modification SNPs file (see tRNAtools.ModsParser())
-					print(isodecoder)
-					print(cluster)
-					print(anticodon)
-					print("#####")
 					if (tRNA_dict[isodecoder]['sequence'][pos-1] == 'A' and list(modTable[isodecoder][pos].keys())[list(modTable[isodecoder][pos].values()).index(max(modTable[isodecoder][pos].values()))] == 'G' and pos-1 == min(anticodon)):
 						new_inosines_cluster[cluster].append(pos-1)
 						new_inosines_isodecoder[isodecoder].append(pos-1)
-				else:
-					new_mods_cluster[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
+				elif (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) <= 0.95 and not pos-1 == min(anticodon) and not tRNA_dict[isodecoder]['sequence'][pos-1] == 'A'):
+					new_mods_cluster[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for mod_lists
 					new_mods_isodecoder[isodecoder].append(pos-1)
 
 	with open(inputs + "_predictedModstemp.csv", "w") as predMods:
@@ -415,13 +412,14 @@ def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 # fill mods and stops tables with 'NA' for gapped alignment
 
 	#cluster = [parent for parent, child in cluster_dict.items() if name in child][0]
-	for pos in tRNA_struct.loc[name].index:
+	shortname = "-".join(name.split("-")[:-1]) if not "chr" in name else name
+	for pos in tRNA_struct.loc[shortname].index:
 		if data_type == 'mods':
 			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':table.condition.iloc[1], 'bam':table.bam.iloc[1]})
 		elif data_type == 'stops':
 			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':table.condition.iloc[0], 'bam':table.bam.iloc[0]}, index=[0])
-		if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
-			if not pos == max(tRNA_struct.loc[name].index):
+		if tRNA_struct.loc[shortname].iloc[pos-1].struct == 'gap':
+			if not pos == max(tRNA_struct.loc[shortname].index):
 				table.loc[(table.isodecoder == name) & (table.pos >= pos), 'pos'] += 1
 			#if not data_type == "readthrough":
 			table = table.append(new)
@@ -572,6 +570,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		modTable_total.loc[~modTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = modTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
 		modTable_total = modTable_total[~modTable_total.isodecoder.isin(filtered)]
 		#modTable_total.drop(modTable_total[modTable_total['isodecoder'] in filtered].index, inplace = True)
+		modTable_total.drop_duplicates(inplace = True)
 		modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 		with open(out_dir + "mods/allModsTable.csv", "w") as known:
 			known.write("cluster\tpos\n")
@@ -581,10 +580,12 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 
 		stopTable_total.loc[~stopTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = stopTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
 		stopTable_total = stopTable_total[~stopTable_total.isodecoder.isin(filtered)]
+		stopTable_total.drop_duplicates(inplace = True)
 		stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		readthroughTable_total.loc[~readthroughTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = readthroughTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
 		readthroughTable_total = readthroughTable_total[~readthroughTable_total.isodecoder.isin(filtered)]
+		readthroughTable_total.drop_duplicates(inplace = True)
 		readthroughTable_total.to_csv(out_dir + "mods/readthroughTable.csv", sep = "\t", index = False, na_rep = 'NA')	
 		
 		# add column to counts to indicate complete isodecoder split or not
@@ -594,6 +595,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 				countsTable_total.at[cluster, 'Single_isodecoder'] = "False"
 			else:
 				countsTable_total.at[cluster, 'Single_isodecoder'] = "True"
+		countsTable_total.drop_duplicates(inplace = True)
 		countsTable_total.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t", index = True, na_rep = "0")
 
 		# map canon_pos for each isodecoder ungapped pos to newMods
@@ -611,6 +613,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		pivot['bam'].replace(out_dir, "", regex = True, inplace = True)
 		newMods_total = pd.merge(newMods_total, pivot, on = ['isodecoder', 'canon_pos', 'bam'], how = "left")
 		newMods_total.drop(columns = ['pos'], inplace = True)
+		newMods_total.drop_duplicates(inplace = True)
 		newMods_total.to_csv(out_dir + 'mods/predictedMods.csv', sep = "\t", index = False, na_rep = "NA")
 
 		if cca:
@@ -619,6 +622,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 			CCAvsCC_table.columns = ['gene', 'end', 'sample', 'condition', 'count']
 			CCAvsCC_table.loc[~CCAvsCC_table['gene'].str.contains("chr"), 'gene'] = CCAvsCC_table['gene'].str.split("-").str[:-1].str.join("-")
 			CCAvsCC_table = CCAvsCC_table[~CCAvsCC_table.gene.isin(filtered)]
+			CCAvsCC_table.drop_duplicates(inplace = True)
 			CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
 		# Anticodon and/or isodecoder counts counts

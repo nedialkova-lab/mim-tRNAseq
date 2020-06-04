@@ -203,8 +203,7 @@ def modContext(out):
 	for record in stk:
 		gene = record.id
 		seq = record.seq
-		for site in sites_dict.keys():
-			pos = sites_dict[site]
+		for site, pos in sites_dict.items():
 			identity = seq[pos-1] # identity of base at modification position
 			if identity in ['A','C','G','U','T']:
 				up = pos - 2 # pos is 1 based from struct, therefore -1 to make 0 based and -1 to get upstream nucl
@@ -226,7 +225,6 @@ def modContext(out):
 		outfile.write("cluster\tpos\tidentity\tupstream\tdownstream\n")
 		for cluster, data in upstream_dict.items():
 			for pos, base in data.items():
-				cluster = "-".join(cluster.split("-")[:-1]) if not "chr" in cluster else cluster
 				outfile.write(cluster + "\t" + str(pos) + "\t" + base[0] + "\t" + base[1] + "\t" + base[2] + "\n")
 
 	mod_sites = str("_".join(str(e) for e in mod_sites))

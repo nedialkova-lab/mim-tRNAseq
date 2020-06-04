@@ -9,7 +9,7 @@ from __future__ import absolute_import
 import os, logging
 import re
 import pysam
-from .tRNAtools import countReads
+from .tRNAtools import countReads, newModsParser
 from .getCoverage import getBamList, filterCoverage
 from multiprocessing import Pool
 import multiprocessing.pool
@@ -20,9 +20,6 @@ from collections import defaultdict
 from .ssAlign import getAnticodon, clusterAnticodon, tRNAclassifier
 
 log = logging.getLogger(__name__)
-
-new_mods_isodecoder = defaultdict(list)
-new_inosines_isodecoder = defaultdict(list)
 
 # custom classes to allow non-demonic processes allowing children processes to spawn more children sub-processes (i.e. multiprocessing within multiprocessing)
 class NoDaemonProcess(multiprocessing.Process):
@@ -42,12 +39,24 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 # find unknown modifications with a total misincorporation threshold >= misinc_thresh
 
 	log.info('Finding potential unannotated mods for {}'.format(inputs))
+	new_mods_isodecoder = defaultdict(list)
+	new_inosines_isodecoder = defaultdict(list)
 	new_mods_cluster =  defaultdict(list)
 	new_inosines_cluster = defaultdict(list)
 	cons_anticodon = getAnticodon()
-	global new_mods_isodecoder
-	global new_inosines_isodecoder
-	
+
+	# if this is round 2, read in previously predicted mods and subtract from knownTable so that they can be re-predicted and written to predictedMods
+	predRound1 = defaultdict(list)
+	try:
+		with open(inputs + "_predictedModstemp.csv", "r") as predFile:
+			for line in predFile:
+				line = line.strip()
+				isodecoder, pos = line.split("\t")[0:2]
+				predRound1[isodecoder].append(int(pos))
+		knownTable = {cluster:[pos for pos in knownTable[cluster] if pos not in predRound1[cluster]] for cluster, pos in knownTable.items()} # subtraction
+	except:
+		next
+
 	for isodecoder, data in modTable.items():
 		if cluster_dict:
 			cluster = [parent for parent, child in cluster_dict.items() if isodecoder in child][0]
@@ -59,33 +68,30 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 			cov = cov_table[isodecoder][pos]
 			if (sum(modTable[isodecoder][pos].values()) >= misinc_thresh and cov >= min_cov and pos-1 not in knownTable[cluster]): # misinc above threshold, cov above threshold and not previously known
 				# if one nucleotide dominates misinc. pattern (i.e. >= 0.9 of all misinc, likely a true SNP or misalignment)
-				if (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) >= 0.90):
+				if (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) >= 0.98):
 					# if mod seems to be an inosine (i.e. A with G misinc at 34) add to list and modification SNPs file (see tRNAtools.ModsParser())
 					if (tRNA_dict[isodecoder]['sequence'][pos-1] == 'A' and list(modTable[isodecoder][pos].keys())[list(modTable[isodecoder][pos].values()).index(max(modTable[isodecoder][pos].values()))] == 'G' and pos-1 == min(anticodon)):
 						new_inosines_cluster[cluster].append(pos-1)
 						new_inosines_isodecoder[isodecoder].append(pos-1)
-					elif (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) <= 0.98):
-						new_mods_cluster[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
-						new_mods_isodecoder[isodecoder].append(pos-1)
 				else:
 					new_mods_cluster[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for snp index
 					new_mods_isodecoder[isodecoder].append(pos-1)
 
-	if not remap: # only write new mods on second round (or if remap is disabled) to prevent writing incorrectly called mods on round 1
-		with open(inputs + "_predictedModstemp.csv", "a") as predMods:
-			#predMods.write("isodecoder\tpos\tidentity\tbam\n")
-			for isodecoder, data in new_mods_isodecoder.items():
-				for pos in data:
-					predMods.write(isodecoder + "\t" + \
-						str(pos) + "\t" + \
-						str(tRNA_dict[isodecoder]['sequence'][int(pos)]) + "\t" + \
-						inputs.split("/")[-1] + "\n")
+	with open(inputs + "_predictedModstemp.csv", "w") as predMods:
+		#predMods.write("isodecoder\tpos\tidentity\tbam\n")
+		for isodecoder, data in new_mods_isodecoder.items():
+			for pos in data:
+				predMods.write(isodecoder + "\t" + \
+					str(pos) + "\t" + \
+					str(tRNA_dict[isodecoder]['sequence'][int(pos)]) + "\t" + \
+					inputs.split("/")[-1] + "\n")
 		
+		if not remap:	
 			for isodecoder, data in new_inosines_isodecoder.items():
 				for pos in data:
 					predMods.write(isodecoder + "\t" + \
 						str(pos) + "\t" + \
-						"I" + "\t" + \
+						"A" + "\t" + \
 						inputs.split("/")[-1] + "\n")
 
 	return(new_mods_cluster, new_inosines_cluster)
@@ -251,9 +257,6 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		cov_table_melt.dropna(inplace = True)
 		cov_table_melt['bam'] = inputs
 		cov_table_melt = cov_table_melt[['isodecoder', 'pos', 'bam', 'cov']]
-		cov_table_melt.loc[~cov_table_melt['isodecoder'].str.contains("chr"), 'isodecoder'] = cov_table_melt['isodecoder'].str.split("-").str[:-1].str.join("-")
-
-		cov_table_melt.to_csv(out_dir + inputs.split("/")[-1] + "_coverage.txt", sep = "\t", index = False)
 
 		# split and parallelize addNA
 		names, dfs = splitTable(modTable_prop_melt)
@@ -265,6 +268,10 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		#modTable_prop_melt = addNA(modTable_prop_melt, tRNA_struct, cluster_dict, "mods")
 		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_melt, on = ['isodecoder', 'pos', 'bam'], how = 'left')
 		modTable_prop_melt = modTable_prop_melt[['isodecoder','pos', 'type','proportion','condition', 'bam', 'cov']]
+
+		# Shorten isodecoder names for cov_table after merge with modTable (still long names here), then save
+		cov_table_melt.loc[~cov_table_melt['isodecoder'].str.contains("chr"), 'isodecoder'] = cov_table_melt['isodecoder'].str.split("-").str[:-1].str.join("-")
+		cov_table_melt.to_csv(out_dir + inputs.split("/")[-1] + "_coverage.txt", sep = "\t", index = False)
 
 		# reformat stopTable and add gaps 
 		stopTable_prop_df = pd.DataFrame.from_dict(stopTable_prop)
@@ -301,6 +308,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		readthroughTable_melt = pd.concat(pool.starmap(func, zip(names, dfs)))
 		pool.close()
 		pool.join()
+		readthroughTable_melt = readthroughTable_melt[['isodecoder', 'pos', 'proportion', 'condition', 'bam']]
 
 		# build temp counts DataFrame
 		counts_table = pd.DataFrame.from_dict(counts)
@@ -438,7 +446,7 @@ def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 
 # 	return(table)
 
-def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, insert_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering):
+def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_dict, insert_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -493,6 +501,9 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 	
 	if not remap:
 
+		# Redo newModsParser here so that knownTable is updated with new mods from second round and written to allModsTable
+		Inosine_clusters = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering)
+
 		modTable_total = pd.DataFrame()
 		countsTable_total = pd.DataFrame()
 		stopTable_total = pd.DataFrame()
@@ -528,14 +539,14 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 			os.remove(bam + "_predictedModstemp.csv")
 
 			# add individual temp files to main concatenated table
-			modTable_total = modTable_total.append(modTable)
-			stopTable_total = stopTable_total.append(stopTable)
-			readthroughTable_total = readthroughTable_total.append(readthroughTable)
+			modTable_total = pd.concat([modTable_total,modTable], ignore_index = True)
+			stopTable_total = pd.concat([stopTable_total, stopTable], ignore_index = True)
+			readthroughTable_total = pd.concat([readthroughTable_total, readthroughTable], ignore_index = True)
 			if countsTable_total.empty:
-				countsTable_total = countsTable_total.append(countsTable)
+				countsTable_total = pd.concat([countsTable_total, countsTable], ignore_index = True)
 			else:
 				countsTable_total = pd.merge(countsTable_total, countsTable, on = "isodecoder", how = "left")
-			newMods_total = newMods_total.append(newModsTable)
+			newMods_total = pd.concat([newMods_total, newModsTable], ignore_index = True)
 
 			if cca:
 				# same for CCA analysis files
@@ -544,8 +555,8 @@ def generateModsTable(sampleGroups, out_dir, threads, min_cov, mismatch_dict, in
 				CCA = pd.read_table(bam + "_CCAcounts.csv", header = None)
 				os.remove(bam + "_CCAcounts.csv")
 
-				dinuc_table = dinuc_table.append(dinuc)
-				CCAvsCC_table = CCAvsCC_table.append(CCA)
+				dinuc_table = pd.concat([dinuc_table, dinuc], ignore_index = True)
+				CCAvsCC_table = pd.concat([CCAvsCC_table, CCA], ignore_index = True)
 
 		# get isodecoders to filter from mods and stops
 		countsTable_total.loc[~countsTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = countsTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")

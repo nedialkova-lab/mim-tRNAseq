@@ -71,7 +71,7 @@ for (i in unique(mods_agg$condition)) {
   sub_mods_wide = sub_mods_wide[, -1]
   sub_mods_mat = as.matrix(sub_mods_wide)
   col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_mods_agg$x, by = list(pos = sub_mods_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
-  count_mods = sub_mods_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > 0.1))
+  count_mods = sub_mods_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > misinc_thresh))
   row_anno = rowAnnotation(Count = row_anno_barplot(count_mods$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
   cyto_mods_hm = Heatmap(sub_mods_mat, column_labels = cons_pos, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
   
@@ -83,7 +83,7 @@ for (i in unique(mods_agg$condition)) {
   sub_stops_wide = sub_stops_wide[, -1]
   sub_stops_mat = as.matrix(sub_stops_wide)
   col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_stops_agg$x, by = list(pos = sub_stops_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
-  count_stops = sub_stops_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > 0.1))
+  count_stops = sub_stops_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > misinc_thresh))
   row_anno = rowAnnotation(Count = row_anno_barplot(count_stops$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
   cyto_stops_hm = Heatmap(sub_stops_mat, column_labels = cons_pos, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
   
@@ -101,7 +101,7 @@ for (i in unique(mods_agg$condition)) {
     sub_mods_wide = sub_mods_wide[, -1]
     sub_mods_mat = as.matrix(sub_mods_wide)
     col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_mods_agg$x, by = list(pos = sub_mods_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
-    count_mods = sub_mods_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > 0.1))
+    count_mods = sub_mods_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > misinc_thresh))
     row_anno = rowAnnotation(Count = row_anno_barplot(count_mods$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
     mito_mods_hm = Heatmap(sub_mods_mat, column_labels = cons_pos, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
     
@@ -113,7 +113,7 @@ for (i in unique(mods_agg$condition)) {
     sub_stops_wide = sub_stops_wide[, -1]
     sub_stops_mat = as.matrix(sub_stops_wide)
     col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_stops_agg$x, by = list(pos = sub_stops_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
-    count_stops = sub_stops_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > 0.1))
+    count_stops = sub_stops_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > misinc_thresh))
     row_anno = rowAnnotation(Count = row_anno_barplot(count_stops$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
     mito_stops_hm = Heatmap(sub_stops_mat, column_labels = cons_pos, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
     
@@ -143,7 +143,7 @@ for (i in unique(mods_agg$condition)) {
   
   mods_scatter = ggplot(sub_mods_pos[!grepl("mito", sub_mods_pos$isodecoder) & !grepl("nmt", sub_mods_pos$isodecoder), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
     theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(breaks = c(0.0, 0.25, 0.50, 0.75, 1.0), colours = cols) +
-    geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
+    geom_hline(yintercept = misinc_thresh, linetype = "dashed", alpha = 0.4) + 
     theme(
       axis.text.x=element_blank(),
       axis.title.x=element_blank(),
@@ -155,7 +155,7 @@ for (i in unique(mods_agg$condition)) {
   if (!is.na(mito_trnas)){
     mito_mods_scatter = ggplot(sub_mods_pos[grepl("mito", sub_mods_pos$isodecoder) | grepl("nmt", sub_mods_pos$isodecoder), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
       theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(breaks = c(0.0, 0.25, 0.50, 0.75, 1.0), colours = cols) +
-      geom_hline(yintercept = 0.1, linetype = "dashed", alpha = 0.4) + 
+      geom_hline(yintercept = misinc_thresh, linetype = "dashed", alpha = 0.4) + 
       theme(
         axis.text.x=element_blank(),
         axis.title.x = element_blank(),
@@ -167,7 +167,7 @@ for (i in unique(mods_agg$condition)) {
   }
   
   # Misinc signatures
-  # create filter list of rows where total misinc. rate < 0.1 
+  # create filter list of rows where total misinc. rate < misinc_thresh 
   filter_misincthresh = sub_mods_agg[sub_mods_agg$x < misinc_thresh, ]
   # subset mods table for condition
   sub_mods_aggtype = mods[mods$condition == i, ]

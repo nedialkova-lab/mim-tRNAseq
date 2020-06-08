@@ -380,7 +380,7 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 				identity = read_seq[read_pos]
 				ref_pos += new_offset 
 				# update reference for isodecoder splitting if cluster_id not 1 and remap is disabed or this is round 2 of alignment (avoid errors in adding new mods for clusters)
-				if (unique_isodecoderMMs) and (identity.upper() in unique_isodecoderMMs[old_reference][ref_pos]): #and (not remap):
+				if (unique_isodecoderMMs) and (identity.upper() in unique_isodecoderMMs[old_reference][ref_pos]) and (not remap):
 					reference = unique_isodecoderMMs[old_reference][ref_pos][identity]
 				# only include these positions if they aren't registered mismatches between clusters, or if they are known modified sites (lowercase)
 				elif (ref_pos not in mismatch_dict[old_reference]): #or (ref_pos in mismatch_dict[old_reference] and interval.islower()):
@@ -400,7 +400,7 @@ def countMods(temp, ref_pos, read_pos, read_seq, offset, reference, md_list, uni
 	# handle insertions between cluster parent and members present in read (different from insertions in read only)
 	# i.e. once new ref is found above and this member has an insertion relative to parent, subtract 1 from all misinc positions after the insertion
 	# corrects for difference in length between member and parent. 
-	# Note that 1 bp up and down from the insertion are checked to account for differences in insertion due to short read aligner, and usearch clustering
+	# Note that 1 bp up and down from the insertion are checked to account for differences in insertion position due to short read aligner, and usearch clustering
 	if (not reference == old_reference) and (insertions):
 		for i in insertions:
 			if reference in (insert_dict[old_reference][i] or insert_dict[old_reference][i+1] or insert_dict[old_reference][i-1]):
@@ -595,7 +595,6 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 				countsTable_total.at[cluster, 'Single_isodecoder'] = "False"
 			else:
 				countsTable_total.at[cluster, 'Single_isodecoder'] = "True"
-		countsTable_total.drop_duplicates(inplace = True)
 		countsTable_total.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t", index = True, na_rep = "0")
 
 		# map canon_pos for each isodecoder ungapped pos to newMods
@@ -604,8 +603,8 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		tRNA_ungap2canon_table = tRNA_ungap2canon_table.melt(var_name='pos', value_name='canon_pos', id_vars='index')
 		tRNA_ungap2canon_table.columns = ['isodecoder', 'pos', 'canon_pos']
 		tRNA_ungap2canon_table['pos'] = tRNA_ungap2canon_table['pos'].astype(int)
-		newMods_total = pd.merge(newMods_total, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
 		newMods_total.loc[~newMods_total['isodecoder'].str.contains("chr"), 'isodecoder'] = newMods_total['isodecoder'].str.split("-").str[:-1].str.join("-")
+		newMods_total = pd.merge(newMods_total, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
 		newMods_total = newMods_total[~newMods_total.isodecoder.isin(filtered)]
 		# make pivot table from mods and add A, C, G, T misinc. proportions for new mods
 		pivot = modTable_total.pivot_table(index = ['isodecoder', 'bam', 'canon_pos'], columns = 'type', values = 'proportion')

@@ -22,11 +22,6 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 		\n| Characterizing cluster mismatches for read splitting by unique tRNA sequence |\
 		\n+------------------------------------------------------------------------------+")
 
-	# read in counts from featureCounts
-	#counts = pd.read_csv(out_dir + "counts.txt", header = 0, sep = "\t", comment='#', quotechar="'")
-	#counts.index = counts['Geneid']
-	#counts = counts.drop(columns=['Geneid', 'Chr','Start','End','Strand','Length'])
-
 	isodecoder_sizes = defaultdict(int)
 	unique_isodecoderMMs = defaultdict(dd)
 

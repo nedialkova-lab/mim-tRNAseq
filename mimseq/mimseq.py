@@ -19,8 +19,8 @@ from .tRNAmap import mainAlign
 from .getCoverage import getCoverage, plotCoverage
 from .mmQuant import generateModsTable
 from .CCAanalysis import plotDinuc
-from .ssAlign import structureParser, modContext
-from .splitClusters import splitIsodecoder, getIsodecoderSizes
+from .ssAlign import structureParser, modContext 
+from .splitClusters import splitIsodecoder, getIsodecoderSizes, writeIsodecoderTranscripts
 import sys, os, subprocess, logging, datetime, copy
 import argparse
 from pyfiglet import figlet_format
@@ -93,6 +93,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 		unique_isodecoderMMs = defaultdict(dict)
 		splitBool = list()
 		isodecoder_sizes = {iso:len(members) for iso, members in cluster_dict.items()}
+		writeIsodecoderTranscripts(out, name, cluster_dict, tRNA_dict)
 	elif not cluster:
 		unique_isodecoderMMs = defaultdict(dict)
 		splitBool = list()
@@ -224,7 +225,7 @@ def main():
 		help = 'Enable detection of unannotated (potential) modifications from misincorporation data. These are defined as having a total misincorporation rate\
 		higher than the threshold set with --misinc_thresh. These modifications are then appended to already known ones, and read alignment is reperformed.\
 		Very useful for poorly annotated species in Modomics. Due to realignment and misincorporation parsing, enabling this option slows the analysis down considerably.')
-	remapping.add_argument('--misinc-thresh', metavar = 'threshold for unannotated mods', dest = 'misinc_thresh', type = restrictedFloat, nargs = '?', default = 0.05,\
+	remapping.add_argument('--misinc-thresh', metavar = 'threshold for unannotated mods', dest = 'misinc_thresh', type = restrictedFloat, nargs = '?', default = 0.1,\
 		required = False, help = 'Threshold of total misincorporation rate at a position in a cluster used to call unannotated modifications. Value between 0 and 1, default is 0.1  (10%% misincorporation).')
 
 	parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version.__version__), help = 'Show version number and exit')

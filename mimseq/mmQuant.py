@@ -305,7 +305,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		readthroughTable_melt.dropna(inplace = True)
 		names, dfs = splitTable(readthroughTable_melt)
 		pool = Pool(threads)
-		func = partial(addNA, tRNA_struct, cluster_dict, "stops") #"readthrough")
+		func = partial(addNA, tRNA_struct, cluster_dict, "stops")
 		readthroughTable_melt = pd.concat(pool.starmap(func, zip(names, dfs)))
 		pool.close()
 		pool.join()
@@ -427,26 +427,6 @@ def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 			table = table.append(new)
 
 	return(table)
-
-# def addNAOLD(tRNA_struct, cluster_dict, data_type_dict, table):
-# # fill mods and stops tables with 'NA' for gapped alignment
-
-# 	grouped = table.groupby('isodecoder')
-# 	for name, group in grouped:
-# 		#cluster = [parent for parent, child in cluster_dict.items() if name in child][0]
-# 		for pos in tRNA_struct.loc[name].index:
-# 			if data_type == 'mods':
-# 				new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':group.condition.iloc[1], 'bam':group.bam.iloc[1], 'cov':'NA'})
-# 			elif data_type == 'stops':
-# 				new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':group.condition.iloc[0], 'bam':group.bam.iloc[0]}, index=[0])
-# 			if tRNA_struct.loc[name].iloc[pos-1].struct == 'gap':
-# 				if not pos == max(tRNA_struct.loc[name].index):
-# 					table.loc[(table.isodecoder == name) & (table.pos >= pos), 'pos'] += 1
-# 				table = table.append(new)
-# 			if not any(table.loc[table.isodecoder == name].pos == pos):
-# 				table = table.append(new)
-
-# 	return(table)
 
 def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_dict, insert_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering):
 # Wrapper function to call countMods_mp with multiprocessing

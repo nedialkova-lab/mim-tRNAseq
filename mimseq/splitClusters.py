@@ -137,6 +137,15 @@ def splitIsodecoder(tRNA_dict, cluster_dict, mismatch_dict, insert_dict, cluster
 
 	return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
 
+def writeIsodecoderTranscripts(out_dir, experiment_name, cluster_dict, tRNA_dict):
+	# write isodecoderTransripts.fa when cluster_id == 1 to avoid issues with shortened isodecoder names and output files
+
+	with open(out_dir + experiment_name + '_isodecoderTranscripts.fa', 'w') as tempSeqs:
+		for seq in cluster_dict.keys():
+			shortname = "-".join(seq.split("-")[:-1]) if not "chr" in seq else seq
+			tempSeqs.write(">" + shortname + "\n" + tRNA_dict[seq]['sequence'] + "\n")
+	aligntRNA(tempSeqs.name, out_dir)
+
 def getIsodecoderSizes(out_dir, experiment_name, tRNAdict):
 	# get isodecoder sizes for tRNA sequences - useful for when clustering is disabled and above function is not applicable
 

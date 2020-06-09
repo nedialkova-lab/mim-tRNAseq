@@ -80,7 +80,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 			anticodon = seq_parts[4]
 			amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
 			mito_count[anticodon] += 1
-			new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-1-" + str(mito_count[anticodon])
+			new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
 			tRNAseq = str(temp_dict[seq].seq) + "CCA"
 			tRNA_dict[new_seq]['sequence'] = tRNAseq
 			tRNA_dict[new_seq]['type'] = 'mitochondrial'

@@ -154,8 +154,8 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 
 				# Return list of modified nucl indices and add to modomics_dict
 				# add unmodified seq to modomics_dict by lookup to modifications
-				nonMod = ['A','C','G','T','-','I']
-				modPos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x not in nonMod]
+				Mods = ['"', 'K', 'R', "'", 'O', 'Y', 'W', '⊆', 'X', '*', '[']
+				modPos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x in Mods]
 				inosinePos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x == 'I']
 				modomics_dict[curr_id]['modified'] = modPos
 				modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
@@ -254,7 +254,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			tophit = ''
 			for alignment in blast_record.alignments:
 				for hsp in alignment.hsps:
-					if (hsp.bits > maxbit) and (hsp.align_length / alignment.length >= 0.9):
+					if (hsp.bits > maxbit) and (hsp.align_length / alignment.length == 1) and (hsp.identities / alignment.length == 1):
 						maxbit = hsp.bits
 						tophit = alignment.title.split(' ')[0]
 			
@@ -370,7 +370,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				for sequence in seq_set:
 					anticodon_seqs.write(">" + sequence + "\n" + seq_set[sequence]['sequence'] + "\n")
 			# run usearch on each anticodon sequence fatsa to cluster
-			cluster_cmd = ["usearch", "-cluster_fast", temp_dir + anticodon + "_allseqs.fa", "-id", str(cluster_id), "-sizeout" ,"-centroids", temp_dir + anticodon + "_centroids.fa", "-uc", temp_dir + anticodon + "_clusters.uc"]			#cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null"
+			cluster_cmd = ["usearch", "-cluster_fast", temp_dir + anticodon + "_allseqs.fa", "-id", str(cluster_id), "-sizeout" ,"-centroids", temp_dir + anticodon + "_centroids.fa", "-uc", temp_dir + anticodon + "_clusters.uc"]
+			#cluster_cmd = ["usearch", "-cluster_smallmem", temp_dir + anticodon + "_allseqs.fa", "-id", str(cluster_id), "--sortedby", "other" ,"-sizeout" ,"-centroids", temp_dir + anticodon + "_centroids.fa", "-uc", temp_dir + anticodon + "_clusters.uc"]			#cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null"
 			subprocess.check_call(cluster_cmd, stdout = subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 			# sort clusters by size (i.e. number of members in cluster)
 			sort_cmd = ["usearch", "-sortbysize", temp_dir + anticodon + "_centroids.fa", "-fastaout", temp_dir + anticodon + "_centroids_sort.fa"]
@@ -589,7 +590,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		for item in snp_records:
 			snp_file.write('{}\n'.format(item))
 	
-	shutil.rmtree(temp_dir)
+	#shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)

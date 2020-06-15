@@ -14,7 +14,7 @@ suppressMessages(library(grid))
 suppressMessages(library(dplyr))
 
 ## Volcano plot with "significant" genes labeled
-volcanoplot = function (res, sigthresh=0.01, main="Volcano Plot", legendpos="bottomright", labelsig=FALSE, textcx=1, ...) {
+volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="bottomright", labelsig=FALSE, textcx=1, ...) {
   with(res, plot(log2FoldChange, -log10(pvalue), pch=19, main=main, xlab="log2 Fold Change", ylab="-log10(p-value)", ...))
   with(subset(res, padj<sigthresh ), points(log2FoldChange, -log10(pvalue), pch=19, col="#d95f02", ...))
   if (labelsig) {
@@ -328,9 +328,9 @@ if (nrow(coldata) == 1) {
         
         # Count plots
         # add significance to baseMean matrices for current contrast
-        baseMeanPerLvl_anticodon$sig = res_anticodon[rownames(baseMeanPerLvl_anticodon),'padj'] < 0.01
+        baseMeanPerLvl_anticodon$sig = res_anticodon[rownames(baseMeanPerLvl_anticodon),'padj'] < 0.05
         baseMeanPerLvl_anticodon$sig = !is.na(baseMeanPerLvl_anticodon$sig) & baseMeanPerLvl_anticodon$sig # deal with NAs turning them into FALSE
-        baseMeanPerLvl_isodecoder$sig = res_isodecoder[rownames(baseMeanPerLvl_isodecoder),'padj'] < 0.01
+        baseMeanPerLvl_isodecoder$sig = res_isodecoder[rownames(baseMeanPerLvl_isodecoder),'padj'] < 0.05
         baseMeanPerLvl_isodecoder$sig = !is.na(baseMeanPerLvl_isodecoder$sig) & baseMeanPerLvl_isodecoder$sig # deal with NAs turning them into FALSE
         
         # add direction of DE to baseMean

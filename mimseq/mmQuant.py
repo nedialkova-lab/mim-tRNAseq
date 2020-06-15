@@ -74,7 +74,7 @@ def unknownMods(inputs, out_dir, knownTable, cluster_dict, modTable, misinc_thre
 					if (tRNA_dict[isodecoder]['sequence'][pos-1] == 'A' and list(modTable[isodecoder][pos].keys())[list(modTable[isodecoder][pos].values()).index(max(modTable[isodecoder][pos].values()))] == 'G' and pos-1 == min(anticodon)):
 						new_inosines_cluster[cluster].append(pos-1)
 						new_inosines_isodecoder[isodecoder].append(pos-1)
-				elif (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) <= 0.95 and not pos-1 == min(anticodon) and not tRNA_dict[isodecoder]['sequence'][pos-1] == 'A'):
+				elif (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) <= 0.95 and not (pos-1 == min(anticodon) and tRNA_dict[isodecoder]['sequence'][pos-1] == 'A')):
 					new_mods_cluster[cluster].append(pos-1) #modTable had 1 based values - convert back to 0 based for mod_lists
 					new_mods_isodecoder[isodecoder].append(pos-1)
 

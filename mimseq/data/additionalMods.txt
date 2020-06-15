@@ -13,6 +13,7 @@ Mus musculus	Thr-AGT	I34
 Mus musculus	Ser-AGA	I34
 Mus musculus	Leu-AAG	I34
 Saccharomyces cerevisiae	Gln-TTG	mcm5s2U34
+Schizosaccharomyces pombe	Gln-TTG	mcm5s2U34
 Schizosaccharomyces pombe	Pro-AGG	I34
 Schizosaccharomyces pombe	Thr-AGT	I34
 Schizosaccharomyces pombe	Arg-ACG	I34

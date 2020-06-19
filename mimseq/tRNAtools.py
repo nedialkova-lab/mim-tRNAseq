@@ -173,7 +173,7 @@ def getModomics():
 		with urllib.request.urlopen('http://modomics.genesilico.pl/sequences/list/?type_field=tRNA&subtype=all&species=all&display_ascii=Display+as+ASCII&nomenclature=abbrev') as response:
 			modomics = response.read().decode().splitlines()
 	except Exception as e:
-		logging.error("Error in {}".format("fetching modomics. Using local files..."))
+		#logging.error("Error in {}".format("fetching modomics. Using local files..."))
 		modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
 		modomics = open(modomics_path, "r+", encoding = "utf-8")
 		

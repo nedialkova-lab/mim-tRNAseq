@@ -4,16 +4,49 @@ Quick-start guide
 Installation
 ^^^^^^^^^^^^
 
-To use mim-tRNAseq, please clone this git repository (:code:`git clone https://github.com/nedialkova-lab/mim-tRNAseq`, or download zip and extract) and run the mim-seq.py script in the `scripts/` folder.
+To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment:
 ::
+	conda create -n mimseq
+	conda actiavte mimseq
+	conda install -c drewjbeh mimseq
 
-	./scripts/mim-seq.py
+Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
+To install GSNAP_, please do the following within the conda environment created above:
+::
+	wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2019-02-26.tar.gz
+	tar -zxvf gmap-gsnap-2020-06-01.tar.gz
+	cd gmap-2020-06-01
+	./configure
+	make
+	make install
 
-This will display the package usage and help page. Note the REQUIRED arguments and inputs. 
-The package also comes with a `data/` folder which has the required tRNAscan-SE input files (and mitochondrial tRNA inputs where available) for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not effect the results.
+To install ggpol, please do the following:
+::
+	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org")'
 
-**Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda.
-This will significantly improve the installation and usage of mim-tRNAseq.
+Finally, usearch needs to be acquired and installed. Please do the following:
+::
+	wget https://drive5.com/downloads/usearch10.0.240_i86linux32.gz
+	gunzip usearch10.0.240_i86linux32.gz
+	mv usearch10.0.240_i86linux32 usearch
+	cp usearch /usr/local/bin
+
+.. _GSNAP: http://research-pub.gene.com/gmap/
+
+Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (see below) will also need to be installed.
+::
+	pip install mimseq
+
+The source code is also available on GitHub_
+
+.. _GitHub: https://github.com/nedialkova-lab/mim-tRNAseq
+
+Once installed, mim-tRNAseq should be executable and help displayed, by running
+::
+	mimseq --help
+
+The package also comes with a `data/` folder which has the required tRNAscan-SE input files (and mitochondrial tRNA inputs where available) for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not effect the results. Therefore default inputs when using the `--species` are the refereces including E. coli Lys-TTT sequence.
+
 
 Dependencies
 ^^^^^^^^^^^^
@@ -33,7 +66,7 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 +-----------------+-------------------+-----------+
 | bedtools        | 2.26.0            | bedtools_ |
 +-----------------+-------------------+-----------+
-| R               | 3.5.2             | R_        |
+| R               | 3.6.3             | R_        |
 +-----------------+-------------------+-----------+
 | INFERNAL        | 1.1.2 (July 2016) | INFERNAL_ |
 +-----------------+-------------------+-----------+
@@ -53,27 +86,31 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 +----------------+------------+----------------------+
 | Package        | Version >= | Link                 |
 +================+============+======================+
-| DESeq2         | 1.22.2     | DESeq2_              |
+| DESeq2         | 1.26.0     | DESeq2_              |
 +----------------+------------+----------------------+
 | RColorBrewer   | 1.1.2      | RColorBrewer_        |
 +----------------+------------+----------------------+
 | pheatmap       | 1.0.12     | pheatmap_            |
 +----------------+------------+----------------------+
-| calibrate      | 1.7.2      | calibrate_           |
+| calibrate      | 1.7.5      | calibrate_           |
 +----------------+------------+----------------------+
 | gridExtra      | 2.3        | gridExtra_           |
 +----------------+------------+----------------------+
-| plyr           | 1.8.4      | plyr_                |
+| plyr           | 1.8.6      | plyr_                |
 +----------------+------------+----------------------+
 | reshape2       | 1.4.3      | reshape2_            |
 +----------------+------------+----------------------+
-| circlize       | 0.4.7      | circlize_            |
+| circlize       | 0.4.8      | circlize_            |
 +----------------+------------+----------------------+
-| tidyverse      | 1.2.1      | tidyverse_           |
+| tidyverse      | 1.3.0      | tidyverse_           |
 +----------------+------------+----------------------+
-| ggpol          | 0.0.5      | \* ggpol_            |
+| ggpol          | =0.0.5     | \* ggpol_            |
 +----------------+------------+----------------------+
-| ComplexHeatmap | 1.99.5     | \*\* ComplexHeatmap_ |
+| ComplexHeatmap | 2.2.0      | \*\* ComplexHeatmap_ |
++----------------+------------+----------------------+
+| devtools       | 2.2.2      | devtools_            |
++----------------+------------+----------------------+
+| ggplot2        | =3.2.1     | ggplot2_             |
 +----------------+------------+----------------------+
 
 .. _DESeq2: https://bioconductor.org/packages/release/bioc/html/DESeq2.html
@@ -85,24 +122,9 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 .. _reshape2: https://cran.r-project.org/web/packages/reshape2/index.html
 .. _circlize: https://cran.r-project.org/web/packages/circlize/index.html
 .. _tidyverse: https://www.tidyverse.org/packages/
-.. _ggpol: https://github.com/erocoar/ggpol
-.. _ComplexHeatmap: https://github.com/jokergoo/ComplexHeatmap
-
-\* To install ggpol, please get development version from github:
-::
-
-	if (!require(devtools)) {
-	install.packages('devtools')
-	}
-	devtools::install_github('erocoar/ggpol')
-
-\*\* To install ComplexHeatmap, please get development version from github:
-::
-
-	if (!require(devtools)) {
-	install.packages('devtools')
-	}
-	devtools::install_github('jokergoo/ComplexHeatmap')	
+.. _ggpol: https://cran.r-project.org/web/packages/ggpol/index.html
+.. _ComplexHeatmap: https://bioconductor.org/packages/release/bioc/html/ComplexHeatmap.html
+.. _devtools: https://cran.r-project.org/web/packages/devtools/index.html
 
 **Required Python packages:**
 
@@ -119,34 +141,37 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 +------------+------------+-------------+
 | numpy      | 1.14.2     | NumPy_      |
 +------------+------------+-------------+
+| seaborn    | 0.10.1     | seaborn_    |
++------------+------------+-------------+
+| pybedtools | 0.8.1      | pybedtools_ |
++------------+------------+-------------+
 
 .. _Biopython: https://biopython.org/
 .. _pyfiglet: https://pypi.org/project/pyfiglet/0.7/
 .. _pysam: https://pysam.readthedocs.io/en/latest/api.html
 .. _pandas: https://pandas.pydata.org/
 .. _NumPy: https://numpy.org/
+.. _seaborn: https://seaborn.pydata.org/
+.. _pybedtools: https://daler.github.io/pybedtools/
 
 
 Usage
 ^^^^^
 
-An example command to run mim-tRNAseq may look as follows. This will run an analysis between iPSC and HEK293T cells on an example dataset included in the package:
+An example command to run mim-tRNAseq may look as follows. This will run an analysis between HEK293T and K562 cells on an example dataset included in the package:
 ::
 
-	./scripts/mim-seq.py -t data/hg19_eColitK/hg19_eColitK.fa -o data/hg19_eColitK/hg19_eschColi-tRNAs.out 
-	-m data/hg19_eColitK/hg19-mitotRNAs.fa --snp-tolerance --cluster --cluster-id 0.97 --threads 15 
-	--min-cov 2000 --max-mismatches 0.1 --control-condition HEK293T --cca-analysis -n hg19_mix 
-	--out-dir hg19_HEKvsK562 --max-multi 4 --remap --remap-mismatches 0.05 sampleData_HEKvsK562.txt
+	mimseq --species Hsap --cluster --cluster-id 0.95 --snp-tolerance --cca-analysis --threads 15 --min-cov 2000 --max-mismatches 0.1 --control-condition HEK293T -n hg19_test --out-dir hg19_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.075 sampleData_HEKvsK562.txt
 
-The run should take around 15 minutes on a server using 15 processors (--threads 15).
+The run should take around 15 minutes on a server using 15 processors (`--threads 15`: please adjust accordingly).
 
 
 Input files
 ^^^^^^^^^^^
 
-Note: mim-tRNAseq does not require an input from Modomics_ for modification indexing, but automatically connexts to the Modomics servers and retrieves this information. Therefore an **internet connection is required** to run mim-tRNAseq.
+Note: mim-tRNAseq does not require an input from Modomics_ for modification indexing, but automatically connexts to the Modomics servers and retrieves this information. Therefore an **internet connection is required** to run mim-tRNAseq. However, there is an offline copy of modomics so that mim-tRNAseq can still run without connection, or if the modomics database is offline.
 
-mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the `data/` folder. If not here, you may be able to obtain the required files from the gtRNAdb_. Failing this, the input files can be generated using tRNAscanSE_ on a genome reference file. Input files include:
+mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the `data/` folder and can be specified easily with the `--species` parameter. If not here, you may be able to obtain the required files from the gtRNAdb_. Failing this, the input files can be generated using tRNAscanSE_ on a genome reference file. Input files include:
 
 * Genomic tRNA sequences: DNA sequences of tRNA loci in genome of interest in fasta format, including introns but excluding trailer and leader sequences.
 * tRNA ".out" file: contains important info about tRNA introns.

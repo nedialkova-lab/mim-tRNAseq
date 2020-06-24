@@ -8,9 +8,9 @@ mim-tRNAseq
 
 :Author: Drew Behrens
 
-:Version: 0.1
+:Version: 0.2.5.1
 
-Modification-induced misincorporation based sequencing of tRNAs using high-throughput RNA sequencing datasets.
+Modification-induced misincorporation tRNA sequencing.
 
 This package is a semi-automated analysis pipeline for the quantification and analysis of tRNA expression. Given trimmed sequencing reads in fastq format, this pipeline will:
 

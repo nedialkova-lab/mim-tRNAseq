@@ -14,8 +14,8 @@ Additional packageges are required that cannot be installed by `conda` before mi
 To install GSNAP_, please do the following within the conda environment created above:
 ::
 	wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2019-02-26.tar.gz
-	tar -zxvf gmap-gsnap-2020-06-01.tar.gz
-	cd gmap-2020-06-01
+	tar -zxvf gmap-gsnap-2019-02-26.tar.gz
+	cd gmap-2019-02-26
 	./configure
 	make
 	make install
@@ -163,7 +163,7 @@ An example command to run mim-tRNAseq may look as follows. This will run an anal
 
 	mimseq --species Hsap --cluster --cluster-id 0.95 --snp-tolerance --cca-analysis --threads 15 --min-cov 2000 --max-mismatches 0.1 --control-condition HEK293T -n hg19_test --out-dir hg19_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.075 sampleData_HEKvsK562.txt
 
-The run should take around 15 minutes on a server using 15 processors (`--threads 15`: please adjust accordingly).
+The run should take around 15 minutes on a server using 15 processors (`--threads 15`: please adjust according to your server capabilities).
 
 
 Input files

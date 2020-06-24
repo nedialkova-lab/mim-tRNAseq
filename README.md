@@ -7,7 +7,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ### Modification-induced misincorporation based sequencing of tRNAs using high-throughput RNA sequencing datasets.
 
-This package is a semi-automated analysis pipeline for the quantification and analysis of tRNA expression. Given trimmed sequencing reads in fastq format, this pipeline will:
+This package is an automated analysis pipeline for the quantification and analysis of tRNA expression and modification. Given trimmed sequencing reads in fastq format, this pipeline will:
 * Cluster tRNAs, index modifications, and perform SNP-tolerant read alignment with [GSNAP](http://research-pub.gene.com/gmap/)
 * Calculate coverage information and plots (useful for QC)
 * Quantify expression
@@ -28,22 +28,47 @@ Detailed methodology is shown in the image below, and described in Behrens et al
 
 Please see the full documentation for explanantions of dependencies, inputs formatting, and outputs.
 
-To use mim-tRNAseq, please clone this git repository (`https://github.com/nedialkova-lab/mim-tRNAseq`, or download zip and extract) and run the mim-seq.py script in the scripts/ folder.
+To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment:
 ```bash
-./scripts/mim-seq.py
+	conda create -n mimseq
+	conda actiavte mimseq
+	conda install -c drewjbeh mimseq
+```
+Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
+To install GSNAP, please do the following within the conda environment created above:
+```bash
+	wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2019-02-26.tar.gz
+	tar -zxvf gmap-gsnap-2020-06-01.tar.gz
+	cd gmap-2020-06-01
+	./configure
+	make
+	make install
+```
+To install ggpol, please do the following:
+```bash
+	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org")'
+```
+Finally, usearch needs to be acquired and installed. Please do the following:
+```bash
+	wget https://drive5.com/downloads/usearch10.0.240_i86linux32.gz
+	gunzip usearch10.0.240_i86linux32.gz
+	mv usearch10.0.240_i86linux32 usearch
+	cp usearch /usr/local/bin
 ```
 
-**Note:** plans for future versions include interfacing R code from within Python with rpy2 and packaging the Python package on PyPI and conda.
-This will significantly improve the installation and usage of mim-tRNAseq.
-
-An example command to run mim-tRNAseq may look as follows. This will run an analysis between iPSC and HEK293T cells on an example dataset included in the package:
+Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (see below) will also need to be installed.
 ```bash
-./scripts/mim-seq.py -t data/hg19_eColitK/hg19_eColitK.fa -o data/hg19_eColitK/hg19_eschColi-tRNAs.out 
--m data/hg19_eColitK/hg19-mitotRNAs.fa --snp-tolerance --cluster --cluster-id 0.97 --threads 15 
---min-cov 2000 --max-mismatches 0.1 --control-condition HEK293T --cca-analysis -n hg19_mix 
---out-dir hg19_HEKvsK562 --max-multi 4 --remap --remap-mismatches 0.05 sampleData_HEKvsK562.txt
+	pip install mimseq
 ```
 
+Once installed, mim-tRNAseq should be executable and help displayed, by running
+```bash
+	mimseq --help
+```
+An example command to run mim-tRNAseq may look as follows. This will run an analysis between HEK293T and K562 cells on an example dataset included in the package:
+```bash
+	mimseq --species Hsap --cluster --cluster-id 0.95 --snp-tolerance --cca-analysis --threads 15 --min-cov 2000 --max-mismatches 0.1 --control-condition HEK293T -n hg19_test --out-dir hg19_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.075 sampleData_HEKvsK562.txt
+```
 The run should take around 15 minutes on a server using 15 processors (--threads 15).
 
 ## Contact

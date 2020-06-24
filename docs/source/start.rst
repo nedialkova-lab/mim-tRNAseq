@@ -104,9 +104,9 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 +----------------+------------+----------------------+
 | tidyverse      | 1.3.0      | tidyverse_           |
 +----------------+------------+----------------------+
-| ggpol          | =0.0.5     | \* ggpol_            |
+| ggpol          | =0.0.5     | ggpol_               |
 +----------------+------------+----------------------+
-| ComplexHeatmap | 2.2.0      | \*\* ComplexHeatmap_ |
+| ComplexHeatmap | 2.2.0      | ComplexHeatmap_      |
 +----------------+------------+----------------------+
 | devtools       | 2.2.2      | devtools_            |
 +----------------+------------+----------------------+

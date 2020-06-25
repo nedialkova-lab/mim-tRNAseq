@@ -35,20 +35,11 @@ To use mim-tRNAseq, it is recommended to install the package using `conda`, pref
 	conda install -c drewjbeh mimseq
 ```
 Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
-To install GSNAP, please do the following within the conda environment created above:
-```bash
-	wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2019-02-26.tar.gz
-	tar -zxvf gmap-gsnap-2019-02-26.tar.gz
-	cd gmap-2019-02-26
-	./configure
-	make
-	make install
-```
 To install ggpol, please do the following:
 ```bash
 	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org")'
 ```
-Finally, usearch needs to be acquired and installed. Please do the following:
+usearch needs to be acquired and installed. Please do the following:
 ```bash
 	wget https://drive5.com/downloads/usearch10.0.240_i86linux32.gz
 	gunzip usearch10.0.240_i86linux32.gz

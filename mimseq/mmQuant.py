@@ -250,6 +250,14 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		modTable_prop_melt['bam'] = inputs
 		modTable_prop_melt.pos = pd.to_numeric(modTable_prop_melt.pos)
 
+		# split and parallelize addNA
+		names, dfs = splitTable(modTable_prop_melt)
+		pool = Pool(threads)
+		func = partial(addNA, tRNA_struct, cluster_dict, "mods")
+		modTable_prop_melt = pd.concat(pool.starmap(func, zip(names, dfs)))
+		pool.close()
+		pool.join()
+
 		# add coverage per nucelotide from cov
 		cov_table = pd.DataFrame.from_dict(cov)
 		cov_table['pos'] = cov_table.index
@@ -259,14 +267,6 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		cov_table_melt['bam'] = inputs
 		cov_table_melt = cov_table_melt[['isodecoder', 'pos', 'bam', 'cov']]
 		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_melt, on = ['isodecoder', 'pos', 'bam'], how = 'left')
-
-		# split and parallelize addNA
-		names, dfs = splitTable(modTable_prop_melt)
-		pool = Pool(threads)
-		func = partial(addNA, tRNA_struct, cluster_dict, "mods")
-		modTable_prop_melt = pd.concat(pool.starmap(func, zip(names, dfs)))
-		pool.close()
-		pool.join()
 		#modTable_prop_melt = addNA(modTable_prop_melt, tRNA_struct, cluster_dict, "mods")
 		modTable_prop_melt = modTable_prop_melt[['isodecoder','pos', 'type','proportion','condition', 'bam', 'cov']]
 
@@ -415,7 +415,8 @@ def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 	shortname = "-".join(name.split("-")[:-1]) if not "chr" in name else name
 	for pos in tRNA_struct.loc[shortname].index:
 		if data_type == 'mods':
-			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':table.condition.iloc[1], 'bam':table.bam.iloc[1], 'cov':'NA'})
+			#new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':table.condition.iloc[1], 'bam':table.bam.iloc[1], 'cov':'NA'})
+			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':table.condition.iloc[1], 'bam':table.bam.iloc[1]})
 		elif data_type == 'stops':
 			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':table.condition.iloc[0], 'bam':table.bam.iloc[0]}, index=[0])
 		if tRNA_struct.loc[shortname].iloc[pos-1].struct == 'gap':

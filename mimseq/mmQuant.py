@@ -258,7 +258,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		pool.close()
 		pool.join()
 
-		# add coverage per nucelotide from cov
+		# format cov table
 		cov_table = pd.DataFrame.from_dict(cov)
 		cov_table['pos'] = cov_table.index
 		cov_table['pos'] = cov_table['pos'].astype(int)
@@ -266,7 +266,18 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, cluster_dict,
 		cov_table_melt.dropna(inplace = True)
 		cov_table_melt['bam'] = inputs
 		cov_table_melt = cov_table_melt[['isodecoder', 'pos', 'bam', 'cov']]
-		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_melt, on = ['isodecoder', 'pos', 'bam'], how = 'left')
+
+		# copy and add NAs for correct merging with modTable
+		cov_table_na = cov_table_melt.copy()
+		names, dfs = splitTable(cov_table_na)
+		pool = Pool(threads)
+		func = partial(addNA, tRNA_struct, cluster_dict, "cov")
+		cov_table_na = pd.concat(pool.starmap(func, zip(names, dfs)))
+		pool.close()
+		pool.join()
+
+		# add coverage per nucelotide from cov
+		modTable_prop_melt = pd.merge(modTable_prop_melt, cov_table_na, on = ['isodecoder', 'pos', 'bam'], how = 'left')
 		#modTable_prop_melt = addNA(modTable_prop_melt, tRNA_struct, cluster_dict, "mods")
 		modTable_prop_melt = modTable_prop_melt[['isodecoder','pos', 'type','proportion','condition', 'bam', 'cov']]
 
@@ -419,6 +430,8 @@ def addNA(tRNA_struct, cluster_dict, data_type, name, table):
 			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'type':pd.Categorical(['A','C','G','T']), 'proportion':'NA', 'condition':table.condition.iloc[1], 'bam':table.bam.iloc[1]})
 		elif data_type == 'stops':
 			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'proportion':'NA', 'condition':table.condition.iloc[0], 'bam':table.bam.iloc[0]}, index=[0])
+		elif data_type == 'cov':
+			new = pd.DataFrame({'isodecoder':name, 'pos':pos, 'bam':table.bam.iloc[0], 'cov':'NA'}, index=[0])
 		if tRNA_struct.loc[shortname].iloc[pos-1].struct == 'gap':
 			if not pos == max(tRNA_struct.loc[shortname].index):
 				table.loc[(table.isodecoder == name) & (table.pos >= pos), 'pos'] += 1

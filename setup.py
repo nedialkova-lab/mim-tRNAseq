@@ -37,7 +37,7 @@ setup(name='mimseq',
 	package_data={'mimseq': extra_files},
 #	data_files = [('fastq', ['mimseq_hek_1.fastq.gz','mimseq_hek_2.fastq.gz','mimseq_k562_1.fastq.gz','mimseq_k562_2.fastq.gz']),
 #				  ('sampledata', ['sampleData_HEKvsK562.txt'])],
-	entry_points={"console_scripts": ["mimseq = mimseq:mimseq.main"]},
+	entry_points={"console_scripts": ["mimseq = mimseq.mimseq:main"]},
 	include_package_data=True,
 	install_requires=[
 		"biopython",

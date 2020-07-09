@@ -1,0 +1,8 @@
+biopython
+pandas
+numpy
+pyfiglet
+pysam
+seaborn
+matplotlib
+pybedtools

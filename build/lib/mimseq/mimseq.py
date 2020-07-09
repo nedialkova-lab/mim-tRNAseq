@@ -26,8 +26,6 @@ import argparse
 from pyfiglet import figlet_format
 from collections import defaultdict
 
-log = logging.getLogger(__name__)
-
 def restrictedFloat(x):
 ## Method for restricting cluster_id argument to float between 0 and 1
 	try:
@@ -42,6 +40,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 	keep_temp, cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, pretrnas, sample_data):
 	
 # Main wrapper
+
 	# Integrity check for output folder argument...
 	try:
 		os.mkdir(out)
@@ -63,6 +62,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 			logging.FileHandler(out + "mim-tRNAseq_{}.log".format(now.strftime("%H-%M-%S"))),
 			logging.StreamHandler()
 		])
+	log = logging.getLogger(__name__)
 	log.info("mim-tRNAseq v{} run with command:".format(version.__version__))
 	log.info(" ".join(sys.argv))
 

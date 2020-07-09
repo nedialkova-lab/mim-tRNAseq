@@ -6,8 +6,7 @@
 
 suppressMessages(library(ggplot2))
 suppressMessages(library(dplyr))
-suppressMessages(source('facet_share.R'))
-#suppressMessages(library(ggpol))
+suppressMessages(library(ggpol))
 
 args = commandArgs(trailingOnly = TRUE)
 

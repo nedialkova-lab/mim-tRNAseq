@@ -102,7 +102,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
 		new_mods, new_Inosines, filtered_cov = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
-		Inosine_clusters = newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster)
+		Inosine_clusters, snp_tolerance = newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster, snp_tolerance)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
 		bams_list, coverageData = mainAlign(sample_data, name, genome_index_path, genome_index_name, \
@@ -162,8 +162,8 @@ def main():
 
 	inputs = parser.add_argument_group("Input files")
 	inputs.add_argument('-s','--species', metavar='species', required = not ('-t' in sys.argv), dest = 'species', help = \
-		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Mmus, Scer, Spom, Dmel, Ecol', \
-		choices = ['Hsap','Mmus','Scer','Spom','Dmel','Ecol'])
+		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Mmus, Scer, Spom, Dmel, Drer, Ecol', \
+		choices = ['Hsap','Mmus','Scer','Spom','Dmel', 'Drer', 'Ecol'])
 	inputs.add_argument('-t', '--trnas', metavar='genomic tRNAs', required = False, dest = 'trnas', help = \
 		'Genomic tRNA fasta file, e.g. from gtRNAdb or tRNAscan-SE. Already avalable in data folder for a few model organisms.')
 	inputs.add_argument('-o', '--trnaout', metavar = 'tRNA out file', required = (not '--species' or '-s' in sys.argv) or ('-t' in sys.argv), 
@@ -291,6 +291,10 @@ def main():
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6-eColitK/dm6_eColitK-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6-eColitK/dm6_eschColi-tRNAs.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/dm6-eColitK/dm6-mitotRNAs.fa"
+				if args.species == 'Drer':
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/danRer11-eColitK/danRer11_eColitK.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/danRer11-eColitK/danRer11_eschColi-tRNAs.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/danRer11-eColitK/danRer11-mitotRNAs.fa"
 				if args.species == 'Ecol':
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi-K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi-K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.out"

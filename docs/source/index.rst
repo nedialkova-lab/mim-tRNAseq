@@ -8,7 +8,7 @@ mim-tRNAseq
 
 :Author: Drew Behrens
 
-:Version: 0.2.5.1
+:Version: 0.2.5.4
 
 Modification-induced misincorporation tRNA sequencing.
 
@@ -18,8 +18,8 @@ This package is a semi-automated analysis pipeline for the quantification and an
 * Calculate coverage information and plots (useful for QC).
 * Quantify expression.
 * Calculate tRNA differential expression with DESeq2_.
-* Analyse functional tRNA pools and tRNA completeness via 3'-CCA analysis.
-* Comprehensive modifcation quantification and misincorporation signature analysis.
+* Analyze functional tRNA pools and tRNA completeness via 3'-CCA analysis.
+* Comprehensive modification quantification and misincorporation signature analysis.
 
 .. _GSNAP: http://research-pub.gene.com/gmap/
 .. _DESeq2: https://bioconductor.org/packages/release/bioc/html/DESeq2.html

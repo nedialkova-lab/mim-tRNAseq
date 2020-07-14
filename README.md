@@ -12,8 +12,8 @@ This package is an automated analysis pipeline for the quantification and analys
 * Calculate coverage information and plots (useful for QC)
 * Quantify expression
 * Calculate tRNA differential expression with [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html).
-* Analyse functional tRNA pools and tRNA completeness via 3'-CCA analysis
-* Comprehensive modifcation quantification and misincorporation signature analysis
+* Analyze functional tRNA pools and tRNA completeness via 3'-CCA analysis
+* Comprehensive modification quantification and misincorporation signature analysis
 
 ## Method strategy
 
@@ -26,7 +26,7 @@ Detailed methodology is shown in the image below, and described in Behrens et al
 
 [![Documentation Status](https://readthedocs.org/projects/mim-trnaseq/badge/?version=latest)](https://mim-trnaseq.readthedocs.io/en/latest/?badge=latest)
 
-Please see the full documentation for explanantions of dependencies, inputs formatting, and outputs.
+Please see the full documentation for explanations of dependencies, inputs formatting, and outputs.
 
 To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment:
 ```bash
@@ -37,7 +37,7 @@ To use mim-tRNAseq, it is recommended to install the package using `conda`, pref
 Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
 To install ggpol, please do the following:
 ```bash
-	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org")'
+	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org", upgrade = FALSE)'
 ```
 usearch needs to be acquired and installed. Please do the following:
 ```bash
@@ -46,8 +46,12 @@ usearch needs to be acquired and installed. Please do the following:
 	mv usearch10.0.240_i86linux32 usearch
 	cp usearch /usr/local/bin
 ```
+For this, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH:
+```bash
+export PATH=$PATH:full/path/to/usearch
+```
 
-Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (see below) will also need to be installed.
+Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (see documentation) will also need to be installed.
 ```bash
 	pip install mimseq
 ```

@@ -13,9 +13,9 @@ Max Planck Institute for Biochemistry, Germany
 Contribute
 ^^^^^^^^^^
 
-Please log issues on the github repo to help us make mim-tRNAseq better!
+Please log issues on the GitHub repo to help us make mim-tRNAseq better!
 
-https://github.com/drewjbeh/mim-tRNAseq/issues
+https://github.com/nedialkova-lab/mim-tRNAseq/issues
 
 Cite
 ^^^^

@@ -13,7 +13,7 @@ To use mim-tRNAseq, it is recommended to install the package using `conda`, pref
 Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
 To install ggpol, please do the following:
 ::
-	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org")'
+	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org", upgrade = FALSE)'
 
 usearch needs to be acquired and installed. Please do the following:
 ::
@@ -22,7 +22,9 @@ usearch needs to be acquired and installed. Please do the following:
 	mv usearch10.0.240_i86linux32 usearch
 	cp usearch /usr/local/bin
 
-.. _GSNAP: http://research-pub.gene.com/gmap/
+For this, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH:
+::
+	export PATH=$PATH:full/path/to/usearch
 
 Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (see below) will also need to be installed.
 ::
@@ -36,13 +38,13 @@ Once installed, mim-tRNAseq should be executable and help displayed, by running
 ::
 	mimseq --help
 
-The package also comes with a `data/` folder which has the required tRNAscan-SE input files (and mitochondrial tRNA inputs where available) for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not effect the results. Therefore default inputs when using the `--species` are the refereces including E. coli Lys-TTT sequence.
+The package also comes with a `data/` folder which has the required tRNAscan-SE input files (and mitochondrial tRNA inputs where available) for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not affect the results. Therefore, default inputs when using the `--species` are the references including E. coli Lys-TTT sequence.
 
 
 Dependencies
 ^^^^^^^^^^^^
 
-Please install all dependencies below before running mim-tRNAseq. In most cases, newer versions of the packages should be fine, but if you encounter any errors when running, first try to install the exact verisons of dependencies listed below.
+Please install all dependencies below before running mim-tRNAseq. In most cases, newer versions of the packages should be fine, but if you encounter any errors when running, first try to install the exact versions of dependencies listed below.
 
 **Unix command line dependencies:**
 
@@ -160,7 +162,7 @@ The run should take around 15 minutes on a server using 15 processors (`--thread
 Input files
 ^^^^^^^^^^^
 
-Note: mim-tRNAseq does not require an input from Modomics_ for modification indexing, but automatically connexts to the Modomics servers and retrieves this information. Therefore an **internet connection is required** to run mim-tRNAseq. However, there is an offline copy of modomics so that mim-tRNAseq can still run without connection, or if the modomics database is offline.
+Note: mim-tRNAseq does not require an input from Modomics_ for modification indexing, but automatically connects to the Modomics server and retrieves this information. Therefore an **internet connection is required** to run mim-tRNAseq. However, there is an offline copy of Modomics so that mim-tRNAseq can still run without connection, or if the Modomics database is offline.
 
 mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the `data/` folder and can be specified easily with the `--species` parameter. If not here, you may be able to obtain the required files from the gtRNAdb_. Failing this, the input files can be generated using tRNAscanSE_ on a genome reference file. Input files include:
 

@@ -95,33 +95,35 @@ for (i in unique(mods_agg$condition)) {
   if (!is.na(mito_trnas)){
     # mito mods
     sub_mods_agg = mods_agg[mods_agg$condition == i & (grepl("mito", mods_agg$isodecoder) | grepl("nmt", mods_agg$isodecoder)),]
-    sub_mods_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'x')], list(.(isodecoder), .(pos)), value.var = 'x', fun.aggregate = mean)
-    sub_mods_wide[is.na(sub_mods_wide)] = 0
-    rownames(sub_mods_wide) = sub_mods_wide$isodecoder
-    sub_mods_wide = sub_mods_wide[, -1]
-    sub_mods_mat = as.matrix(sub_mods_wide)
-    col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_mods_agg$x, by = list(pos = sub_mods_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
-    count_mods = sub_mods_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > misinc_thresh))
-    row_anno = rowAnnotation(Count = row_anno_barplot(count_mods$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
-    mito_mods_hm = Heatmap(sub_mods_mat, column_labels = cons_pos, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
     
-    # mito stops
-    sub_stops_agg = stops_agg[stops_agg$condition == i & (grepl("mito", stops_agg$isodecoder) | grepl("nmt", stops_agg$isodecoder)),]
-    sub_stops_wide = dcast(sub_stops_agg[,c('isodecoder','pos', 'x')], list(.(isodecoder), .(pos)), value.var = 'x', fun.aggregate = mean)
-    sub_stops_wide[is.na(sub_stops_wide)] = 0
-    rownames(sub_stops_wide) = sub_stops_wide$isodecoder
-    sub_stops_wide = sub_stops_wide[, -1]
-    sub_stops_mat = as.matrix(sub_stops_wide)
-    col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_stops_agg$x, by = list(pos = sub_stops_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
-    count_stops = sub_stops_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > misinc_thresh))
-    row_anno = rowAnnotation(Count = row_anno_barplot(count_stops$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
-    mito_stops_hm = Heatmap(sub_stops_mat, column_labels = cons_pos, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
+    if (nrow(sub_mods_agg != 0)) { 
+      sub_mods_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'x')], list(.(isodecoder), .(pos)), value.var = 'x', fun.aggregate = mean)
+      sub_mods_wide[is.na(sub_mods_wide)] = 0
+      rownames(sub_mods_wide) = sub_mods_wide$isodecoder
+      sub_mods_wide = sub_mods_wide[, -1]
+      sub_mods_mat = as.matrix(sub_mods_wide)
+      col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_mods_agg$x, by = list(pos = sub_mods_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
+      count_mods = sub_mods_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > misinc_thresh))
+      row_anno = rowAnnotation(Count = row_anno_barplot(count_mods$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
+      mito_mods_hm = Heatmap(sub_mods_mat, column_labels = cons_pos, row_title = "Misincorporations", column_title = as.character(i), column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "Misincorporation proportion", direction = "horizontal"))
     
-    # combined mito heatmap
-    heatmap_list = mito_stops_hm %v% mito_mods_hm
-    draw(heatmap_list, ht_gap = unit(10, "mm"), column_title = "Mitochondrial (and nuclear-encoded mito) clusters")
-    dev.off()
+      # mito stops
+      sub_stops_agg = stops_agg[stops_agg$condition == i & (grepl("mito", stops_agg$isodecoder) | grepl("nmt", stops_agg$isodecoder)),]
+      sub_stops_wide = dcast(sub_stops_agg[,c('isodecoder','pos', 'x')], list(.(isodecoder), .(pos)), value.var = 'x', fun.aggregate = mean)
+      sub_stops_wide[is.na(sub_stops_wide)] = 0
+      rownames(sub_stops_wide) = sub_stops_wide$isodecoder
+      sub_stops_wide = sub_stops_wide[, -1]
+      sub_stops_mat = as.matrix(sub_stops_wide)
+      col_anno = HeatmapAnnotation(Mean = anno_barplot(aggregate(sub_stops_agg$x, by = list(pos = sub_stops_agg$pos), FUN = mean)$x, height = unit(1.5, 'cm'),  gp = gpar(fill = '#C8553D')))
+      count_stops = sub_stops_agg %>% group_by(isodecoder) %>% summarise(count = sum(x > misinc_thresh))
+      row_anno = rowAnnotation(Count = row_anno_barplot(count_stops$count, width = unit(1, 'cm'),  gp = gpar(fill = '#C8553D')))
+      mito_stops_hm = Heatmap(sub_stops_mat, column_labels = cons_pos, row_title = "RT stops", cluster_columns = FALSE, cluster_rows = TRUE, col = col_fun, top_annotation = col_anno, right_annotation = row_anno, heatmap_legend_param = list(title = "RT stop proportion", direction = "horizontal"))
     
+      # combined mito heatmap
+      heatmap_list = mito_stops_hm %v% mito_mods_hm
+      draw(heatmap_list, ht_gap = unit(10, "mm"), column_title = "Mitochondrial (and nuclear-encoded mito) clusters")
+      dev.off()
+    }
   }
   
   else {
@@ -153,17 +155,19 @@ for (i in unique(mods_agg$condition)) {
   ggsave(paste(out, "mods/", paste(i, 'misincProps.pdf', sep = '_'), sep = ''), mods_scatter, height=10, width=14)
   
   if (!is.na(mito_trnas)){
-    mito_mods_scatter = ggplot(sub_mods_pos[grepl("mito", sub_mods_pos$isodecoder) | grepl("nmt", sub_mods_pos$isodecoder), ], aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
-      theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(breaks = c(0.0, 0.25, 0.50, 0.75, 1.0), colours = cols) +
-      geom_hline(yintercept = misinc_thresh, linetype = "dashed", alpha = 0.4) + 
-      theme(
-        axis.text.x=element_blank(),
-        axis.title.x = element_blank(),
-        axis.ticks.x=element_blank()
-      )
-    
-    ggsave(paste(out, "mods/", paste('mito', i, 'misincProps.pdf', sep = '_'), sep = ''), mito_mods_scatter, height=10, width=14)
-    
+    sub_mods_pos_mito = sub_mods_pos[grepl("mito", sub_mods_pos$isodecoder) | grepl("nmt", sub_mods_pos$isodecoder), ]
+
+    if (nrow(sub_mods_pos_mito) != 0) {
+      mito_mods_scatter = ggplot(, aes(x=as.character(canon_pos), y = Proportion, color = Proportion)) + geom_jitter(width = 0.1, size = 3) +
+        theme_bw() + facet_grid(identity~canon_pos, scales = "free_x", labeller = label_both) + scale_color_gradientn(breaks = c(0.0, 0.25, 0.50, 0.75, 1.0), colours = cols) +
+        geom_hline(yintercept = misinc_thresh, linetype = "dashed", alpha = 0.4) + 
+        theme(
+          axis.text.x=element_blank(),
+          axis.title.x = element_blank(),
+          axis.ticks.x=element_blank()
+        )
+      ggsave(paste(out, "mods/", paste('mito', i, 'misincProps.pdf', sep = '_'), sep = ''), mito_mods_scatter, height=10, width=14)
+    }
   }
   
   # Misinc signatures
@@ -227,47 +231,49 @@ for (i in unique(mods_agg$condition)) {
   
   if (!is.na(mito_trnas)){
     sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$isodecoder) | grepl("nmt", sub_mods_aggtype$isodecoder), ]
-    # renormalise by sum of misinc at each site for each isodecoder in each bam file - this makes sum all misinc types = 1
-    sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
-    #sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, downstream = sub_mods_aggtype_mito$downstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
-    #sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
-    sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))
-    mito_signature_plot_upstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
-      geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
-      geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4, outlier.shape = NA) +
-      facet_grid(upstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
-      theme_bw() +
-      labs(y = "Proportion") + 
-      theme(
-        axis.title.x = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()
-      ) +
-      scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
-      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
-    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
-    
-    ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_upstream, height=10, width=14)
-    
-    mito_signature_plot_downstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
-      geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
-      geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4, outlier.shape = NA) +
-      facet_grid(downstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
-      theme_bw() +
-      labs(y = "Proportion") + 
-      theme(
-        axis.title.x = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()
-      ) +
-      scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
-      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
-      guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
-    scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
-    
-    ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_downstream, height=10, width=14)
-    
+
+    if(nrow(sub_mods_aggtype_mito) != 0) {
+      # renormalise by sum of misinc at each site for each isodecoder in each bam file - this makes sum all misinc types = 1
+      sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
+      #sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, downstream = sub_mods_aggtype_mito$downstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
+      #sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
+      sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))
+      mito_signature_plot_upstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
+        geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
+        geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4, outlier.shape = NA) +
+        facet_grid(upstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
+        theme_bw() +
+        labs(y = "Proportion") + 
+        theme(
+          axis.title.x = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        ) +
+        scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
+        scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
+        guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
+      
+      ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_upstream, height=10, width=14)
+      
+      mito_signature_plot_downstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
+        geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
+        geom_boxplot(aes(color = type), lwd = 0.9, alpha = 0.4, outlier.shape = NA) +
+        facet_grid(downstream~canon_pos+identity , scales = "free_x", labeller = label_both) + 
+        theme_bw() +
+        labs(y = "Proportion") + 
+        theme(
+          axis.title.x = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        ) +
+        scale_color_manual(values = c("A"="#739FC2", "C"="#7DB0A9", "G"="#9F8FA9", "T"="#C1B098", dot_colors)) +
+        scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
+        guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
+      scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))
+      
+      ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_downstream, height=10, width=14)
+    }
   }
   
 }

@@ -96,7 +96,7 @@ for (i in unique(mods_agg$condition)) {
     # mito mods
     sub_mods_agg = mods_agg[mods_agg$condition == i & (grepl("mito", mods_agg$isodecoder) | grepl("nmt", mods_agg$isodecoder)),]
     
-    if (nrow(sub_mods_agg != 0)) { 
+    if (nrow(sub_mods_agg) != 0) { 
       sub_mods_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'x')], list(.(isodecoder), .(pos)), value.var = 'x', fun.aggregate = mean)
       sub_mods_wide[is.na(sub_mods_wide)] = 0
       rownames(sub_mods_wide) = sub_mods_wide$isodecoder

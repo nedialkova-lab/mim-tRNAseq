@@ -106,6 +106,8 @@ def getCoverage(sampleGroups, out_dir, min_cov, control_cond, filtered_cov):
 			ratio = float(data[data.bin == 8]['cov_norm']) / float(data[data.bin == 92]['cov_norm'])
 		except ZeroDivisionError:
 			ratio = float(data[data.bin == 92]['cov_norm'])
+		except TypeError:
+			ratio = float(data[data.bin.astype(float) == data.bin.astype(float).nlargest(2).iloc[1]]['cov_norm'])
 		cov_ratios[aa] = ratio
 	sorted_aa = sorted(cov_ratios, key = cov_ratios.get)
 	sorted_aa = "_".join(str(e) for e in sorted_aa)

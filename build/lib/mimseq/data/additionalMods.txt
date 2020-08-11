@@ -22,3 +22,11 @@ Schizosaccharomyces pombe	Ser-AGA	I34
 Schizosaccharomyces pombe	Ala-AGC	I34
 Schizosaccharomyces pombe	Ile-AAT	I34
 Schizosaccharomyces pombe	Val-AAC	I34
+Danio rerio	Ala-AGC	I34
+Danio rerio	Arg-ACG	I34
+Danio rerio	Ile-AAT	I34
+Danio rerio	Leu-AAG	I34
+Danio rerio	Pro-AGG	I34
+Danio rerio	Ser-AGA	I34
+Danio rerio	Thr-AGT	I34
+Danio rerio	Val-AAC	I34

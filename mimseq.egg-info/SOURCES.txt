@@ -7,7 +7,6 @@ mimseq/__init__.py
 mimseq/ccaPlots.R
 mimseq/coveragePlot.R
 mimseq/deseq.R
-mimseq/facet_share.R
 mimseq/getCoverage.py
 mimseq/mimseq.py
 mimseq/mmQuant.py
@@ -36,6 +35,10 @@ mimseq/data/ce11-tRNAs/ce11-tRNAs-detailed.out
 mimseq/data/ce11-tRNAs/ce11-tRNAs.bed
 mimseq/data/ce11-tRNAs/ce11-tRNAs.fa
 mimseq/data/ce11-tRNAs/ce11-tRNAs_name_map.txt
+mimseq/data/danRer11-eColitK/danRer11-mitotRNAs.fa
+mimseq/data/danRer11-eColitK/danRer11-tRNAs.bed
+mimseq/data/danRer11-eColitK/danRer11_eColitK.fa
+mimseq/data/danRer11-eColitK/danRer11_eschColi-tRNAs.out
 mimseq/data/dm6-eColitK/dm6-mitotRNAs.fa
 mimseq/data/dm6-eColitK/dm6-tRNAs.bed
 mimseq/data/dm6-eColitK/dm6_eColitK-tRNAs.fa

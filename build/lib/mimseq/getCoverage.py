@@ -20,6 +20,10 @@ def filterCoverage (cov_table, min_cov):
 
 	log.info("{} clusters filtered out according to minimum coverage threshold: {}".format(len(filtered_list), min_cov))
 
+	# warn user about many filtered clusters
+	if len(filtered_list) / len(cov_table.index) >= 0.7:
+		log.warning("70% or more clusters filtered out by --min-cov: consider reducing or assessing data quality and depth!")
+
 	return(filtered_list)
 
 def getBamList (sampleGroups):
@@ -106,6 +110,8 @@ def getCoverage(sampleGroups, out_dir, min_cov, control_cond, filtered_cov):
 			ratio = float(data[data.bin == 8]['cov_norm']) / float(data[data.bin == 92]['cov_norm'])
 		except ZeroDivisionError:
 			ratio = float(data[data.bin == 92]['cov_norm'])
+		except TypeError:
+			ratio = float(data[data.bin.astype(float) == data.bin.astype(float).nlargest(2).iloc[1]]['cov_norm'])
 		cov_ratios[aa] = ratio
 	sorted_aa = sorted(cov_ratios, key = cov_ratios.get)
 	sorted_aa = "_".join(str(e) for e in sorted_aa)

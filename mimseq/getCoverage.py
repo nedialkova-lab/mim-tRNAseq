@@ -20,6 +20,10 @@ def filterCoverage (cov_table, min_cov):
 
 	log.info("{} clusters filtered out according to minimum coverage threshold: {}".format(len(filtered_list), min_cov))
 
+	# warn user about many filtered clusters
+	if len(filtered_list) / len(cov_table.index) >= 0.7:
+		log.warning("70% or more clusters filtered out by --min-cov: consider reducing or assessing data quality and depth!")
+
 	return(filtered_list)
 
 def getBamList (sampleGroups):

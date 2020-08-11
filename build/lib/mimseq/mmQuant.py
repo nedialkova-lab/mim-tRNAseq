@@ -498,7 +498,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 	if not remap:
 
 		# Redo newModsParser here so that knownTable is updated with new mods from second round and written to allModsTable
-		Inosine_clusters = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering)
+		Inosine_clusters, snp_tolerance = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering, snp_tolerance = True)
 
 		modTable_total = pd.DataFrame()
 		countsTable_total = pd.DataFrame()

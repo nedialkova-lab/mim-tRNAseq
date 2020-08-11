@@ -161,7 +161,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 				modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
 				modomics_dict[curr_id]["InosinePos"] = inosinePos
 
-	for s in perSpecies_count:
+	for s in species:
 		log.info('Number of Modomics entries for {}: {}'.format(s, perSpecies_count[s]))
 
 	return(tRNA_dict,modomics_dict, species)
@@ -595,7 +595,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
 
-def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, clustering):
+def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, clustering, snp_tolerance):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index
 
 	log.info("\n+------------------+ \
@@ -628,6 +628,10 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 			mod_lists[cluster] = list(set(mod_lists[cluster] + l[cluster]))
 			new_snps_num += len(mod_lists[cluster]) - old_mods
 
+	# update snp_tolerance if previously False - i.e. no Modomics data but new mods discovered after alignment
+	if snp_tolerance == False and not new_snps_num == 0:
+		snp_tolerance = True
+
 	log.info("{} new predicted modifications".format(new_snps_num))
 
 	# rewrite SNP index
@@ -656,7 +660,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 		
 	log.info("{:,} modifications written to SNP index".format(total_snps))	
 
-	return(Inosine_clusters)
+	return(Inosine_clusters, snp_tolerance)
 
 def additionalModsParser(input_species, out_dir):
 # Reads in manual addition of modifcations in /data/additionalMods.txt

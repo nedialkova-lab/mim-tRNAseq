@@ -513,11 +513,12 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 			# read in temp files and then delete
 			modTable = pd.read_csv(bam + "mismatchTable.csv", header = 0, sep = "\t")
 			modTable['canon_pos'] = modTable['pos'].map(cons_pos_dict)
-			# edit misinc. propoportions of inosines to reflect true level of Gs
+			# edit misinc. propoportions of inosines to reflect true level of Gs, set As to NA
 			for cluster in Inosine_clusters:
 				for isodecoder in cluster_dict[cluster]:
 					if any(modTable.isodecoder.str.contains(isodecoder)):
 						modTable.at[(modTable.canon_pos == '34') & (modTable['type'] == 'G') & (modTable.isodecoder == isodecoder), 'proportion'] = 1 - sum(modTable[(modTable.canon_pos == '34') & (modTable['type'] != 'G') & (modTable.isodecoder == isodecoder)]['proportion'].dropna())
+						modTable.at[(modTable.canon_pos == '34') & (modTable['type'] == 'A') & (modTable.isodecoder == isodecoder), 'proportion'] = np.nan
 			os.remove(bam + "mismatchTable.csv")
 
 			stopTable = pd.read_csv(bam + "RTstopTable.csv", header = 0, sep = "\t")

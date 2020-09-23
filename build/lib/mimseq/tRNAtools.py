@@ -328,6 +328,13 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				Inosine_lists[seq] = list(set(Inosine_lists[seq] + additionalInosines_sub[seq]['InosinePos']))
 
 			total_inosines += len(Inosine_lists[seq])
+			total_snps += len(Inosine_lists[seq])
+
+			for (index, pos) in enumerate(Inosine_lists[seq]):
+				# Add inosines to snp index (in addition to changing ref seqence - see below)
+				# Ensure only "A" SNPs are tolerated. That is, a G in the reference allows inosines while an A in the snp index allows unmodified reads
+				snp_records.append(">" + seq + "_snp" + str(index) + " " + seq + ":" + str(pos + 1) + " " + "GA")
+
 
 		Inosine_clusters = [cluster for cluster, inosines in Inosine_lists.items() if len(inosines) > 0]
 
@@ -566,6 +573,13 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + additionalInosines_sub[cluster]['InosinePos']))
 
 			total_inosines += len(Inosine_lists[cluster])
+			total_snps += len(Inosine_lists[cluster])
+
+			for (index, pos) in enumerate(Inosine_lists[cluster]):
+				# Add inosines to snp index (in addition to changing ref seqence - see below)
+				# Ensure only "A" SNPs are tolerated. That is, a G in the reference allows inosines while an A in the snp index allows unmodified reads
+				snp_records.append(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + "GA")
+
 
 		# edit ref seqs A to G at inosine positions if snp_tolerance is enabled
 		if snp_tolerance:

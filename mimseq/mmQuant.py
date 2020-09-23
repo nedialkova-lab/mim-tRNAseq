@@ -494,6 +494,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 	pool.join()
 
 	filtered = list()
+	filter_warning = False
 	
 	if not remap:
 
@@ -559,7 +560,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		countsTable_total.loc[~countsTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = countsTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
 		countsTable_total.index = countsTable_total.isodecoder
 		countsTable_total.drop(columns = ['isodecoder'], inplace = True)
-		filtered = filterCoverage(countsTable_total, min_cov)
+		filtered, filter_warning = filterCoverage(countsTable_total, min_cov)
 
 		# filter and output tables
 		modTable_total.loc[~modTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = modTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
@@ -624,4 +625,4 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 
 		log.info("** Read counts per isodecoder saved to " + out_dir + "counts/Isodecoder_counts.txt **")
 
-	return(new_mods, new_Inosines, filtered)
+	return(new_mods, new_Inosines, filtered, filter_warning)

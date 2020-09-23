@@ -21,10 +21,12 @@ def filterCoverage (cov_table, min_cov):
 	log.info("{} clusters filtered out according to minimum coverage threshold: {}".format(len(filtered_list), min_cov))
 
 	# warn user about many filtered clusters
+	filter_warning = False
 	if len(filtered_list) / len(cov_table.index) >= 0.7:
 		log.warning("70% or more clusters filtered out by --min-cov: consider reducing or assessing data quality and depth!")
+		filter_warning = True
 
-	return(filtered_list)
+	return(filtered_list, filter_warning)
 
 def getBamList (sampleGroups):
 # reads sampleGroups file and creates dictionary of bam and groups

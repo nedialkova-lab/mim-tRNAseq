@@ -32,7 +32,7 @@ To use mim-tRNAseq, it is recommended to install the package using `conda`, pref
 ```bash
 	conda create -n mimseq
 	conda actiavte mimseq
-	conda install -c drewjbeh mimseq
+	conda install -c bioconda mimseq
 ```
 Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
 To install ggpol, please do the following:
@@ -46,7 +46,7 @@ usearch needs to be acquired and installed. Please do the following:
 	mv usearch10.0.240_i86linux32 usearch
 	cp usearch /usr/local/bin
 ```
-For this, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH:
+For this last cp command, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH:
 ```bash
 export PATH=$PATH:full/path/to/usearch
 ```

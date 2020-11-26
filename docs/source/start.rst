@@ -4,11 +4,11 @@ Quick-start guide
 Installation
 ^^^^^^^^^^^^
 
-To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment:
+To use mim-tRNAseq, it is recommended to install the package from `bioconda` using `conda`, preferably in its own environment:
 ::
 	conda create -n mimseq
 	conda actiavte mimseq
-	conda install -c drewjbeh mimseq
+	conda install -c bioconda mimseq
 
 Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
 To install ggpol, please do the following:
@@ -22,7 +22,7 @@ usearch needs to be acquired and installed. Please do the following:
 	mv usearch10.0.240_i86linux32 usearch
 	cp usearch /usr/local/bin
 
-For this, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH:
+For this last `cp` command, root access is required. However, if this is not possible, please add the path of the usearch binary to your PATH:
 ::
 	export PATH=$PATH:full/path/to/usearch
 
@@ -44,12 +44,13 @@ The package also comes with a `data/` folder which has the required tRNAscan-SE 
 Dependencies
 ^^^^^^^^^^^^
 
-Please install all dependencies below before running mim-tRNAseq. In most cases, newer versions of the packages should be fine, but if you encounter any errors when running, first try to install the exact versions of dependencies listed below.
+When using `conda` to install mim-tRNAseq, all dependencies below are managed and installed automatically. We therefore strongly recommend using conda to install mim-tRNAseq in a separate environment (see Installation above).
+If you install from source or PyPi, please install all dependencies below before running mim-tRNAseq. In most cases, newer versions of the packages should be fine, but if you encounter any errors when running, first try to install the exact versions of dependencies listed below.
 
 **Unix command line dependencies:**
 
 +-----------------+-------------------+-----------+
-|Tool             | Version >=        | Link      |
+|Tool             | Version           | Link      |
 +=================+===================+===========+
 | GMAP-GSNAP      | 2019-02-26        | GSNAP_    |
 +-----------------+-------------------+-----------+
@@ -59,26 +60,28 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 +-----------------+-------------------+-----------+
 | bedtools        | 2.26.0            | bedtools_ |
 +-----------------+-------------------+-----------+
-| R               | 3.6.3             | R_        |
-+-----------------+-------------------+-----------+
 | INFERNAL        | 1.1.2 (July 2016) | INFERNAL_ |
 +-----------------+-------------------+-----------+
 | BLAST           | 2.7.1             | BLAST_    |
++-----------------+-------------------+-----------+
+| gcc             | 4.8.5             | gcc_      |
 +-----------------+-------------------+-----------+
 
 .. _GSNAP: http://research-pub.gene.com/gmap/
 .. _samtools: http://www.htslib.org/
 .. _usearch: https://www.drive5.com/usearch/
 .. _bedtools: https://bedtools.readthedocs.io/en/latest/content/installation.html
-.. _R: https://www.r-project.org/
 .. _INFERNAL: http://eddylab.org/infernal/
 .. _BLAST: https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download
+.. _gcc: https://gcc.gnu.org/
 
 **Required R packages:**
 
 +----------------+------------+----------------------+
-| Package        | Version >= | Link                 |
+| Package        | Version    | Link                 |
 +================+============+======================+
+| R base         | <3.7.0a0   | R_                   |
++----------------+------------+----------------------+
 | DESeq2         | 1.26.0     | DESeq2_              |
 +----------------+------------+----------------------+
 | RColorBrewer   | 1.1.2      | RColorBrewer_        |
@@ -90,6 +93,8 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 | gridExtra      | 2.3        | gridExtra_           |
 +----------------+------------+----------------------+
 | plyr           | 1.8.6      | plyr_                |
++----------------+------------+----------------------+
+| dplyr          | 1.0.0      | dplyr_               |
 +----------------+------------+----------------------+
 | reshape2       | 1.4.3      | reshape2_            |
 +----------------+------------+----------------------+
@@ -106,12 +111,14 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 | ggplot2        | =3.2.1     | ggplot2_             |
 +----------------+------------+----------------------+
 
+.. _R: https://cran.r-project.org/
 .. _DESeq2: https://bioconductor.org/packages/release/bioc/html/DESeq2.html
 .. _RColorBrewer: https://www.rdocumentation.org/packages/RColorBrewer/versions/1.1-2
 .. _pheatmap: https://www.rdocumentation.org/packages/pheatmap/versions/1.0.12
 .. _calibrate: https://cran.r-project.org/web/packages/calibrate/index.html
 .. _gridExtra: https://cran.r-project.org/web/packages/gridExtra/index.html
 .. _plyr: https://www.rdocumentation.org/packages/plyr/versions/1.8.4
+.. _dplyr: https://cran.r-project.org/web/packages/dplyr/index.html
 .. _reshape2: https://cran.r-project.org/web/packages/reshape2/index.html
 .. _circlize: https://cran.r-project.org/web/packages/circlize/index.html
 .. _tidyverse: https://www.tidyverse.org/packages/
@@ -122,13 +129,15 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 **Required Python packages:**
 
 +------------+------------+-------------+
-| Package    | Version >= | Link        |
+| Package    | Version    | Link        |
 +============+============+=============+
+| Python     | >=3        | Python_     |
++------------+------------+-------------+
 | Biopython  | 1.70       | Biopython_  |
 +------------+------------+-------------+
 | pyfiglet   | 0.7.5      | pyfiglet_   |
 +------------+------------+-------------+
-| pysam      | 0.14.1     | pysam_      |
+| pysam      | 0.15.3     | pysam_      |
 +------------+------------+-------------+
 | pandas     | 0.22.0     | pandas_     |
 +------------+------------+-------------+
@@ -139,6 +148,7 @@ Please install all dependencies below before running mim-tRNAseq. In most cases,
 | pybedtools | 0.8.1      | pybedtools_ |
 +------------+------------+-------------+
 
+.. _Python: https://www.python.org/
 .. _Biopython: https://biopython.org/
 .. _pyfiglet: https://pypi.org/project/pyfiglet/0.7/
 .. _pysam: https://pysam.readthedocs.io/en/latest/api.html

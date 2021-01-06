@@ -191,7 +191,7 @@ for (i in unique(mods_agg$condition)) {
   
   sub_mods_aggtype_cyt$canon_pos = factor(sub_mods_aggtype_cyt$canon_pos, levels = c('9', '20', '20a','26','32','34','37','58'))
   color_num = length(unique(sub_mods_aggtype_cyt$bam)) + 1
-  dot_colors = brewer.pal(color_num, "Greys")[2:(color_num)]
+  dot_colors = suppressMessages(brewer.pal(color_num, "Greys")[2:(color_num)])
   names(dot_colors) = unique(sub_mods_aggtype_cyt$bam)
   
   signature_plot_upstream = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = new_prop, fill = type)) + 
@@ -240,7 +240,7 @@ for (i in unique(mods_agg$condition)) {
 
       # Reallocate bam dot colours to account for inconsistencies between mito and cyto bam numbers (usually due to very low count data)
       color_num = length(unique(sub_mods_aggtype_mito$bam)) + 1
-      dot_colors = brewer.pal(color_num, "Greys")[2:(color_num)]
+      dot_colors = suppressMessages(brewer.pal(color_num, "Greys")[2:(color_num)])
       names(dot_colors) = unique(sub_mods_aggtype_mito$bam)
 
       mito_signature_plot_upstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 

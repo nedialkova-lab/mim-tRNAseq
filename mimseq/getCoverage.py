@@ -32,19 +32,18 @@ def getBamList (sampleGroups):
 # reads sampleGroups file and creates dictionary of bam and groups
 # sampleGroups text file contains bam file locations, group and library size in read number, tab-separated. 
 
-	sampleGroups = open(sampleGroups,"r")
-	baminfo = defaultdict(list)
-	bamlist = list()
-	for line in sampleGroups:
-		line = line.strip()
-		currbam = str(line.split("\t")[0])
-		condition = line.split("\t")[1]
-		librarySize = int(line.split("\t")[2])
-		baminfo[currbam] = [condition,librarySize]
-		bamlist.append(currbam)
+	with open(sampleGroups,"r") as sampleGroups:
+		baminfo = defaultdict(list)
+		bamlist = list()
+		for line in sampleGroups:
+			line = line.strip()
+			currbam = str(line.split("\t")[0])
+			condition = line.split("\t")[1]
+			librarySize = int(line.split("\t")[2])
+			baminfo[currbam] = [condition,librarySize]
+			bamlist.append(currbam)
 
 	return(baminfo, bamlist)
-	sampleGroups.close()
 
 def getCoverage(sampleGroups, out_dir, min_cov, control_cond, filtered_cov):
 # Uses bedtools coverage and pandas generate coverage in 5% intervals per gene and isoacceptor for plotting
@@ -53,7 +52,7 @@ def getCoverage(sampleGroups, out_dir, min_cov, control_cond, filtered_cov):
 		\n| Calculating coverage and plotting |\
 		\n+-----------------------------------+")
 
-	baminfo, bamlist = getBamList(sampleGroups)
+	baminfo = getBamList(sampleGroups)[0]
 	cov_mean = list()
 
 	for bam, info in baminfo.items():
@@ -125,8 +124,14 @@ def plotCoverage(out_dir, mito_trnas, sorted_aa):
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	command = ["Rscript", script_path + "/coveragePlot.R", out_dir + "coverage_bygene.txt", out_dir + "coverage_byaa.txt", out_dir, sorted_aa, mito_trnas]
 	try:
-	#with StreamLogger.StreamLogger(logging.INFO) as out:
-		subprocess.check_call(command)
+		process = subprocess.Popen(command, stdout = subprocess.PIPE)
+		while True:
+			line = process.stdout.readline()
+			if not line:
+				break
+			line = line.decode("utf-8")
+			log.info(line.rstrip())
+		exitcode = process.wait()
 	except Exception as e:
 		logging.error("Error in {}".format(command), exc_info=e)
 		raise

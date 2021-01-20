@@ -52,7 +52,7 @@ Only generated if --cca-analysis flag is present. Contains data and plots for 3'
 Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
 
 * `\*comb_heatmap.pdf`: Combined RT stop and misincorporation heatmaps for all tRNAs/clusters passing --min-cov threshold, showing proportion of stops and misincorporations at canonical tRNA positions for all conditions. Available for mitochondrial tRNAs if -m is specified.
-* `\*misincProps/pdf`: Misincorporation proportions for each tRNA/cluster at selected conserved modified sites by identity of modified nucleotide. Available for mitochondrial tRNAs if -m is specified.
+* `\*misincProps.pdf`: Misincorporation proportions for each tRNA/cluster at selected conserved modified sites by identity of modified nucleotide. Available for mitochondrial tRNAs if -m is specified.
 * `\*misincSignatures_upstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucloetide and upstream nucleotide relative to RT direction. Available for mitochondrial tRNAs if -m is specified.
 * `\*misincSignatures_downstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucleotide and downstream nucleotide relative to RT direction. Available for mitochondrial tRNAs if -m is specified.
 * `mismatchTable.csv`: Data table for all misincorporation analyses. Includes tRNA/cluster, misincorporation type, proportion of misincorporations, coverage at each position and canonical tRNA position information, among other useful information.
@@ -61,6 +61,13 @@ Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
 * `modContext.txt`: Nucleotide context information for selected modified positions. Note, `pos` here is not canonical position information but ungapped alignment positions for each tRNA/cluster.
 * `allModsTable.csv`: All known modifications from Modomics and `additionalMods.txt` and newly detected mim-tRNAseq modifications for each cluster. 1-based numbering of position of modified base in mature transctipt sequence (not canonical tRNA numbering). Used in new mods discovery.
 * `predictedMods.csv`: Newly predicted modified sites per tRNA/cluster based on misinc-thresh.
+
+**mods_logOR**
+
+Differential modification analysis. Only generated if mods analysis is performed (see above) and if there are more than 1 condition in the experiment
+
+* `ConditionAvsConditionB_logOR.pdf`: Heatmaps of filtered, significant log10 odds ratios (logOR) for each tRNA at each position between condition A and B. Performed for all pairwise condition comparisons. Values are FDR adjusted chi-squared p-values <= 0.01.
+* 'ConditionAvsConditionB_logOR.csv': Data table for heatmap plotting.
 
 **DESeq2**
 

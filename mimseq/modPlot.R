@@ -295,112 +295,114 @@ for (i in unique(mods_agg$condition)) {
 
 ### Differential mods analysis and heatmaps ###
 ###############################################
-dir.create(file.path(paste(out,"mods_logOR/", sep="/")), showWarnings = FALSE)
 
-# Plots for logOR between conditions, including significance tests for each OR with chi-squared tests
+if (length(unique(mods$condition)) > 1) {
+  dir.create(file.path(paste(out,"mods_logOR/", sep="/")), showWarnings = FALSE)
 
-# modify mods and aggregate for total misinc. (sum of all types) and by condition (mean)
-mods$cov[is.na(mods$cov)] = 0
-mods = mods[!grepl("eColiLys", mods$isodecoder), ]
-mods$bam = sub(".*/","",mods$bam)
-mods_agg = aggregate(mods$proportion, by = list(isodecoder=mods$isodecoder, pos=mods$pos, bam=mods$bam, condition=mods$condition, canon_pos=mods$canon_pos, cov=mods$cov), FUN = sum)
-mods_agg = aggregate(mods_agg$x, by = list(isodecoder=mods_agg$isodecoder, pos=mods_agg$pos, condition=mods_agg$condition, canon_pos=mods_agg$canon_pos, cov=mods_agg$cov), FUN = mean)
-#mods = mods[mods$bam %in% c("lib894_ht_ks_trmt5_kips_1_day5_con.unpaired_uniq.bam", "lib896_ht_ks_trmt5_kips_1_day5_dox.unpaired_uniq.bam"),]
+  # Plots for logOR between conditions, including significance tests for each OR with chi-squared tests
 
-# for each condition make a misincorporation matrix
-mods_hm_list = list()
-stops_hm_list = list()
-mods_mats = list()
-unmod_mats = list()
-mods_props = list()
-stops_mats = list()
-for (i in unique(mods_agg$condition)) {
-  # mods
-  sub_mods_agg = subset(mods_agg, condition == i)
-  sub_mods_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'x')], list(.(isodecoder), .(pos)), value.var = 'x', fun.aggregate = mean)
-  sub_cov_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'cov')], list(.(isodecoder), .(pos)), value.var = 'cov', fun.aggregate = mean)
-  # convert NA to 0
-  sub_mods_wide[is.na(sub_mods_wide)] = 0
-  sub_cov_wide[is.na(sub_cov_wide)] = 0
-  rownames(sub_mods_wide) = sub_mods_wide$isodecoder
-  rownames(sub_cov_wide) = sub_cov_wide$isodecoder
-  sub_mods_wide = sub_mods_wide[, -1]
-  sub_mods_wide = as.matrix(sub_mods_wide)
-  sub_cov_wide = sub_cov_wide[, -1]
-  sub_cov_wide = as.matrix(sub_cov_wide)
+  # modify mods and aggregate for total misinc. (sum of all types) and by condition (mean)
+  mods$cov[is.na(mods$cov)] = 0
+  mods = mods[!grepl("eColiLys", mods$isodecoder), ]
+  mods$bam = sub(".*/","",mods$bam)
+  mods_agg = aggregate(mods$proportion, by = list(isodecoder=mods$isodecoder, pos=mods$pos, bam=mods$bam, condition=mods$condition, canon_pos=mods$canon_pos, cov=mods$cov), FUN = sum)
+  mods_agg = aggregate(mods_agg$x, by = list(isodecoder=mods_agg$isodecoder, pos=mods_agg$pos, condition=mods_agg$condition, canon_pos=mods_agg$canon_pos, cov=mods_agg$cov), FUN = mean)
+  #mods = mods[mods$bam %in% c("lib894_ht_ks_trmt5_kips_1_day5_con.unpaired_uniq.bam", "lib896_ht_ks_trmt5_kips_1_day5_dox.unpaired_uniq.bam"),]
 
-  # save mod proportion matrices
-  mods_props[[i]] = sub_mods_wide
+  # for each condition make a misincorporation matrix
+  mods_hm_list = list()
+  stops_hm_list = list()
+  mods_mats = list()
+  unmod_mats = list()
+  mods_props = list()
+  stops_mats = list()
+  for (i in unique(mods_agg$condition)) {
+    # mods
+    sub_mods_agg = subset(mods_agg, condition == i)
+    sub_mods_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'x')], list(.(isodecoder), .(pos)), value.var = 'x', fun.aggregate = mean)
+    sub_cov_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'cov')], list(.(isodecoder), .(pos)), value.var = 'cov', fun.aggregate = mean)
+    # convert NA to 0
+    sub_mods_wide[is.na(sub_mods_wide)] = 0
+    sub_cov_wide[is.na(sub_cov_wide)] = 0
+    rownames(sub_mods_wide) = sub_mods_wide$isodecoder
+    rownames(sub_cov_wide) = sub_cov_wide$isodecoder
+    sub_mods_wide = sub_mods_wide[, -1]
+    sub_mods_wide = as.matrix(sub_mods_wide)
+    sub_cov_wide = sub_cov_wide[, -1]
+    sub_cov_wide = as.matrix(sub_cov_wide)
 
-  # get misincoproration as a value of coverage at each position
-  sub_modCount_wide = sub_mods_wide * sub_cov_wide
-  sub_unmodCount_wide = sub_cov_wide - sub_modCount_wide
-  mods_mats[[i]] = sub_modCount_wide
-  unmod_mats[[i]] = sub_unmodCount_wide
-}
+    # save mod proportion matrices
+    mods_props[[i]] = sub_mods_wide
 
-# for each pairwise comparison of conditions, generate an log odds ratio heatmap (unload plyr to avoid errors)
-suppressWarnings(detach("package:plyr", unload=TRUE))
-mods_OR_list = list()
-mods_OR_hm = list()
-mods_OR_barplot = list()
-
-ordered_levels = levels(lastlevel(unique(mods_agg$condition), control_cond))
-combinations = combn(ordered_levels, 2, simplify = FALSE)
-for (i in combinations) {
-  # load in matrices for comaprison
-  first = as.character(i[1])
-  second = as.character(i[2])
-  comp =  paste(i, collapse = "vs")
-  mat1_mod = mods_mats[[first]]
-  mat1_mod_props = mods_props[[first]]
-  mat1_unmod = unmod_mats[[first]]
-  mat2_mod = mods_mats[[second]]
-  mat2_mod_props = mods_props[[second]]
-  mat2_unmod = unmod_mats[[second]]
-
-  # make NA and 0 vlaues very small to stop inf errors when calculating log OR
-  mat1_mod[is.na(mat1_mod)] = 0.0001
-  mat1_mod_props[is.na(mat1_mod_props)] = 0.0001
-  mat2_mod[is.na(mat2_mod)] = 0.0001
-  mat2_mod_props[is.na(mat2_mod_props)] = 0.0001
-  mat1_mod[which(mat1_mod == 0)] = 0.0001
-  mat2_mod[which(mat2_mod == 0)] = 0.0001
-  mat1_unmod[is.na(mat1_unmod)] = 0.0001
-  mat2_unmod[is.na(mat2_unmod)] = 0.0001
-  mat1_unmod[which(mat1_unmod == 0)] = 0.0001
-  mat2_unmod[which(mat2_unmod == 0)] = 0.0001
-  
-  # log odds ratio temp matrix
-  temp =  (mat1_mod/mat2_mod) / (mat1_unmod/mat2_unmod)
-  temp = log(temp, base = 10)
-  chisq = matrix(nrow = nrow(temp), ncol = ncol(temp), dimnames = list(rownames(temp), colnames(temp)))
-  
-  # compute chi-squared value for each logOR in temp
-  for (n in 1:nrow(chisq)) {
-    for (j in 1:ncol(chisq)) {
-      tab = matrix(c(mat1_mod[n,j], mat2_mod[n,j], mat1_unmod[n,j], mat2_unmod[n,j]), ncol = 2)
-      test = chisq.test(tab)
-      chisq[n,j] = test$p.value
-    }
+    # get misincoproration as a value of coverage at each position
+    sub_modCount_wide = sub_mods_wide * sub_cov_wide
+    sub_unmodCount_wide = sub_cov_wide - sub_modCount_wide
+    mods_mats[[i]] = sub_modCount_wide
+    unmod_mats[[i]] = sub_unmodCount_wide
   }
-  
-  # calculate absolute fold-change in misincorporation to filter results on effect size
-  foldchange = abs(log(mat1_mod_props/mat2_mod_props, base = 2))
-  foldchange[is.nan(foldchange)] = 0
-  # Set infinite values (from dividing non-zero value by zero) equal to the max fold-change in the table exluding Inf values
-  foldchange[is.infinite(foldchange)] = max(foldchange[-which(is.infinite(foldchange))])
-  # Corrrect for multiple testing using FDR and filter low effect size changes and lowly modified sites
-  chisq = matrix(p.adjust(chisq, method = 'fdr'), nrow = nrow(temp))
-  temp[chisq > 0.01 | foldchange < 0.25 | (mat1_mod_props < 0.1 & mat2_mod_props < 0.1)] = 0
-  
-  # heatmaps
-  col_fun = colorRamp2(c(max(abs(temp)), 0, -max(abs(temp))), c("#36682B", "#f7f7f7","#CC5803"))
-  write.csv(temp, file=paste(out, "mods_logOR/", paste(comp,"logOR.csv",sep="_"), sep=""))
-  
-  pdf(paste(out, 'mods_logOR/', paste(comp, "logOR.pdf", sep = "_"), sep = ''), width = 14, height = 12)
-  hm_logOR = Heatmap(temp, column_labels = cons_pos, column_title = as.character(comp), row_names_gp = gpar(fontsize = 6), column_names_gp = gpar(fontsize = 6), col = col_fun, column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, heatmap_legend_param = list(title = "Log odds ratio"))
-  draw(hm_logOR)
-  dev.off()
-}
 
+  # for each pairwise comparison of conditions, generate an log odds ratio heatmap (unload plyr to avoid errors)
+  suppressWarnings(detach("package:plyr", unload=TRUE))
+  mods_OR_list = list()
+  mods_OR_hm = list()
+  mods_OR_barplot = list()
+
+  ordered_levels = levels(lastlevel(unique(mods_agg$condition), control_cond))
+  combinations = combn(ordered_levels, 2, simplify = FALSE)
+  for (i in combinations) {
+    # load in matrices for comaprison
+    first = as.character(i[1])
+    second = as.character(i[2])
+    comp =  paste(i, collapse = "vs")
+    mat1_mod = mods_mats[[first]]
+    mat1_mod_props = mods_props[[first]]
+    mat1_unmod = unmod_mats[[first]]
+    mat2_mod = mods_mats[[second]]
+    mat2_mod_props = mods_props[[second]]
+    mat2_unmod = unmod_mats[[second]]
+
+    # make NA and 0 vlaues very small to stop inf errors when calculating log OR
+    mat1_mod[is.na(mat1_mod)] = 0.0001
+    mat1_mod_props[is.na(mat1_mod_props)] = 0.0001
+    mat2_mod[is.na(mat2_mod)] = 0.0001
+    mat2_mod_props[is.na(mat2_mod_props)] = 0.0001
+    mat1_mod[which(mat1_mod == 0)] = 0.0001
+    mat2_mod[which(mat2_mod == 0)] = 0.0001
+    mat1_unmod[is.na(mat1_unmod)] = 0.0001
+    mat2_unmod[is.na(mat2_unmod)] = 0.0001
+    mat1_unmod[which(mat1_unmod == 0)] = 0.0001
+    mat2_unmod[which(mat2_unmod == 0)] = 0.0001
+    
+    # log odds ratio temp matrix
+    temp =  (mat1_mod/mat2_mod) / (mat1_unmod/mat2_unmod)
+    temp = log(temp, base = 10)
+    chisq = matrix(nrow = nrow(temp), ncol = ncol(temp), dimnames = list(rownames(temp), colnames(temp)))
+    
+    # compute chi-squared value for each logOR in temp
+    for (n in 1:nrow(chisq)) {
+      for (j in 1:ncol(chisq)) {
+        tab = matrix(c(mat1_mod[n,j], mat2_mod[n,j], mat1_unmod[n,j], mat2_unmod[n,j]), ncol = 2)
+        test = chisq.test(tab)
+        chisq[n,j] = test$p.value
+      }
+    }
+    
+    # calculate absolute fold-change in misincorporation to filter results on effect size
+    foldchange = abs(log(mat1_mod_props/mat2_mod_props, base = 2))
+    foldchange[is.nan(foldchange)] = 0
+    # Set infinite values (from dividing non-zero value by zero) equal to the max fold-change in the table exluding Inf values
+    foldchange[is.infinite(foldchange)] = max(foldchange[-which(is.infinite(foldchange))])
+    # Corrrect for multiple testing using FDR and filter low effect size changes and lowly modified sites
+    chisq = matrix(p.adjust(chisq, method = 'fdr'), nrow = nrow(temp))
+    temp[chisq > 0.01 | foldchange < 0.25 | (mat1_mod_props < 0.1 & mat2_mod_props < 0.1)] = 0
+    
+    # heatmaps
+    col_fun = colorRamp2(c(max(abs(temp)), 0, -max(abs(temp))), c("#36682B", "#f7f7f7","#CC5803"))
+    write.csv(temp, file=paste(out, "mods_logOR/", paste(comp,"logOR.csv",sep="_"), sep=""))
+    
+    pdf(paste(out, 'mods_logOR/', paste(comp, "logOR.pdf", sep = "_"), sep = ''), width = 14, height = 12)
+    hm_logOR = Heatmap(temp, column_labels = cons_pos, column_title = as.character(comp), row_names_gp = gpar(fontsize = 6), column_names_gp = gpar(fontsize = 6), col = col_fun, column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, heatmap_legend_param = list(title = "Log odds ratio"))
+    draw(hm_logOR)
+    dev.off()
+  }
+}

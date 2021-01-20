@@ -36,7 +36,7 @@ Read alignment outputs.
 Read count outputs.
 
 * `Anticodon_counts.txt`: Read counts summed by tRNAs sharing anticodons.
-* `Isodecoder_counts.txt`: Deconvoluted isodecoder counts. See methods in Behrens et al., 2020. Only produced if cluster-id < 1.
+* `Isodecoder_counts.txt`: Deconvoluted isodecoder counts, parent info and size (i.e. number of identical sequences/gene copies). See methods in Behrens et al., 2020. Only produced if cluster-id < 1. The `Single_isodecoder` column indicates if this isodecoder was able to be deconvoluted from the parent or not based on coverage at the required mismatch. Counts for "False" sequences should be interpreted/used with caution. Such isodecoders and their parents are excluded from DESeq2 analysis.
 
 **CCAanalysis**
 
@@ -77,7 +77,7 @@ Differential tRNA expression analyses using DESeq2. Split into two separate anal
 * `qc-sampledists.png`: Sample distance heatmap based on variance stabilizing transformed counts. Hierarchical clustering used for clustering samples. Scale indicates sample distances.
 * `qc-pca.png`: Principal component analysis plot for all samples according to normalized counts for isoacceptors/isodecoders.
 * `vst-transformedCounts.csv`: Variace stabilizing transformed count data used for sample clustering. Also useful for comparing tRNA expression, although normalized counts are easier to understand for this purpose.
-* `\*diffextr-countplot.pdf`: Count data plotted for each pairwise condition comparison. Significantly differentially expressed isoacceptors/isodecoders detected by DESeq2 (adjusted p-value < 0.05) indicated by coloured triangles.
+* `\*diffextr-countplot.pdf`: Count data plotted for each pairwise condition comparison. Significantly differentially expressed isoacceptors/isodecoders detected by DESeq2 (adjusted p-value < 0.05) indicated by coloured triangles. Note that isodecoders unable to be split from parents (as well as the corresponding parents) are excluded from DESeq2 analysis.
 * `\*diffexpr-results.csv`: DESeq2 differential expression results for each pairwise condition comparison. Note, every pairwise comparison output also has normalized counts for *all* samples appended as the last set of columns.
 
 .. _here: https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#dispersion-plot-and-fitting-alternatives

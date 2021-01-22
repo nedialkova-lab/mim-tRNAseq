@@ -36,7 +36,7 @@ Read alignment outputs.
 Read count outputs.
 
 * `Anticodon_counts.txt`: Read counts summed by tRNAs sharing anticodons.
-* `Isodecoder_counts.txt`: Deconvoluted isodecoder counts, parent info and size (i.e. number of identical sequences/gene copies). See methods in Behrens et al., 2020. Only produced if cluster-id < 1. The `Single_isodecoder` column indicates if this isodecoder was able to be deconvoluted from the parent or not based on coverage at the required mismatch. Counts for "False" sequences should be interpreted/used with caution. Such isodecoders and their parents are excluded from DESeq2 analysis.
+* `Isodecoder_counts.txt`: Deconvoluted isodecoder counts, parent info and size (i.e. number of identical sequences/gene copies). See methods in Behrens et al., 2021. Only produced if cluster-id < 1. The `Single_isodecoder` column indicates if this isodecoder was able to be deconvoluted from the parent or not based on coverage at the required mismatch. Counts for "False" sequences should be interpreted/used with caution. Such isodecoders and their parents are excluded from DESeq2 analysis.
 
 **CCAanalysis**
 
@@ -51,7 +51,7 @@ Only generated if --cca-analysis flag is present. Contains data and plots for 3'
 
 Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
 
-* `\*comb_heatmap.pdf`: Combined RT stop and misincorporation heatmaps for all tRNAs/clusters passing --min-cov threshold, showing proportion of stops and misincorporations at canonical tRNA positions for all conditions. Available for mitochondrial tRNAs if -m is specified.
+* `\*comb_heatmap.pdf`: Combined RT stop and misincorporation heatmaps for all tRNAs/clusters passing --min-cov threshold and successfully deconvoluted (see *mim-tRNAseq introduction*). Shows proportion of stops and misincorporations at canonical tRNA positions for all conditions. Available for mitochondrial tRNAs if -m is specified.
 * `\*misincProps.pdf`: Misincorporation proportions for each tRNA/cluster at selected conserved modified sites by identity of modified nucleotide. Available for mitochondrial tRNAs if -m is specified.
 * `\*misincSignatures_upstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucloetide and upstream nucleotide relative to RT direction. Available for mitochondrial tRNAs if -m is specified.
 * `\*misincSignatures_downstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucleotide and downstream nucleotide relative to RT direction. Available for mitochondrial tRNAs if -m is specified.

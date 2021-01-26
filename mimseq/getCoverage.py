@@ -8,7 +8,6 @@ import subprocess
 import pandas as pd
 import numpy as np
 import os, logging
-from functools import partial
 from collections import defaultdict
 from multiprocessing import Pool
 
@@ -16,9 +15,17 @@ log = logging.getLogger(__name__)
 
 def filterCoverage (cov_table, min_cov):
 # returns isodecoders as list from counts table with less than min_cov reads (excluding mito clusters)
-	filtered_list = list(cov_table[(cov_table.values < min_cov).any(1) & (~cov_table.index.str.contains('mito'))].index)
 
-	log.info("{} clusters filtered out according to minimum coverage threshold: {}".format(len(filtered_list), min_cov))
+	# if min_cov is a fraction
+	if min_cov < 1:
+		cov_table_new = cov_table.div(cov_table.sum(axis=0), axis=1)
+		filtered_list = list(cov_table_new[(cov_table_new.values < min_cov).any(1) & (~cov_table_new.index.str.contains('mito')) & (~cov_table_new.index.str.contains('eColi'))].index)
+		log.info("{} clusters filtered out according to minimum coverage threshold: {:.2%} of total tRNA coverage.".format(len(filtered_list), min_cov))
+	else:
+		if min_cov == 1:
+			log.warning("--min-cov set to 1: treating as integer of absolute coverage, not a fraction of mapped reads!")
+		filtered_list = list(cov_table[(cov_table.values < min_cov).any(1) & (~cov_table.index.str.contains('mito')) & (~cov_table.index.str.contains('eColi'))].index)
+		log.info("{} clusters filtered out according to minimum coverage threshold: {} total read coverage per isodecoder.".format(len(filtered_list), min_cov))
 
 	# warn user about many filtered clusters
 	filter_warning = False
@@ -45,7 +52,7 @@ def getBamList (sampleGroups):
 
 	return(baminfo, bamlist)
 
-def getCoverage(sampleGroups, out_dir, min_cov, control_cond, filtered_cov):
+def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
 # Uses bedtools coverage and pandas generate coverage in 5% intervals per gene and isoacceptor for plotting
 
 	log.info("\n+-----------------------------------+\

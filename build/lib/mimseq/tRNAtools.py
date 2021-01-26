@@ -8,12 +8,10 @@ from __future__ import absolute_import
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio import Alphabet
 from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio.Blast import NCBIXML
 import re, copy, sys, os, shutil, subprocess, logging, glob
 from pathlib import Path
-import urllib.request
 from collections import defaultdict
 import pandas as pd
 import requests
@@ -317,7 +315,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			nomatch_count += 1
 
 		# Build seqrecord list for writing
-		seq_records[str(seq)] = SeqRecord(Seq(tRNA_dict[seq]['sequence'].upper(), Alphabet.generic_dna), id = str(seq))
+		seq_records[str(seq)] = SeqRecord(Seq(tRNA_dict[seq]['sequence'].upper()), id = str(seq))
 
 		tRNAbed.write(seq + "\t0\t" + str(len(tRNA_dict[seq]['sequence'])) + "\t" + seq + "\t1000\t+\n" )
 
@@ -443,7 +441,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		centroids = SeqIO.parse(temp_dir + "all_centroids.fa", "fasta")
 		for centroid in centroids:
 			centroid.id = centroid.id.split(";")[0]
-			final_centroids[centroid.id] = SeqRecord(Seq(str(centroid.seq).upper(), Alphabet.generic_dna), id = centroid.id) 
+			final_centroids[centroid.id] = SeqRecord(Seq(str(centroid.seq).upper()), id = centroid.id) 
 
 		# read cluster files, get nonredudant set of mod positions of all members of a cluster, create snp_records for writing SNP index
 		cluster_pathlist = Path(temp_dir).glob("**/*_clusters.uc")

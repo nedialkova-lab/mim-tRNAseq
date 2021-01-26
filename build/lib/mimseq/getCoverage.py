@@ -8,7 +8,6 @@ import subprocess
 import pandas as pd
 import numpy as np
 import os, logging
-from functools import partial
 from collections import defaultdict
 from multiprocessing import Pool
 
@@ -16,42 +15,51 @@ log = logging.getLogger(__name__)
 
 def filterCoverage (cov_table, min_cov):
 # returns isodecoders as list from counts table with less than min_cov reads (excluding mito clusters)
-	filtered_list = list(cov_table[(cov_table.values < min_cov).any(1) & (~cov_table.index.str.contains('mito'))].index)
 
-	log.info("{} clusters filtered out according to minimum coverage threshold: {}".format(len(filtered_list), min_cov))
+	# if min_cov is a fraction
+	if min_cov < 1:
+		cov_table_new = cov_table.div(cov_table.sum(axis=0), axis=1)
+		filtered_list = list(cov_table_new[(cov_table_new.values < min_cov).any(1) & (~cov_table_new.index.str.contains('mito')) & (~cov_table_new.index.str.contains('eColi'))].index)
+		log.info("{} clusters filtered out according to minimum coverage threshold: {:.2%} of total tRNA coverage.".format(len(filtered_list), min_cov))
+	else:
+		if min_cov == 1:
+			log.warning("--min-cov set to 1: treating as integer of absolute coverage, not a fraction of mapped reads!")
+		filtered_list = list(cov_table[(cov_table.values < min_cov).any(1) & (~cov_table.index.str.contains('mito')) & (~cov_table.index.str.contains('eColi'))].index)
+		log.info("{} clusters filtered out according to minimum coverage threshold: {} total read coverage per isodecoder.".format(len(filtered_list), min_cov))
 
 	# warn user about many filtered clusters
+	filter_warning = False
 	if len(filtered_list) / len(cov_table.index) >= 0.7:
 		log.warning("70% or more clusters filtered out by --min-cov: consider reducing or assessing data quality and depth!")
+		filter_warning = True
 
-	return(filtered_list)
+	return(filtered_list, filter_warning)
 
 def getBamList (sampleGroups):
 # reads sampleGroups file and creates dictionary of bam and groups
 # sampleGroups text file contains bam file locations, group and library size in read number, tab-separated. 
 
-	sampleGroups = open(sampleGroups,"r")
-	baminfo = defaultdict(list)
-	bamlist = list()
-	for line in sampleGroups:
-		line = line.strip()
-		currbam = str(line.split("\t")[0])
-		condition = line.split("\t")[1]
-		librarySize = int(line.split("\t")[2])
-		baminfo[currbam] = [condition,librarySize]
-		bamlist.append(currbam)
+	with open(sampleGroups,"r") as sampleGroups:
+		baminfo = defaultdict(list)
+		bamlist = list()
+		for line in sampleGroups:
+			line = line.strip()
+			currbam = str(line.split("\t")[0])
+			condition = line.split("\t")[1]
+			librarySize = int(line.split("\t")[2])
+			baminfo[currbam] = [condition,librarySize]
+			bamlist.append(currbam)
 
 	return(baminfo, bamlist)
-	sampleGroups.close()
 
-def getCoverage(sampleGroups, out_dir, min_cov, control_cond, filtered_cov):
+def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
 # Uses bedtools coverage and pandas generate coverage in 5% intervals per gene and isoacceptor for plotting
 
 	log.info("\n+-----------------------------------+\
 		\n| Calculating coverage and plotting |\
 		\n+-----------------------------------+")
 
-	baminfo, bamlist = getBamList(sampleGroups)
+	baminfo = getBamList(sampleGroups)[0]
 	cov_mean = list()
 
 	for bam, info in baminfo.items():
@@ -123,8 +131,14 @@ def plotCoverage(out_dir, mito_trnas, sorted_aa):
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	command = ["Rscript", script_path + "/coveragePlot.R", out_dir + "coverage_bygene.txt", out_dir + "coverage_byaa.txt", out_dir, sorted_aa, mito_trnas]
 	try:
-	#with StreamLogger.StreamLogger(logging.INFO) as out:
-		subprocess.check_call(command)
+		process = subprocess.Popen(command, stdout = subprocess.PIPE)
+		while True:
+			line = process.stdout.readline()
+			if not line:
+				break
+			line = line.decode("utf-8")
+			log.info(line.rstrip())
+		exitcode = process.wait()
 	except Exception as e:
 		logging.error("Error in {}".format(command), exc_info=e)
 		raise

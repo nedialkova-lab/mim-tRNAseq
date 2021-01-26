@@ -64,6 +64,8 @@ anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_coun
 isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
 isodecoder_countdata = isodecoder_countdata[grepl("True", isodecoder_countdata$Single_isodecoder),]
 isodecoder_countdata$Single_isodecoder = NULL
+isodecoder_countdata$size = NULL
+isodecoder_countdata$parent = NULL
 isodecoder_countdata = isodecoder_countdata[!grepl("mito", rownames(isodecoder_countdata)), ,drop = FALSE]
 coldata = read.table(paste(sampleData, sep=""), header=FALSE, sep = "\t", row.names=1)
 

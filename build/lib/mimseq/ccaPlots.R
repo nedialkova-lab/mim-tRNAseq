@@ -11,15 +11,20 @@ suppressMessages(library(ggpol))
 args = commandArgs(trailingOnly = TRUE)
 
 
-if (length(args)==0) {
+if (length(args) == 0) {
   stop("At least one argument must be supplied (input file).n", call.=FALSE)
   
 } else if (length(args)>0) {
   out = args[3]
+  double_cca = args[4]
+  if (double_cca == "True"){
+    out_string = "double_ccaPlot.pdf"
+  } else {
+    out_string = "ccaPlot.pdf"
+  }
   
   dinuc = read.table(args[1], header = TRUE, sep = "\t", na.strings="")
   dinuc = dinuc[!grepl("N", dinuc$dinuc),]
-  #dinuc = dinuc[-which(is.na(dinuc$dinuc)),]
   dinuc$color = "grey"
   dinuc$color[dinuc$dinuc == "CC"] = "red"
   dinuc$color[dinuc$dinuc == "CA"] = "green"
@@ -84,7 +89,7 @@ if (length(args)==0) {
               axis.text.y = element_text(size = 9), 
               axis.text.x = element_text(face = 'bold'))
       
-      ggsave(paste(out, paste(combinations[[i]][1], combinations[[i]][2], 'ccaPlot.pdf', sep = '_'), sep = ''), cca_plot, height = 8, width = 9)
+      ggsave(paste(out, paste(combinations[[i]][1], combinations[[i]][2], out_string, sep = '_'), sep = ''), cca_plot, height = 8, width = 9)
       
     }
     
@@ -119,7 +124,7 @@ if (length(args)==0) {
               axis.text.y = element_text(size = 9), 
               axis.text.x = element_text(face = 'bold'))
    
-    ggsave(paste(out, 'ccaPlot.pdf', sep = ''), cca_plot, height = 8, width = 9)
+    ggsave(paste(out, out_string, sep = ''), cca_plot, height = 8, width = 9)
     
   }
 }

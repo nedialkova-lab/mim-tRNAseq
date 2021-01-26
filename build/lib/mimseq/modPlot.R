@@ -11,7 +11,18 @@ suppressMessages(library(circlize))
 suppressMessages(library(dplyr))
 suppressMessages(library(RColorBrewer))
 
-# Plotting of modification and stops heatmaps, and misincorporation scatter plots
+# Function to order control/WT condition last in combinations so that contrasts for differntial mod analysis are always mutant/condition vs WT/control
+lastlevel = function(f, control) {
+    if (!is.factor(f)) stop("input for contrast combinations not a factor")
+    orig_levels = levels(f)
+    if (! control %in% orig_levels) stop("Control must be a level of data - potentially removed due to single replicate. Control condition must have replicates!")
+    new_levels = c(setdiff(orig_levels, control), control)
+    factor(f, levels = new_levels)
+}
+
+###################################################################################
+# Plotting of modification and stops heatmaps, and misincorporation scatter plots #
+###################################################################################
 
 args = commandArgs(trailingOnly = TRUE)
 out = args[1]
@@ -27,6 +38,7 @@ cons_pos = args[3]
 cons_pos = unlist(strsplit(cons_pos, "_"))
 cons_pos = cons_pos[!grepl("-",cons_pos)]
 misinc_thresh = as.numeric(args[4])
+control_cond = args[6]
 
 # read in mods and aggregate for total misinc. (sum of all types) and by condition (mean)
 mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep = "\t", quote = '')
@@ -35,6 +47,7 @@ mods$proportion[is.infinite(mods$proportion)] = 0
 mods$isodecoder = sub(".*_mito_tRNA-","mito",mods$isodecoder)
 mods$isodecoder = sub(".*_nmt_tRNA-","nmt",mods$isodecoder)
 mods$isodecoder = sub(".*_tRNA-","",mods$isodecoder)
+mods$isodecoder = sub(".*_tRX-","",mods$isodecoder)
 mods$isodecoder = ifelse(mods$isodecoder == 'eColiLys-TTT-1-1', 'eColiLys', mods$isodecoder)
 mods = mods[!grepl("-", mods$canon_pos),]
 mods_agg = aggregate(mods$proportion, by = list(isodecoder=mods$isodecoder, pos=mods$pos, bam=mods$bam, condition=mods$condition, canon_pos=mods$canon_pos), FUN = sum)
@@ -59,8 +72,8 @@ context_info$isodecoder = sub(".*_nmt_tRNA-","nmt", context_info$isodecoder)
 context_info$isodecoder = sub(".*_tRNA-","", context_info$isodecoder)
 context_info$isodecoder = ifelse(context_info$isodecoder == 'eColiLys-TTT-1-1', 'eColiLys', context_info$isodecoder)
 
-# for each condition make a misincorporation and stops heatmap as a combined figure using ComplexHeatmap
-# ... make a scatter plot of misincorporation rates faceted by positions in cons_mods (selected known mod sites of interest) and by identity of nucleotide
+### for each condition make a misincorporation and stops heatmap as a combined figure using ComplexHeatmap ###
+###... make a scatter plot of misincorporation rates faceted by positions in cons_mods (selected known mod sites of interest) and by identity of nucleotide ###
 for (i in unique(mods_agg$condition)) {
   
   # cyto mods
@@ -130,7 +143,7 @@ for (i in unique(mods_agg$condition)) {
     dev.off()
   }
   
-  # scatter plots
+  ### scatter plots ###
   temp_mods = merge(mods, context_info, by = c('isodecoder', 'pos'))
   temp_mods = temp_mods %>% group_by(isodecoder, pos, bam, identity) %>% mutate(new_prop = proportion/sum(proportion))
   filter_proportions = temp_mods %>% group_by(isodecoder, pos, bam, identity) %>% filter((any(max(new_prop) > 0.95) & any(canon_pos != 34)) | (any(max(new_prop) > 0.95) & any(identity != 'A') & any(canon_pos == 34) & any(type != 'G')))
@@ -170,7 +183,7 @@ for (i in unique(mods_agg$condition)) {
     }
   }
   
-  # Misinc signatures
+  ### Misinc signatures ###
   # create filter list of rows where total misinc. rate < misinc_thresh 
   filter_misincthresh = sub_mods_agg[sub_mods_agg$x < misinc_thresh, ]
   # subset mods table for condition
@@ -191,7 +204,7 @@ for (i in unique(mods_agg$condition)) {
   
   sub_mods_aggtype_cyt$canon_pos = factor(sub_mods_aggtype_cyt$canon_pos, levels = c('9', '20', '20a','26','32','34','37','58'))
   color_num = length(unique(sub_mods_aggtype_cyt$bam)) + 1
-  dot_colors = brewer.pal(color_num, "Greys")[2:(color_num)]
+  dot_colors = suppressMessages(brewer.pal(color_num, "Greys")[2:(color_num)])
   names(dot_colors) = unique(sub_mods_aggtype_cyt$bam)
   
   signature_plot_upstream = ggplot(sub_mods_aggtype_cyt, aes(x = type, y = new_prop, fill = type)) + 
@@ -240,7 +253,7 @@ for (i in unique(mods_agg$condition)) {
 
       # Reallocate bam dot colours to account for inconsistencies between mito and cyto bam numbers (usually due to very low count data)
       color_num = length(unique(sub_mods_aggtype_mito$bam)) + 1
-      dot_colors = brewer.pal(color_num, "Greys")[2:(color_num)]
+      dot_colors = suppressMessages(brewer.pal(color_num, "Greys")[2:(color_num)])
       names(dot_colors) = unique(sub_mods_aggtype_mito$bam)
 
       mito_signature_plot_upstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
@@ -279,4 +292,120 @@ for (i in unique(mods_agg$condition)) {
     }
   }
   
+}
+
+### Differential mods analysis and heatmaps ###
+###############################################
+
+if (length(unique(mods$condition)) > 1) {
+  dir.create(file.path(paste(out,"mods_logOR/", sep="/")), showWarnings = FALSE)
+
+  # Plots for logOR between conditions, including significance tests for each OR with chi-squared tests
+
+  # modify mods and aggregate for total misinc. (sum of all types) and by condition (mean)
+  mods$cov[is.na(mods$cov)] = 0
+  mods = mods[!grepl("eColiLys", mods$isodecoder), ]
+  # exclude mito clusters from diff mods analysis
+  mods = mods[!grepl("mito", mods$isodecoder),]
+  mods$bam = sub(".*/","",mods$bam)
+  mods_agg = aggregate(mods$proportion, by = list(isodecoder=mods$isodecoder, pos=mods$pos, bam=mods$bam, condition=mods$condition, canon_pos=mods$canon_pos, cov=mods$cov), FUN = sum)
+  mods_agg = aggregate(mods_agg$x, by = list(isodecoder=mods_agg$isodecoder, pos=mods_agg$pos, condition=mods_agg$condition, canon_pos=mods_agg$canon_pos, cov=mods_agg$cov), FUN = mean)
+  #mods = mods[mods$bam %in% c("lib894_ht_ks_trmt5_kips_1_day5_con.unpaired_uniq.bam", "lib896_ht_ks_trmt5_kips_1_day5_dox.unpaired_uniq.bam"),]
+
+  # for each condition make a misincorporation matrix
+  mods_hm_list = list()
+  stops_hm_list = list()
+  mods_mats = list()
+  unmod_mats = list()
+  mods_props = list()
+  stops_mats = list()
+  for (i in unique(mods_agg$condition)) {
+    # mods
+    sub_mods_agg = subset(mods_agg, condition == i)
+    sub_mods_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'x')], list(.(isodecoder), .(pos)), value.var = 'x', fun.aggregate = mean)
+    sub_cov_wide = dcast(sub_mods_agg[,c('isodecoder','pos', 'cov')], list(.(isodecoder), .(pos)), value.var = 'cov', fun.aggregate = mean)
+    # convert NA to 0
+    sub_mods_wide[is.na(sub_mods_wide)] = 0
+    sub_cov_wide[is.na(sub_cov_wide)] = 0
+    rownames(sub_mods_wide) = sub_mods_wide$isodecoder
+    rownames(sub_cov_wide) = sub_cov_wide$isodecoder
+    sub_mods_wide = sub_mods_wide[, -1]
+    sub_mods_wide = as.matrix(sub_mods_wide)
+    sub_cov_wide = sub_cov_wide[, -1]
+    sub_cov_wide = as.matrix(sub_cov_wide)
+
+    # save mod proportion matrices
+    mods_props[[i]] = sub_mods_wide
+
+    # get misincoproration as a value of coverage at each position
+    sub_modCount_wide = sub_mods_wide * sub_cov_wide
+    sub_unmodCount_wide = sub_cov_wide - sub_modCount_wide
+    mods_mats[[i]] = sub_modCount_wide
+    unmod_mats[[i]] = sub_unmodCount_wide
+  }
+
+  # for each pairwise comparison of conditions, generate an log odds ratio heatmap (unload plyr to avoid errors)
+  suppressWarnings(detach("package:plyr", unload=TRUE))
+  mods_OR_list = list()
+  mods_OR_hm = list()
+  mods_OR_barplot = list()
+
+  ordered_levels = levels(lastlevel(unique(mods_agg$condition), control_cond))
+  combinations = combn(ordered_levels, 2, simplify = FALSE)
+  for (i in combinations) {
+    # load in matrices for comaprison
+    first = as.character(i[1])
+    second = as.character(i[2])
+    comp =  paste(i, collapse = "vs")
+    mat1_mod = mods_mats[[first]]
+    mat1_mod_props = mods_props[[first]]
+    mat1_unmod = unmod_mats[[first]]
+    mat2_mod = mods_mats[[second]]
+    mat2_mod_props = mods_props[[second]]
+    mat2_unmod = unmod_mats[[second]]
+
+    # make NA and 0 vlaues very small to stop inf errors when calculating log OR
+    mat1_mod[is.na(mat1_mod)] = 0.0001
+    mat1_mod_props[is.na(mat1_mod_props)] = 0.0001
+    mat2_mod[is.na(mat2_mod)] = 0.0001
+    mat2_mod_props[is.na(mat2_mod_props)] = 0.0001
+    mat1_mod[which(mat1_mod == 0)] = 0.0001
+    mat2_mod[which(mat2_mod == 0)] = 0.0001
+    mat1_unmod[is.na(mat1_unmod)] = 0.0001
+    mat2_unmod[is.na(mat2_unmod)] = 0.0001
+    mat1_unmod[which(mat1_unmod == 0)] = 0.0001
+    mat2_unmod[which(mat2_unmod == 0)] = 0.0001
+    
+    # log odds ratio temp matrix
+    temp =  (mat1_mod/mat2_mod) / (mat1_unmod/mat2_unmod)
+    temp = log(temp, base = 10)
+    chisq = matrix(nrow = nrow(temp), ncol = ncol(temp), dimnames = list(rownames(temp), colnames(temp)))
+    
+    # compute chi-squared value for each logOR in temp
+    for (n in 1:nrow(chisq)) {
+      for (j in 1:ncol(chisq)) {
+        tab = matrix(c(mat1_mod[n,j], mat2_mod[n,j], mat1_unmod[n,j], mat2_unmod[n,j]), ncol = 2)
+        test = chisq.test(tab)
+        chisq[n,j] = test$p.value
+      }
+    }
+    
+    # calculate absolute fold-change in misincorporation to filter results on effect size
+    foldchange = abs(log(mat1_mod_props/mat2_mod_props, base = 2))
+    foldchange[is.nan(foldchange)] = 0
+    # Set infinite values (from dividing non-zero value by zero) equal to the max fold-change in the table exluding Inf values
+    foldchange[is.infinite(foldchange)] = max(foldchange[-which(is.infinite(foldchange))])
+    # Corrrect for multiple testing using FDR and filter low effect size changes and lowly modified sites
+    chisq = matrix(p.adjust(chisq, method = 'fdr'), nrow = nrow(temp))
+    temp[chisq > 0.01 | foldchange < 0.25 | (mat1_mod_props < 0.1 & mat2_mod_props < 0.1)] = 0
+    
+    # heatmaps
+    col_fun = colorRamp2(c(max(abs(temp)), 0, -max(abs(temp))), c("#36682B", "#f7f7f7","#CC5803"))
+    write.csv(temp, file=paste(out, "mods_logOR/", paste(comp,"logOR.csv",sep="_"), sep=""))
+    
+    pdf(paste(out, 'mods_logOR/', paste(comp, "logOR.pdf", sep = "_"), sep = ''), width = 14, height = 12)
+    hm_logOR = Heatmap(temp, column_labels = cons_pos, column_title = as.character(comp), row_names_gp = gpar(fontsize = 6), column_names_gp = gpar(fontsize = 6), col = col_fun, column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, heatmap_legend_param = list(title = "Log odds ratio"))
+    draw(hm_logOR)
+    dev.off()
+  }
 }

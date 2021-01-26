@@ -31,7 +31,6 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 			\n+-----------+")
 
 	# Read sampleData 
-	sampleDict = defaultdict()
 	unique_bam_list = list()
 	alignstats_total = defaultdict(list)
 	coverageData = open(out_dir + sampleData.split("/")[-1].split(".")[0] + "_cov." + sampleData.split(".")[-1], "w")
@@ -41,7 +40,6 @@ def mainAlign(sampleData, experiment_name, genome_index_path, genome_index_name,
 			if not line.startswith("#"):
 				log.info("**** {} ****".format(line.split("\t")[0].split("/")[-1]))
 				fq = line.split("\t")[0]
-				name = line.split("\t")[0].split("/")[-1].split(".")[0]
 				group = line.split("\t")[1]
 
 				# align
@@ -268,7 +266,3 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 		alignstats_dict["Count"].append(count)
 
 	return(unique_bam, unique_count, alignstats_dict)
-
-if __name__ == '__main__':
-	mainAlign(sys.argv[1:])
-

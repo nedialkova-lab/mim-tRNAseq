@@ -16,6 +16,8 @@ from pathlib import Path
 import urllib.request
 from collections import defaultdict
 import pandas as pd
+import requests
+from requests.models import HTTPError
 from .ssAlign import aligntRNA, extraCCA, tRNAclassifier, tRNAclassifier_nogaps, getAnticodon, clusterAnticodon
 
 log = logging.getLogger(__name__)
@@ -30,7 +32,7 @@ def dd():
 def dd_list():
 	return(defaultdict(list))
 
-def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, pretrnas):
+def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod):
 # tRNA sequence files parser and dictionary building
 
 	# Generate modification reference table
@@ -57,17 +59,12 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 		# only add to dictionary if not nmt or undetermined sequence
 		if not (re.search('Und', seq) or re.search('nmt', seq)):
 			if not pretrnas:
-				tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off)
+				tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off, double_cca)
 			else:
 				tRNAseq = str(temp_dict[seq].seq)
-			# if re.search('nmt', seq):
-			# 	seq = seq.split("-")[0] + "_" + "-".join(seq.split("-")[1:])
-			# 	loc_type = "mitochondrial"
-			# else:
-			loc_type = "cytosolic"
 			tRNA_dict[seq]['sequence'] = tRNAseq
 			tRNA_dict[seq]['species'] = ' '.join(seq.split('_')[0:2])
-			tRNA_dict[seq]['type'] = loc_type
+			tRNA_dict[seq]['type'] = "cytosolic"
 
 	# add mitochondrial tRNAs if given
 	if mitotRNAs:
@@ -76,12 +73,11 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 		# read each mito tRNA, edit sequence header to match nuclear genes as above and add to tRNA_dict
 		for seq in temp_dict:
 			seq_parts = seq.split("|")
-			mito_species = ' '.join(seq_parts[1].split("_")[0:])
 			anticodon = seq_parts[4]
 			amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
 			mito_count[anticodon] += 1
 			new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
-			tRNAseq = str(temp_dict[seq].seq) + "CCA"
+			tRNAseq = str(temp_dict[seq].seq) + "CCA" if not double_cca else str(temp_dict[seq].seq) + "CCACCA"
 			tRNA_dict[new_seq]['sequence'] = tRNAseq
 			tRNA_dict[new_seq]['type'] = 'mitochondrial'
 			tRNA_dict[new_seq]['species'] = ' '.join(seq.split('_')[0:2])
@@ -91,97 +87,149 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 
 		log.info("{} cytosolic and {} mitochondrial tRNA sequences imported".format(num_cytosilic, num_mito))
 
-		# if 'nmt' in seq:
-		# 	tRNA_dict[seq]['type'] = 'mitochondrial'
-		# 	new_seq = str(seq.split('-')[0]) + '_' + '-'.join(seq.split('-')[1:])
-		# 	tRNA_dict[new_seq] = tRNA_dict[seq]
-		# 	del tRNA_dict[seq]
-		# else:
-		# 	tRNA_dict[seq]['type'] = 'cytosolic'
-
-
 	# Read in and parse modomics file to contain similar headers to tRNA_dict
 	# Save in new dict
 
 	log.info("Processing modomics database...")
-	modomics_file = getModomics()
-	modomics_dict = {}
-	perSpecies_count = defaultdict(int)
-	for line in modomics_file:
-		line = line.strip()
-		sameIDcount = 0
-
-		if line.startswith('>'):
-			line = line.replace(' | ','|')
-			# Check if species matches those from gtRNAdb input, otherwise skip entry
-			mod_species = line.split('|')[3]
-			if not mod_species in species:
-				continue
-			else:
-				# Add to perSpecies_count to tally total modomics entries per species of interest
-				perSpecies_count[mod_species] += 1
-				# Replace modomics antidon with normal ACGT codon, keep "." for pattern matching
-				anticodon = str(line.split('|')[2])
-				new_anticodon = getUnmodSeq(anticodon, modifications)
-				if "N" in new_anticodon:
-					continue
-				#new_anticodon = new_anticodon.replace("N", ".")
-
-				# Check amino acid name in modomics - set to iMet if equal to Ini to match gtRNAdb
-				amino = str(line.split('|')[1])
-				if amino == 'Ini' :
-					amino = 'iMet'
-
-				curr_id = str(line.split('|')[3].split(' ')[0]) + '_' + str(line.split('|')[3].split(' ')[1]) + '_' + str(line.split('|')[0].split(' ')[1]) + '-' + amino + '-' + new_anticodon
-				#Unique names for duplicates
-				while curr_id in modomics_dict:
-					sameIDcount += 1
-					curr_id = "-".join(curr_id.split('-')[0:3]) + '-' + str(sameIDcount)
-
-				tRNA_type = str(line.split('|')[4])
-				modomics_dict[curr_id] = {'sequence':'','type':tRNA_type, 'anticodon':new_anticodon}
-		
-		else:
-			if not mod_species in species:
-				continue
-			else:
-				if "N" in new_anticodon:
-					continue
-
-				sequence = line.strip().replace('U','T').replace('-','')
-				modomics_dict[curr_id]['sequence'] = sequence
-				unmod_sequence = getUnmodSeq(sequence, modifications)
-
-				# Return list of modified nucl indices and add to modomics_dict
-				# add unmodified seq to modomics_dict by lookup to modifications
-				Mods = ['"', 'K', 'R', "'", 'O', 'Y', 'W', '⊆', 'X', '*', '[']
-				modPos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x in Mods]
-				inosinePos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x == 'I']
-				modomics_dict[curr_id]['modified'] = modPos
-				modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
-				modomics_dict[curr_id]["InosinePos"] = inosinePos
+	modomics_file, fetch = getModomics(local_mod)
+	modomics_dict, perSpecies_count = processModomics(modomics_file, fetch, species, modifications)
 
 	for s in species:
 		log.info('Number of Modomics entries for {}: {}'.format(s, perSpecies_count[s]))
 
 	return(tRNA_dict,modomics_dict, species)
 
-def getModomics():
-	# Get full Modomics modified tRNA data from web
+def processModomics(modomics_file, fetch, species, modifications):
 
-	try:
-		with urllib.request.urlopen('http://modomics.genesilico.pl/sequences/list/?type_field=tRNA&subtype=all&species=all&display_ascii=Display+as+ASCII&nomenclature=abbrev') as response:
-			modomics = response.read().decode().splitlines()
-	except Exception as e:
-		#logging.error("Error in {}".format("fetching modomics. Using local files..."))
+	modomics_dict = dict()
+	perSpecies_count = defaultdict(int)
+
+	# build modomics_dict from JSON data through API
+	if fetch:
+		log.info("Parsing Modomics JSON data...")
+		for data in modomics_file.values():
+			sameIDcount = 0
+
+			mod_species = data['organism']
+			if not mod_species in species:
+				continue
+			else:
+				perSpecies_count[mod_species] += 1
+				anticodon = data['anticodon']
+				new_anticodon = getUnmodSeq(anticodon, modifications)
+				if "N" in new_anticodon:
+					continue
+				
+				# Check amino acid name in modomics - set to iMet if equal to Ini to match gtRNAdb
+				amino = data['subtype']
+				if amino == 'Ini':
+					amino = 'iMet'
+
+				curr_id = str(mod_species.replace(' ','_') + '_tRNA-' + amino + '-' + new_anticodon)
+				#Unique names for duplicates
+				while curr_id in modomics_dict:
+					sameIDcount += 1
+					curr_id = "-".join(curr_id.split('-')[0:3]) + '-' + str(sameIDcount)
+
+				tRNA_type = data['organellum']
+				tRNA_type = "cytosolic" if re.search("cytosol",tRNA_type) else tRNA_type
+				
+				sequence = data['seq'].replace('U','T').replace('-','')
+				unmod_sequence = getUnmodSeq(sequence, modifications)
+				# Return list of modified nucl and inosines indices and add to modomics_dict
+				# add unmodified seq to modomics_dict by lookup to modifications
+				Mods = ['"', 'K', 'R', "'", 'O', 'Y', 'W', '⊆', 'X', '*', '[']
+				modPos = [i for i, x in enumerate(sequence) if x in Mods]
+				inosinePos = [i for i, x in enumerate(sequence) if x == 'I']
+				
+				modomics_dict[curr_id] = {'sequence':sequence,'type':tRNA_type, 'anticodon':new_anticodon, 'modified':modPos, 'unmod_sequence':unmod_sequence, 'InosinePos':inosinePos}
+
+	# build modomics_dict if data was not fetched from API - i.e. using local txt version
+	elif not fetch:
+		log.info("Parsing local Modomics data...")
+		for line in modomics_file:
+			line = line.strip()
+			sameIDcount = 0
+
+			if line.startswith('>'):
+				line = line.replace(' | ','|')
+				# Check if species matches those from gtRNAdb input, otherwise skip entry
+				mod_species = line.split('|')[3]
+				if not mod_species in species:
+					continue
+				else:
+					# Add to perSpecies_count to tally total modomics entries per species of interest
+					perSpecies_count[mod_species] += 1
+					# Replace modomics antidon with normal ACGT codon, keep "." for pattern matching
+					anticodon = str(line.split('|')[2])
+					new_anticodon = getUnmodSeq(anticodon, modifications)
+					if "N" in new_anticodon:
+						continue
+					#new_anticodon = new_anticodon.replace("N", ".")
+
+					# Check amino acid name in modomics - set to iMet if equal to Ini to match gtRNAdb
+					amino = str(line.split('|')[1])
+					if amino == 'Ini' :
+						amino = 'iMet'
+
+					curr_id = str(line.split('|')[3].split(' ')[0]) + '_' + str(line.split('|')[3].split(' ')[1]) + '_' + str(line.split('|')[0].split(' ')[1]) + '-' + amino + '-' + new_anticodon
+					#Unique names for duplicates
+					while curr_id in modomics_dict:
+						sameIDcount += 1
+						curr_id = "-".join(curr_id.split('-')[0:3]) + '-' + str(sameIDcount)
+
+					tRNA_type = str(line.split('|')[4])
+					tRNA_type = "cytosolic" if re.search("cytosol",tRNA_type) else tRNA_type
+					modomics_dict[curr_id] = {'sequence':'','type':tRNA_type, 'anticodon':new_anticodon}
+			
+			else:
+				if not mod_species in species:
+					continue
+				else:
+					if "N" in new_anticodon:
+						continue
+
+					sequence = line.strip().replace('U','T').replace('-','')
+					modomics_dict[curr_id]['sequence'] = sequence
+					unmod_sequence = getUnmodSeq(sequence, modifications)
+
+					# Return list of modified nucl indices and add to modomics_dict
+					# add unmodified seq to modomics_dict by lookup to modifications
+					Mods = ['"', 'K', 'R', "'", 'O', 'Y', 'W', '⊆', 'X', '*', '[']
+					modPos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x in Mods]
+					inosinePos = [i for i, x in enumerate(modomics_dict[curr_id]['sequence']) if x == 'I']
+					modomics_dict[curr_id]['modified'] = modPos
+					modomics_dict[curr_id]['unmod_sequence'] = unmod_sequence
+					modomics_dict[curr_id]["InosinePos"] = inosinePos
+		
+	return(modomics_dict, perSpecies_count)
+
+def getModomics(local_mod):
+	# Get full Modomics modified tRNA data from web
+	fetch = False
+	if not local_mod:
+		try:
+			response = requests.get("http://www.genesilico.pl/modomics/api/sequences?&RNAtype=tRNA")
+			response.raise_for_status()
+			modomics = response.json()
+			fetch = True
+			log.info("Modomics retrieved...")
+		except HTTPError as http_err:
+			log.error("Unable to connect to Modomics database! HTTP error: {}. Check status of Modomics webpage. Using local Modomics files...".format(http_err))
+			modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
+			modomics = open(modomics_path, "r+", encoding = "utf-8")
+		except Exception as err:
+			log.error("Error in connecting to Modomics: {}. Using local Modomics files...".format(err))
+			modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
+			modomics = open(modomics_path, "r+", encoding = "utf-8")
+	else:
+		log.warning("Retrieval of Modomics database disabled. Using local files instead...")
 		modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
 		modomics = open(modomics_path, "r+", encoding = "utf-8")
-		
 
-	return modomics
+	return modomics, fetch
 
-
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False):
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, double_cca, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0
@@ -193,7 +241,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
-	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, pretrnas)
+	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod)
 	temp_dir = out_dir + "/tmp/"
 
 	try:
@@ -233,7 +281,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		temp_tRNAFasta = open(temp_dir + seq + ".fa","w")
 		temp_tRNAFasta.write(">" + seq + "\n" + tRNA_dict[seq]['sequence'] + "\n")
 		temp_tRNAFasta.close()
-		tRNA_dict[seq]['anticodon'] = anticodon = re.search('.*tRNA-.*?-(.*?)-', seq).group(1)
+		tRNA_dict[seq]['anticodon'] = anticodon = re.search('.*tR(NA|X)-.*?-(.*?)-', seq).group(2)
 		if not anticodon in anticodon_list:
 			anticodon_list.append(anticodon)
 		# find initial possible matches to modomics where anticodons match and types are the same (here regex is used to match anticodons with "." in modomics to all possible matching sequences from input tRNAs)
@@ -355,9 +403,10 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		# empty mismatch dict to avoid error when returning it from this function
 		mismatch_dict = defaultdict(list)
 		insert_dict = defaultdict(dd_list)
+		del_dict = defaultdict(dd_list)
 		mod_lists = {tRNA:list() for tRNA in tRNA_dict.keys()}
 		Inosine_lists = {tRNA:data['InosinePos'] for tRNA, data in tRNA_dict.items()}
-		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list))
+		cluster_perPos_mismatchMembers = defaultdict(dd_list)
 		cluster_dict = defaultdict(list)
 
 	##########################
@@ -403,8 +452,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		snp_records = list()
 		cluster_dict = defaultdict(list) # info about clusters and members
 		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for exclusion from misincorporation analysis in mmQuant)
-		insert_dict = defaultdict(dd_list) # dictionary of insertions in cluster parents - these are not recorded as mismatches but are needed in order to split read counts into isodecoders
-		cluster_perPos_mismatchMembers = defaultdict(lambda: defaultdict(list)) # for each cluster, list of members that mismatch at each position corresonding to mismatch dict - used for splitting read counts into isodecoders (splitReads.py)
+		insert_dict = defaultdict(dd_list) # dictionary of insertions in cluster parents - these are not recorded as mismatches but are needed in order to split clusters into isodecoders
+		del_dict = defaultdict(dd_list) # dictionary of deletions in cluster parents - these are not recorded as mismatches but are needed in order to split clusters into isodecoders
+		cluster_perPos_mismatchMembers = defaultdict(dd_list) # for each cluster, list of members that mismatch at each position corresonding to mismatch dict - used for splitting clusters into isodecoders (splitClusters.py)
 		cluster_num = 0
 		total_snps = 0
 		total_inosines = 0
@@ -478,26 +528,27 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 									pos += 1
 
 							for delete in deletion_pos:
-								# if delete in tRNA_dict[member_name]["modified"]:
-								# 	tRNA_dict[member_name]["modified"].remove(delete)
-								new_delete = delete + adjust_pos_del
+								adjust_pos_len = 0
+								for insert in insertion_pos:
+									if insert < delete:
+										adjust_pos_len -= 1
+								new_delete = delete + adjust_pos_del + adjust_pos_len
 								member_seq = member_seq[ :new_delete] + member_seq[new_delete+1: ]
+								del_dict[cluster_name][new_delete].append(member_name)
 								adjust_pos_del -= 1
 
 							for index, insert in enumerate(insertion_pos):
 								adjust_pos_len = 0
-								# if insert in mod_lists[cluster_name]:
-								# 	mod_lists[cluster_name].remove(insert)
 								for delete in deletion_pos:
 									if delete < insert:
 										adjust_pos_len -= 1
-								if index != 0:
-									if insert == insertion_pos[index-1] + 1:
-										adjust_pos_ins -= 1
+								#if index != 0:
+								#	if insert == insertion_pos[index-1] + 1:
+								#		adjust_pos_ins -= 1
 								new_insert = insert + adjust_pos_len + adjust_pos_ins
 								member_seq = member_seq[ :new_insert] + cluster_seq[insert] + member_seq[new_insert: ]
-								insert_dict[cluster_name][new_insert-1].append(member_name)
-								#insert_dict[cluster_name][new_insert].append(member_name)
+								#insert_dict[cluster_name][new_insert-1].append(member_name)
+								insert_dict[cluster_name][new_insert].append(member_name)
 								#cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
@@ -607,9 +658,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
-	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
+	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, del_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
 
-def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, clustering, snp_tolerance):
+def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, clustering, remap, snp_tolerance):
 # Parses new mods (from remap) into mod_lists, rewrites SNP index
 
 	log.info("\n+------------------+ \
@@ -625,7 +676,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 
 	# add new predicted inosines to inosine list and tRNA_dict
 	for l in new_Inosines:
-		for cluster, inosines in l.items():
+		for cluster in l.keys():
 			tRNA_dict[cluster]['InosinePos'] = list(set(tRNA_dict[cluster]['InosinePos'] + l[cluster]))
 			old_inosines = len(Inosine_lists[cluster])
 			Inosine_lists[cluster] = list(set(Inosine_lists[cluster] + l[cluster])) # total inosines per cluster
@@ -636,7 +687,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 
 	# add new predicted mods to mods_list and tRNA_dict
 	for l in new_mods_list:
-		for cluster, mods in l.items():
+		for cluster in l.keys():
 			tRNA_dict[cluster]['modified'] = list(set(tRNA_dict[cluster]['modified'] + l[cluster]))
 			old_mods = len(mod_lists[cluster])
 			mod_lists[cluster] = list(set(mod_lists[cluster] + l[cluster]))
@@ -648,33 +699,34 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 
 	log.info("{} new predicted modifications".format(new_snps_num))
 
-	# rewrite SNP index
-	total_snps = 0
-	with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
-		for cluster in mod_lists:
-			for (index, pos) in enumerate(mod_lists[cluster]):
-				snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N\n")
-			total_snps += len(mod_lists[cluster])
-		for cluster in newInosine_lists:
-		 	for (index, pos) in enumerate(Inosine_lists[cluster]):
-		 		snp_file.write(">" + cluster + "_snp" + str(index) + "  " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G\n")
-		 	total_snps += len(Inosine_lists[cluster])
+	if remap:
+		# rewrite SNP index
+		total_snps = 0
+		with open(out_dir + experiment_name + "_modificationSNPs.txt", "w") as snp_file:
+			for cluster in mod_lists:
+				for (index, pos) in enumerate(mod_lists[cluster]):
+					snp_file.write(">" + cluster + "_snp" + str(index) + " " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "N\n")
+				total_snps += len(mod_lists[cluster])
+			for cluster in newInosine_lists:
+				for (index, pos) in enumerate(Inosine_lists[cluster]):
+					snp_file.write(">" + cluster + "_snp" + str(index) + "  " + cluster + ":" + str(pos + 1) + " " + tRNA_dict[cluster]['sequence'][pos].upper() + "G\n")
+				total_snps += len(Inosine_lists[cluster])
 
-	# read in reference transcripts for inosine editing - use cluster to determine correct file
-	if clustering:
-		tRNA_ref = out_dir + experiment_name + '_clusterTranscripts.fa'
-	else:
-		tRNA_ref = out_dir + experiment_name + '_tRNATranscripts.fa'
-	
-	tRNA_seqs = SeqIO.to_dict(SeqIO.parse(tRNA_ref, 'fasta'))	
-
-	# rewrite tRNA transcript reference
-	with open(tRNA_ref, "w") as transcript_fasta:
-		SeqIO.write(tRNA_seqs.values(), transcript_fasta, "fasta")
+		# read in reference transcripts for inosine editing - use cluster to determine correct file
+		if clustering:
+			tRNA_ref = out_dir + experiment_name + '_clusterTranscripts.fa'
+		else:
+			tRNA_ref = out_dir + experiment_name + '_tRNATranscripts.fa'
 		
-	log.info("{:,} modifications written to SNP index".format(total_snps))	
+		tRNA_seqs = SeqIO.to_dict(SeqIO.parse(tRNA_ref, 'fasta'))	
 
-	return(Inosine_clusters, snp_tolerance)
+		# rewrite tRNA transcript reference
+		with open(tRNA_ref, "w") as transcript_fasta:
+			SeqIO.write(tRNA_seqs.values(), transcript_fasta, "fasta")
+				
+		log.info("{:,} modifications written to SNP index".format(total_snps))	
+
+	return(Inosine_clusters, snp_tolerance, tRNA_dict, mod_lists)
 
 def additionalModsParser(input_species, out_dir):
 # Reads in manual addition of modifcations in /data/additionalMods.txt
@@ -690,14 +742,15 @@ def additionalModsParser(input_species, out_dir):
 		if species in input_species:
 			if "mito" in tRNA:
 				tRNA = tRNA.replace("mito", "")
-				additionalMods[tRNA]['type'] = "mito"
+				additionalMods[tRNA]['type'] = "mitochondrial"
 			else:
 				additionalMods[tRNA]['type'] = "cytosolic"
 			additionalMods[tRNA]['mods'] = mods.split(";")
 			additionalMods[tRNA]['species'] = species
 
 	# initialise dictionaries of structure (with and without gapped numbering) and anticodon positions to define canonical mod sites
-	tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict = tRNAclassifier(out_dir)
+	tRNA_struct = tRNAclassifier()[0]
+	cons_pos_dict = tRNAclassifier()[3]
 	tRNA_struct_nogap = tRNAclassifier_nogaps()
 	cons_anticodon = getAnticodon()
 
@@ -707,15 +760,14 @@ def additionalModsParser(input_species, out_dir):
 
 	# for each additional modification in dictionary, define mod site based on conserved location relative to structural features
 	for isodecoder, data in additionalMods.items():
-		if data['type'] == "mito":
+		if data['type'] == "mitochondrial":
 			clusters = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key and "mito" in key]
 		else:
 			clusters = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key and "mito" not in key]
 		for cluster in clusters:
 			no_gap_struct = [value for key, value in tRNA_struct_nogap.items() if key == cluster and 'nmt' not in key]
 			if not no_gap_struct: # test if struct is empty, i.e. if isodecoder from additional mods does not exist in tRNA dictionary
-				continue
-			gap_struct = [value for key, value in tRNA_struct.items() if key == cluster and 'nmt' not in key]			
+				continue		
 			anticodon = clusterAnticodon(cons_anticodon, cluster)
 
 			for mod in data['mods']:
@@ -855,7 +907,7 @@ def modificationParser(modifications_table):
 					modifications[mod.strip()] = {'name':name.strip(), 'abbr':abbr.strip(), 'ref':ref.strip()}
 		return(modifications)
 
-def getUnmodSeq (seq, modification_table):
+def getUnmodSeq(seq, modification_table):
 # Change modified bases into standard ACGT in input sequence
 
 	new_seq = []
@@ -907,7 +959,7 @@ def initIntronDict(tRNAscan_out):
 	return(Intron_dict)
 
 
-def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
+def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off, double_cca):
 # Use Intron_dict to find and remove introns plus add CCA and 5' G for His (if eukaryotic)
 
 	# Find a match, slice intron and add G and CCA
@@ -917,14 +969,17 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off):
 		seq = str(seqIO_dict[seqIO_record].seq[:Intron_dict[ID]['intron_start']] + seqIO_dict[seqIO_record].seq[Intron_dict[ID]['intron_stop']:])
 	else:
 		seq = str(seqIO_dict[seqIO_record].seq)
-	if 'His' in seqIO_record and posttrans_mod_off == False:
-		seq = 'G' + seq + 'CCA'
-	elif posttrans_mod_off == False:
-		seq = seq + 'CCA'
+	if posttrans_mod_off == False:
+		if double_cca:
+			seq = seq + 'CCACCA'
+		else:
+			seq = seq + 'CCA'
+		if 'His' in seqIO_record:
+			seq = 'G' + seq
 
 	return(seq)
 
-def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict):
+def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict, clusterInfo):
 
 	# Counts per anticodon
 	count_dict_anticodon = defaultdict(lambda: defaultdict(int))
@@ -935,7 +990,7 @@ def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict):
 			line = line.strip()
 			if not line.startswith("#"):
 				if line.startswith("isodecoder"):
-					sample_list = [samples for samples in line.split("\t")[1:-1]]
+					sample_list = [samples for samples in line.split("\t")[1:-3]]
 				else:
 					isodecoder = line.split("\t")[0]
 					anticodon = "-".join(isodecoder.split("-")[:-1]) if not "chr" in isodecoder else "-".join(isodecoder.split("-")[:-2])
@@ -962,6 +1017,17 @@ def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict):
 		count_isodecoder_pd = pd.DataFrame.from_dict(new_count_isodecoder, orient='index')
 		count_isodecoder_pd.index.name = 'isodecoder'
 		count_isodecoder_pd['Single_isodecoder'] = "True"
+
+		isodecoder_sizes_short = defaultdict()
+		for iso, size in isodecoder_sizes.items():
+			if not "chr" in iso:
+				short = "-".join(iso.split("-")[:-1])
+			else:
+				short = iso
+			isodecoder_sizes_short[short] = size
+		for cluster in count_isodecoder_pd.index:
+			count_isodecoder_pd.at[cluster, 'size'] = isodecoder_sizes_short[cluster]
+		count_isodecoder_pd = count_isodecoder_pd.join(clusterInfo)
 		count_isodecoder_pd.to_csv(out_dir + 'Isodecoder_counts.txt', sep = '\t')
 
 	log.info("** Read counts per anticodon saved to " + out_dir + "counts/Anticodon_counts.txt **")

@@ -47,6 +47,7 @@ mods$proportion[is.infinite(mods$proportion)] = 0
 mods$isodecoder = sub(".*_mito_tRNA-","mito",mods$isodecoder)
 mods$isodecoder = sub(".*_nmt_tRNA-","nmt",mods$isodecoder)
 mods$isodecoder = sub(".*_tRNA-","",mods$isodecoder)
+mods$isodecoder = sub(".*_tRX-","",mods$isodecoder)
 mods$isodecoder = ifelse(mods$isodecoder == 'eColiLys-TTT-1-1', 'eColiLys', mods$isodecoder)
 mods = mods[!grepl("-", mods$canon_pos),]
 mods_agg = aggregate(mods$proportion, by = list(isodecoder=mods$isodecoder, pos=mods$pos, bam=mods$bam, condition=mods$condition, canon_pos=mods$canon_pos), FUN = sum)
@@ -304,6 +305,8 @@ if (length(unique(mods$condition)) > 1) {
   # modify mods and aggregate for total misinc. (sum of all types) and by condition (mean)
   mods$cov[is.na(mods$cov)] = 0
   mods = mods[!grepl("eColiLys", mods$isodecoder), ]
+  # exclude mito clusters from diff mods analysis
+  mods = mods[!grepl("mito", mods$isodecoder),]
   mods$bam = sub(".*/","",mods$bam)
   mods_agg = aggregate(mods$proportion, by = list(isodecoder=mods$isodecoder, pos=mods$pos, bam=mods$bam, condition=mods$condition, canon_pos=mods$canon_pos, cov=mods$cov), FUN = sum)
   mods_agg = aggregate(mods_agg$x, by = list(isodecoder=mods_agg$isodecoder, pos=mods_agg$pos, condition=mods_agg$condition, canon_pos=mods_agg$canon_pos, cov=mods_agg$cov), FUN = mean)

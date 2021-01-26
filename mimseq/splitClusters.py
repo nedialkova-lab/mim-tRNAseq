@@ -5,7 +5,11 @@ import logging
 from collections import defaultdict
 from itertools import chain, combinations as comb
 from .ssAlign import aligntRNA
+from .getCoverage import getBamList
 import re
+import pybedtools
+from multiprocessing import Pool
+from functools import partial
 import pickle
 
 ####################################################################################################################
@@ -175,7 +179,6 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
     multiSeq_size = 0
     multiSeq_names = set()
     for cluster, members in cluster_dict.items():
-        child_iso_set = set()
         child_iso_set = {tRNA_dict[member]['sequence'].upper() for member in members}
         if len(child_iso_set) == 1:
             singleSeq_clusters += 1
@@ -237,6 +240,73 @@ The following isodecoders were not distinguished uniquely from the cluster paren
     #    pickle.dump(unique_isodecoderMMs, unique_mms_out) 
 
     return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
+
+def covCheck_mp(coverageBed, unique_isodecoderMMs, covDiff, input):
+    # get positional coverage per cluster per bam file and check if 3':5' coverage is greater than covDiff
+    unsplit = set()
+    unsplit_isosOnly = set()
+    log.info("Calculating nucleotide coverage for {}".format(input))
+    bam = pybedtools.BedTool(input)
+    bed = pybedtools.BedTool(coverageBed)
+    cov = bed.coverage(bam, s = True, d = True)
+    cov_df = cov.to_dataframe()
+
+    # check coverage diff for each unique sequence in each cluster
+    for cluster in unique_isodecoderMMs.keys():
+        for mismatch in unique_isodecoderMMs[cluster]:
+            # split positions from identities in distinguishing mismatches and find most 5' (i.e. min)
+            mismatchNums = [int(re.search('(\d+\.|\d+)+', pos).group(0)) for pos in mismatch]
+            minMismatch = min(mismatchNums) + 1 # 0 to 1 based numbering for cov_df thickStart
+
+            # check coverage at position/coverage at 3' is >= covDiff: thickStart is pos, thickEnd is coverage
+            # determine most 3' pos of current cluster
+            end = max(cov_df.loc[cov_df.name == cluster,'thickStart'])
+            if minMismatch < end:
+                endCov = int(cov_df.loc[(cov_df.name == cluster) & (cov_df.thickStart == end - 5), 'thickEnd'])
+                # use this end - 5 (to exlude variability at 3'-CCA coverage) as the 3' position to measure against
+                ratio = cov_df.loc[(cov_df.name == cluster) & (cov_df.thickStart == minMismatch), 'thickEnd'].astype(float) / endCov
+            #try:
+                if float(ratio) < covDiff:
+                    unsplit.add(cluster)
+                    unsplit.add(unique_isodecoderMMs[cluster][mismatch][0])
+                    unsplit_isosOnly.add(unique_isodecoderMMs[cluster][mismatch][0])
+            #except TypeError:
+            #   print(cov_df.head())
+            #   print(mismatch)
+            #    print(minMismatch)
+            #    print(endCov)
+            #    print(ratio)
+
+    return(unsplit, unsplit_isosOnly)
+
+def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, threads, covDiff = 0.5):
+    # Define unique sequences not able to be split based on significant drop in coverage before distinguishing mismatch
+   
+    log.info("\n+---------------------------------------------------------------------------------+\
+        \n| Determining un-deconvoluted clusters due to insufficient coverage at mismatches |\
+        \n+---------------------------------------------------------------------------------+")
+
+    log.info("*** Un-deconvoluted sequences being defined based on coverage difference more than {}".format(covDiff))
+    baminfo, bamlist = getBamList(coverageData)
+    
+    if len(baminfo) > threads:
+	    multi = threads
+    else:
+	    multi = len(baminfo)
+
+    # initiate custom non-daemonic multiprocessing pool and run with bam names
+    log.info("Determining unsplittable sequences...")
+    pool = Pool(multi)
+    func = partial(covCheck_mp, coverageBed, unique_isodecoderMMs, covDiff)
+    unsplit, unsplit_isosOnly = zip(*pool.map(func, bamlist))
+    pool.close()
+    pool.join()
+
+    unsplit_all = list(set().union(*unsplit))
+    unsplit_isosAll = len(list(set().union(*unsplit_isosOnly)))
+    log.info("{} unique sequences excluded from deconvolution due to reductions in required coverage at mismatches of more than {:.2%}".format(unsplit_isosAll, covDiff))
+
+    return(unsplit_all)
 
 def writeIsodecoderTranscripts(out_dir, experiment_name, cluster_dict, tRNA_dict):
 	# write isodecoderTransripts.fa when cluster_id == 1 to avoid issues with shortened isodecoder names and output files

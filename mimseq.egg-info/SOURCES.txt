@@ -2,7 +2,6 @@ MANIFEST.in
 README.md
 sampleData_HEKvsK562.txt
 setup.py
-mimseq/CCAanalysis.py
 mimseq/__init__.py
 mimseq/ccaPlots.R
 mimseq/coveragePlot.R
@@ -13,6 +12,7 @@ mimseq/mmQuant.py
 mimseq/modPlot.R
 mimseq/modifications
 mimseq/splitClusters.py
+mimseq/splitClustersOLD.py
 mimseq/ssAlign.py
 mimseq/tRNAmap.py
 mimseq/tRNAtools.py
@@ -35,10 +35,14 @@ mimseq/data/ce11-tRNAs/ce11-tRNAs-detailed.out
 mimseq/data/ce11-tRNAs/ce11-tRNAs.bed
 mimseq/data/ce11-tRNAs/ce11-tRNAs.fa
 mimseq/data/ce11-tRNAs/ce11-tRNAs_name_map.txt
+mimseq/data/danRer11-eColitK/README.txt
 mimseq/data/danRer11-eColitK/danRer11-mitotRNAs.fa
 mimseq/data/danRer11-eColitK/danRer11-tRNAs.bed
 mimseq/data/danRer11-eColitK/danRer11_eColitK.fa
+mimseq/data/danRer11-eColitK/danRer11_eColitK_filtered.fa
 mimseq/data/danRer11-eColitK/danRer11_eschColi-tRNAs.out
+mimseq/data/danRer11-eColitK/filterList.txt
+mimseq/data/danRer11-eColitK/filtertRNAs.py
 mimseq/data/dm6-eColitK/dm6-mitotRNAs.fa
 mimseq/data/dm6-eColitK/dm6-tRNAs.bed
 mimseq/data/dm6-eColitK/dm6_eColitK-tRNAs.fa
@@ -68,6 +72,15 @@ mimseq/data/hg19-tRNAs/hg19-tRNAs.bed
 mimseq/data/hg19-tRNAs/hg19-tRNAs.fa
 mimseq/data/hg19-tRNAs/hg19-tRNAs.out.nohap
 mimseq/data/hg19-tRNAs/hg19-tRNAs.ss.sort
+mimseq/data/hg38-eColitK/FastaHeadersforMimseq.py
+mimseq/data/hg38-eColitK/README.txt
+mimseq/data/hg38-eColitK/hg38-mitotRNAs.fa
+mimseq/data/hg38-eColitK/hg38-tRNAs-all.fa
+mimseq/data/hg38-eColitK/hg38-tRNAs-detailed.out
+mimseq/data/hg38-eColitK/hg38-tRNAs-filtered.fa
+mimseq/data/hg38-eColitK/hg38-tRNAs.bed
+mimseq/data/hg38-eColitK/hg38-tRNAs.fa
+mimseq/data/hg38-eColitK/hg38-tRNAs_name_map.txt
 mimseq/data/mm10-eColitK/mm10-mitotRNAs.fa
 mimseq/data/mm10-eColitK/mm10_eColitK-tRNAs.fa
 mimseq/data/mm10-eColitK/mm10_eschColi-tRNAs.out

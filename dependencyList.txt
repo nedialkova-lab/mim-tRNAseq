@@ -4,6 +4,7 @@ Python packages:
 	- numpy 1.14.0 
 	- pyfiglet 0.7.5
 	- pysam 0.14.1
+	- pybedtools 0.8.1
 	- seaborn 0.8.1
 	- matplotlib 2.1.2
 INFERNAL 1.1.2 (July 2016) 

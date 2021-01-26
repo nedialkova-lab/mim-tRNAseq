@@ -1,3 +1,14 @@
 {
-    "restructuredtext.confPath": "${workspaceFolder}/docs/source"
+    "r.bracketedPaste": true,
+    "r.rterm.linux": "/home/drew/anaconda3/bin/radian",
+    "r.lsp.path": "/usr/bin/R",
+    "r.lsp.debug": true,
+    "r.lsp.diagnostics": true,
+    "r.rterm.option": [
+          "--no-save",
+          "--no-restore",
+          "--r-binary=/usr/bin/R"
+      ],
+    "restructuredtext.confPath": "${workspaceFolder}/docs/source",
+    "python.pythonPath": "/home/drew/anaconda3/bin/python"
 }

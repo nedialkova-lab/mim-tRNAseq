@@ -19,7 +19,7 @@ from .tRNAmap import mainAlign
 from .getCoverage import getCoverage, plotCoverage
 from .mmQuant import generateModsTable, plotCCA
 from .ssAlign import structureParser, modContext 
-from .splitClusters import splitIsodecoder, getIsodecoderSizes, writeIsodecoderTranscripts
+from .splitClusters import splitIsodecoder, unsplitClusters, getIsodecoderSizes, writeIsodecoderTranscripts
 import sys, os, subprocess, logging, datetime, copy
 import argparse
 from pyfiglet import figlet_format
@@ -28,7 +28,7 @@ from collections import defaultdict
 log = logging.getLogger(__name__)
 
 def restrictedFloat(x):
-## Method for restricting cluster_id argument to float between 0 and 1
+## Method for restricting cluster_id and cov_diff argument to float between 0 and 1
 	try:
 		x = float(x)
 		if x < 0.0 or x > 1.0:
@@ -37,8 +37,19 @@ def restrictedFloat(x):
 	except ValueError:
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
-def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, pretrnas, sample_data):
+def restrictedFloat2(x):
+## Method for restricting min-cov argument to float between 0 and 1, or int greater than 1
+
+	try:
+		x = float(x)
+		if x < 0.0:
+			raise argparse.ArgumentTypeError('{} not greater than 0'.format(x))
+		return x
+	except ValueError:
+		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
+
+def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, posttrans, control_cond, threads, max_multi, snp_tolerance, \
+	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, pretrnas, local_mod, sample_data):
 	
 # Main wrapper
 	# Integrity check for output folder argument...
@@ -75,7 +86,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
 	coverage_bed, snp_tolerance, mismatch_dict, insert_dict, del_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
-	= modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, double_cca, snp_tolerance, cluster, cluster_id, posttrans, pretrnas)
+	= modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, double_cca, snp_tolerance, cluster, cluster_id, posttrans, pretrnas, local_mod)
 	structureParser()
 	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
@@ -87,9 +98,12 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 	# define unique mismatches/insertions to assign reads to unique tRNA sequences
 	unique_isodecoderMMs = defaultdict(dict)
 	splitBool = list()
-	if cluster and not cluster_id == 1:
+	newSplitBool = list()
+	if cluster and cluster_id != 1:
 		cluster_dict2 = copy.deepcopy(cluster_dict) # copy so splitReadsIsodecoder does not edit main cluster_dict
 		unique_isodecoderMMs, splitBool, isodecoder_sizes = splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_dict, cluster_dict2, out, name)
+		unsplit = unsplitClusters(coverageData, coverage_bed, unique_isodecoderMMs, threads, cov_diff)
+		newSplitBool = list(set(splitBool).union(unsplit))
 	elif cluster and cluster_id == 1:
 		isodecoder_sizes = {iso:len(members) for iso, members in cluster_dict.items()}
 		writeIsodecoderTranscripts(out, name, cluster_dict, tRNA_dict)
@@ -98,7 +112,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
+		new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, newSplitBool, isodecoder_sizes, cluster)
 		Inosine_clusters, snp_tolerance, newtRNA_dict, new_mod_lists = newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster, remap, snp_tolerance)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
@@ -108,14 +122,19 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 	#else:
 	#	log.info("\n*** New modifications not discovered as remap is not enabled ***\n")
 
+	# redo checks for unsplit isodecoders based on coverage
+	if map_round == 2 and cluster_id != 1:
+		unsplit = unsplitClusters(coverageData, coverage_bed, unique_isodecoderMMs, threads, cov_diff)
+		newSplitBool = list(set(splitBool).union(unsplit))
+
 	# Misincorporation analysis
 	filter_warning = False
 	filtered_cov = list()
 	if snp_tolerance or not mismatches == 0.0:
 		if 'newtRNA_dict' in locals():
-			new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
+			new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs, newSplitBool, isodecoder_sizes, cluster)
 		else:
-			new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, cluster)
+			new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, newSplitBool, isodecoder_sizes, cluster)
 
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
@@ -129,7 +148,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 					# plot mods and stops, catch exception with command call and print log error if many clusters are filtered (known to cause issues with R code handling mods table)
 		log.info("Plotting modification and RT stop data...")
 		try:
-			modplot_cmd = ["Rscript", script_path + "/modPlot.R", out, str(mod_sites), str(cons_pos_list), str(misinc_thresh), str(mito_trnas)]
+			modplot_cmd = ["Rscript", script_path + "/modPlot.R", out, str(mod_sites), str(cons_pos_list), str(misinc_thresh), str(mito_trnas), control_cond]
 			process = subprocess.Popen(modplot_cmd, stdout = subprocess.PIPE)
 			while True:
 				line = process.stdout.readline()
@@ -147,7 +166,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, posttrans, c
 			plotCCA(out, double_cca)
 
 	# Coverage and plots
-	sorted_aa = getCoverage(coverageData, out, min_cov, control_cond, filtered_cov)
+	sorted_aa = getCoverage(coverageData, out, control_cond, filtered_cov)
 	plotCoverage(out, mito_trnas, sorted_aa)
 
 	# DESeq2
@@ -201,6 +220,9 @@ def main():
 		help = 'Enable usearch sequence clustering of tRNAs by isodecoder - drastically reduces rate of multi-mapping reads.')
 	options.add_argument('--cluster-id', metavar = 'clustering identity threshold', dest = 'cluster_id', type = restrictedFloat, nargs = '?', default = 0.97,\
 		required = False, help = 'Identity cutoff for usearch clustering between 0 and 1. Default is 0.97.')
+	options.add_argument('--deconv-cov-ratio', metavar='deconvolution coverage threshold', dest='cov_diff', type = restrictedFloat, nargs = '?', default=0.5,\
+		required=False, help="Threshold for ratio between coverage at 3' end and mismatch used for deconvolution. Coverage reductions greater than the threshold will result in non-deconvoluted sequences. \
+			Default is 0.5 (i.e. less than 50%% reduction required for deconvolution).")
 	options.add_argument('--threads', metavar = 'thread number', required = False, dest = 'threads', type = int, \
 		help = 'Set processor threads to use during read alignment and read counting.')
 	options.add_argument('--posttrans-mod-off', required = False, dest = 'posttrans', action = 'store_true', \
@@ -214,6 +236,9 @@ def main():
 		Useful for comparing functional to non-functional mature tRNAs.")
 	options.add_argument('--double-cca', required = False, dest = 'double_cca', action = "store_true",\
 		help = "Enable analysis of 3'-CCACCA tagging for tRNA degradation pathway. Note that this will alter the output of the CCA analysis pipeline.")
+	options.add_argument('--local-modomics', required=False, dest = 'local_mod', action='store_true',\
+		help = "Disable retrieval of Modomics data from online. Instead use older locally stored data. Warning - this leads\
+			to usage of older Modomics data!")
 
 	align = parser.add_argument_group("GSNAP alignment options")
 	align.add_argument('--max-mismatches', metavar = 'allowed mismatches', required = False, dest = 'mismatches', type = float, \
@@ -235,9 +260,10 @@ def main():
 		'Keeps multi-mapping and unmapped bam files from GSNAP alignments. Default is false.')
 
 	bedtools = parser.add_argument_group("Bedtools coverage options")
-	bedtools.add_argument('--min-cov', metavar = 'Minimum coverage per cluster', required = False, dest = 'min_cov', type = int, \
-		help = "Minimum coverage per cluster to include this cluster in coverage plots, modification analysis, and 3'-CCA analysis. Clusters with \
-		 less than this will be filtered out of these analyses. Note that all clusters are included for differential expression analysis with DESeq2.")
+	bedtools.add_argument('--min-cov', metavar = 'Minimum coverage per cluster', required = False, dest = 'min_cov', type = restrictedFloat2, \
+		help = "Minimum coverage per cluster required to include this cluster in coverage plots, modification analysis, and 3'-CCA analysis. \
+		Can be a fraction of total mapped reads between 0 and 1, or an integer of absolute coverage. Any cluster not meeting the threshold in 1 or more sample will be excluded. \
+		Note that all clusters are included for differential expression analysis with DESeq2.")
 	bedtools.add_argument('--max-multi', metavar = 'Bedtools coverage multithreading', required = False, dest = 'max_multi', type = int, \
 		help = 'Maximum number of bam files to run bedtools coverage on simultaneously. Increasing this number reduces processing time\
 		by increasing number of files processed simultaneously. However, depending on the size of the bam files to process and\
@@ -255,7 +281,7 @@ def main():
 	parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version.__version__), help = 'Show version number and exit')
 	parser.add_argument('sampledata', help = 'Sample data sheet in text format, tab-separated. Column 1: full path to fastq (or fastq.gz). Column 2: condition/group.')
 	
-	parser.set_defaults(threads=1, out="./", max_multi = 3, min_cov = 0, mito = '')
+	parser.set_defaults(threads=1, out="./", max_multi = 3, min_cov = 0, mito = '', cov_diff = 0.5)
 
 	#########################################
 	# Print help, check args or run mim-seq #
@@ -329,10 +355,10 @@ def main():
 					args.mito = ''
 			else:
 				args.species = args.trnas.split("/")[-1].split(".")[0]
-			mimseq(args.trnas, args.trnaout, args.name, args.species, args.out, args.cluster, args.cluster_id, \
+			mimseq(args.trnas, args.trnaout, args.name, args.species, args.out, args.cluster, args.cluster_id, args.cov_diff, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
 				args.keep_temp, args.cca, args.double_cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
-				args.misinc_thresh, args.mito, args.pretrnas, args.sampledata)
+				args.misinc_thresh, args.mito, args.pretrnas, args.local_mod, args.sampledata)
 
 if __name__ == '__main__':
 	main()

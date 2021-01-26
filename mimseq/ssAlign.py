@@ -4,7 +4,6 @@
 
 import subprocess, os, re
 from Bio import AlignIO
-from Bio.Alphabet import generic_rna
 from collections import defaultdict, Counter
 from itertools import groupby
 from operator import itemgetter
@@ -23,7 +22,7 @@ def extraCCA():
 	# look for extra CCA's added spuriously that fall outside of canonical tRNA structure
 	# Seems to be a problem in certain sequences in mouse - either an artifact from gtRNAdb or tRNAScan, or CCA is genomically encoded for these tRNAs?
 	extra_cca = list()
-	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
+	stk = AlignIO.read(stkname, "stockholm")
 	for record in stk:
 		if record.seq[-3:] == 'cca': #lowercase here indicates alignment issue to other clusters
 			extra_cca.append(record.name)
@@ -35,7 +34,7 @@ def extraCCA():
 def tRNAclassifier(ungapped = False):
 
 	struct_dict = structureParser()
-	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna,)
+	stk = AlignIO.read(stkname, "stockholm")
 
 	# Get canonical tRNA position numbering (cons_pos_list). Useful to retain cononical numbering of tRNA positions (i.e. anticodon at 34 - 36, m1A 58 etc...)
 	# Return list of characters with pos or '-'. To be used in all plots with positional data such as heatmaps for stops or modifications.
@@ -149,7 +148,7 @@ def tRNAclassifier_nogaps():
 	tRNA_struct = defaultdict(dict)
 
 	# Loop thorugh every tRNA in alignment and create dictionary entry for pos - structure information (1-based to match to mismatchTable from mmQuant)
-	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
+	stk = AlignIO.read(stkname, "stockholm")
 	for record in stk:
 		tRNA = record.id
 		seq = record.seq
@@ -191,7 +190,7 @@ def clusterAnticodon(cons_anticodon, cluster):
 	# return anticodon position without gaps for specific cluster
 
 	bases = ["A", "C", "G", "U"]
-	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna)
+	stk = AlignIO.read(stkname, "stockholm")
 	cluster_anticodon = list()
 	for record in stk:
 		if record.id == cluster:
@@ -219,7 +218,7 @@ def modContext(out):
 
 	upstream_dict = defaultdict(lambda: defaultdict(list))
 
-	stk = AlignIO.read(stkname, "stockholm", alphabet=generic_rna) 
+	stk = AlignIO.read(stkname, "stockholm") 
 	for record in stk:
 		gene = record.id
 		seq = record.seq

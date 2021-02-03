@@ -10,7 +10,7 @@ To use mim-tRNAseq, it is recommended to install the package from `bioconda` usi
 	conda actiavte mimseq
 	conda install -c bioconda mimseq
 
-Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
+Additional packages are required that cannot be installed by `conda` before mim-tRNAseq can be run.
 To install ggpol, please do the following:
 ::
 	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org", upgrade = FALSE)'
@@ -147,6 +147,8 @@ If you install from source or PyPi, please install all dependencies below before
 +------------+------------+-------------+
 | pybedtools | 0.8.1      | pybedtools_ |
 +------------+------------+-------------+
+| requests   | 2.23.0     | requests_   |
++------------+------------+-------------+
 
 .. _Python: https://www.python.org/
 .. _Biopython: https://biopython.org/
@@ -156,6 +158,7 @@ If you install from source or PyPi, please install all dependencies below before
 .. _NumPy: https://numpy.org/
 .. _seaborn: https://seaborn.pydata.org/
 .. _pybedtools: https://daler.github.io/pybedtools/
+.. _requests: https://requests.readthedocs.io/en/master/
 
 
 Usage

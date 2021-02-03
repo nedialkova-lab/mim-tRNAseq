@@ -2,8 +2,8 @@
 mim-tRNAseq
 ***********
 
-Behrens et al., 2021, Molecular Cell 81, 1–14
-`doi <https://doi.org/10.1016/j.molcel.2021.01.028>`_
+`Behrens <https://doi.org/10.1016/j.molcel.2021.01.028>`_ et al., 2021, Molecular Cell 81, 1–14
+
 
 .. image:: ../img/globular_multi.png
    :align: center

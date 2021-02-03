@@ -10,7 +10,7 @@ Due to the abundance of modifications to tRNA residues as well as high sequence 
 
 Using mim-tRNAseq and TGIRT overcomes these problems. First, tRNA genes sharing anticodons are clustered according to a user-defined ID threshold to limit read placement ambiguity during alignment. Next, the misincorporation by TGIRT at modified nucleotides allows read-through of modifications producing longer reads and libraries with less biased tRNA coverage, further improving alignment statistics and quantification. Additionally, indexed modification data is used in SNP-tolerant alignments by GSNAP (Wu and Nacu, 2010) to account for misincorporations, and thereby guide more accurate read placement. Collectively, mim-tRNAseq improves tRNA gene coverage from sequencing data and thereby reduces bias, enables more data from libraries to be used by reducing multi-mapping, and overall improves estimation of tRNA expression.
 
-Detailed methodology is shown in the image below, and described in Behrens et al. (2021)
+Detailed methodology is shown in the image below, and described in Behrens et al., 2021, Molecular Cell 81, 1–14 (`doi <https://doi.org/10.1016/j.molcel.2021.01.028>`_)
 
 .. image:: ../img/method.png
 

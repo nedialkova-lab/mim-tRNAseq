@@ -2,13 +2,16 @@
 mim-tRNAseq
 ***********
 
+Behrens et al., 2021, Molecular Cell 81, 1–14
+`doi <https://doi.org/10.1016/j.molcel.2021.01.028>`_
+
 .. image:: ../img/globular_multi.png
    :align: center
    :scale: 35%
 
 :Author: Drew Behrens
 
-:Version: 0.2.5.4
+:Version: 0.3.1
 
 Modification-induced misincorporation tRNA sequencing.
 

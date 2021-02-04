@@ -28,13 +28,12 @@ Detailed methodology is shown in the image below, and described in Behrens et al
 
 Please see the full documentation for explanations of dependencies, inputs formatting, and outputs.
 
-To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Note that you should have conda-forge and bioconda channels added:
+To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time improvements can be made to installing mimseq using mamba which we will use within the mimseq environment:
 ```bash
-	conda config --add channels conda-forge
-	conda config --add channels bioconda
-	conda create -n mimseq
+	conda create -n mimseq python==3.7
 	conda actiavte mimseq
-	conda install -c bioconda mimseq
+	conda install -c conda-forge mamba
+	mamba install -c bioconda mimseq
 ```
 Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
 To install ggpol, please do the following:

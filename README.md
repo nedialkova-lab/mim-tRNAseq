@@ -28,8 +28,10 @@ Detailed methodology is shown in the image below, and described in Behrens et al
 
 Please see the full documentation for explanations of dependencies, inputs formatting, and outputs.
 
-To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment:
+To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Note that you should have conda-forge and bioconda channels added:
 ```bash
+	conda config --add channels conda-forge
+	conda config --add channels bioconda
 	conda create -n mimseq
 	conda actiavte mimseq
 	conda install -c bioconda mimseq

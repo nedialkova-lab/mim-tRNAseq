@@ -4,8 +4,10 @@ Quick-start guide
 Installation
 ^^^^^^^^^^^^
 
-To use mim-tRNAseq, it is recommended to install the package from `bioconda` using `conda`, preferably in its own environment:
+To use mim-tRNAseq, it is recommended to install the package from `bioconda` using `conda`, preferably in its own environment. Note that conda-forge and bioconda channels should be added before installation:
 ::
+	conda config --add channels conda-forge
+	conda config --add channels bioconda
 	conda create -n mimseq
 	conda actiavte mimseq
 	conda install -c bioconda mimseq

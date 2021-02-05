@@ -35,11 +35,7 @@ To use mim-tRNAseq, it is recommended to install the package using `conda`, pref
 	conda install -c conda-forge mamba
 	mamba install -c bioconda mimseq
 ```
-Additional packageges are required that cannot be installed by `conda` before mim-tRNAseq can be run.
-To install ggpol, please do the following:
-```bash
-	Rscript -e 'devtools::install_version("ggpol", version = "0.0.5", repos="http://cran.us.r-project.org", upgrade = FALSE)'
-```
+
 usearch needs to be acquired and installed. Please do the following:
 ```bash
 	wget https://drive5.com/downloads/usearch10.0.240_i86linux32.gz

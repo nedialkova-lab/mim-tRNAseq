@@ -754,7 +754,7 @@ def plotCCA(out_dir, double_cca):
 
 	out = out_dir + "CCAanalysis/"
 	script_path = os.path.dirname(os.path.realpath(__file__))
-	command = ["Rscript", script_path + "/ccaPlots.R", out + "AlignedDinucProportions.csv", out + "/CCAcounts.csv", out, str(double_cca)]
+	command = ["Rscript", script_path + "/ccaPlots.R", out + "AlignedDinucProportions.csv", out + "/CCAcounts.csv", out, str(double_cca), script_path + "/facet_share.R"]
 	subprocess.check_call(command)
 
 	log.info("CCA analysis done and plots created. Located in {}".format(out))

@@ -6,10 +6,14 @@
 
 suppressMessages(library(ggplot2))
 suppressMessages(library(dplyr))
-suppressMessages(library(ggpol))
+suppressMessages(library(rlang))
+suppressMessages(library(grid))
+suppressMessages(library(gtable))
 
 args = commandArgs(trailingOnly = TRUE)
 
+# source facet_share.R
+suppressMessages(source(args[5]))
 
 if (length(args) == 0) {
   stop("At least one argument must be supplied (input file).n", call.=FALSE)

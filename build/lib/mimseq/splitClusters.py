@@ -170,7 +170,6 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
     # Build nested dictionary of unique minimal set of mismatches and insertions that distinguish an isodecoder from parent and all others in cluster
     unique_isodecoderMMs = defaultdict(dd)
     unique_isodecoderMMs = findUniqueSubset(cluster_MemberMismatchPos, unique_isodecoderMMs)
-
     isodecoder_sizes = defaultdict(int)
 
     # Check that all unique sequences can be deconvoluted

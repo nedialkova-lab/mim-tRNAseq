@@ -98,8 +98,6 @@ If you install from source or PyPi, please install all dependencies below before
 +----------------+------------+----------------------+
 | tidyverse      | 1.3.0      | tidyverse_           |
 +----------------+------------+----------------------+
-| ggpol          | =0.0.5     | ggpol_               |
-+----------------+------------+----------------------+
 | ComplexHeatmap | 2.2.0      | ComplexHeatmap_      |
 +----------------+------------+----------------------+
 | devtools       | 2.2.2      | devtools_            |
@@ -118,7 +116,6 @@ If you install from source or PyPi, please install all dependencies below before
 .. _reshape2: https://cran.r-project.org/web/packages/reshape2/index.html
 .. _circlize: https://cran.r-project.org/web/packages/circlize/index.html
 .. _tidyverse: https://www.tidyverse.org/packages/
-.. _ggpol: https://cran.r-project.org/web/packages/ggpol/index.html
 .. _ComplexHeatmap: https://bioconductor.org/packages/release/bioc/html/ComplexHeatmap.html
 .. _devtools: https://cran.r-project.org/web/packages/devtools/index.html
 

@@ -74,5 +74,7 @@ Nedialkova laboratory: https://www.biochem.mpg.de/nedialkova
 
 ## Cite
 
+Behrens et al., 2021, High-resolution quantitative profiling of tRNA abundance and modification status in eukaryotes by mim-tRNaseq. Molecular Cell 81, 1–14 (https://doi.org/10.1016/j.molcel.2021.01.028)
+
 Behrens et al., High-resolution quantitative profiling of tRNA pools by mim-tRNAseq (2020)
 

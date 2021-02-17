@@ -467,7 +467,7 @@ if (length(unique(mods$condition)) > 1) {
                                              condition = mods_agg$condition,
                                              canon_pos = mods_agg$canon_pos,
                                              cov = mods_agg$cov), FUN = mean)
-                                             
+
   # for each condition make a misincorporation matrix
   mods_hm_list = list()
   stops_hm_list = list()
@@ -560,12 +560,15 @@ if (length(unique(mods$condition)) > 1) {
     temp[chisq > 0.01 | foldchange < 0.25 | (mat1_mod_props < 0.1 & mat2_mod_props < 0.1)] = 0
     
     # heatmaps
-    col_fun = colorRamp2(c(max(abs(temp)), 0, -max(abs(temp))), c("#36682B", "#f7f7f7","#CC5803"))
-    write.csv(temp, file=paste(out, "mods_logOR/", paste(comp,"logOR.csv",sep="_"), sep=""))
+    # only draw if temp consists of something other than 0s
+    if (length(temp[which(temp != 0)]) > 0) {
+      col_fun = colorRamp2(c(max(abs(temp)), 0, -max(abs(temp))), c("#36682B", "#f7f7f7","#CC5803"))
+      write.csv(temp, file=paste(out, "mods_logOR/", paste(comp,"logOR.csv",sep="_"), sep=""))
     
-    pdf(paste(out, 'mods_logOR/', paste(comp, "logOR.pdf", sep = "_"), sep = ''), width = 14, height = 12)
-    hm_logOR = Heatmap(temp, column_labels = cons_pos, column_title = as.character(comp), row_names_gp = gpar(fontsize = 6), column_names_gp = gpar(fontsize = 6), col = col_fun, column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, heatmap_legend_param = list(title = "Log odds ratio"))
-    draw(hm_logOR)
-    dev.off()
+      pdf(paste(out, 'mods_logOR/', paste(comp, "logOR.pdf", sep = "_"), sep = ''), width = 14, height = 12)
+      hm_logOR = Heatmap(temp, column_labels = cons_pos, column_title = as.character(comp), row_names_gp = gpar(fontsize = 6), column_names_gp = gpar(fontsize = 6), col = col_fun, column_title_side = "top", cluster_columns = FALSE, cluster_rows = TRUE, heatmap_legend_param = list(title = "Log odds ratio"))
+      draw(hm_logOR)
+      dev.off()
+    }
   }
 }

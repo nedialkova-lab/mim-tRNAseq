@@ -33,9 +33,14 @@ if (length(args) == 0) {
   dinuc$color[dinuc$dinuc == "CC"] = "red"
   dinuc$color[dinuc$dinuc == "CA"] = "green"
   
-  dinuc_plot = ggplot(dinuc, aes(x=dinuc, y=proportion)) + geom_bar(stat="identity", aes(fill=color)) + 
-    facet_wrap(~sample, ncol=3) + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, size=8), legend.position="none") + 
-    scale_fill_manual(values = c("#66828D","#737373","#A05C45")) + xlab("3' dinucleotide") + ylab("Proportion")
+  dinuc_plot = ggplot(dinuc, aes(x=dinuc, y=proportion)) +
+               geom_bar(stat="identity", aes(fill=color)) +
+               facet_wrap(~sample, ncol=3) +
+               theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
+                     legend.position="none") +
+               scale_fill_manual(values = c("#66828D","#737373","#A05C45")) +
+               xlab("3' dinucleotide") +
+               ylab("Proportion")
   ggsave(paste(out, "dinuc_plot.pdf", sep = ''), dinuc_plot, height=5, width=10)
   
   cca_counts = read.table(args[2], header = TRUE, sep = "\t")
@@ -43,26 +48,34 @@ if (length(args) == 0) {
   cca_counts$gene = sub(".*_nmt_tRNA-","nmt",cca_counts$gene)
   cca_counts$gene = sub(".*_tRNA-","",cca_counts$gene)
   cca_counts$gene = ifelse(cca_counts$gene == 'eColiLys-TTT-1-1', 'eColiLys', cca_counts$gene)
-  
+
   cca_prop = cca_counts %>% group_by(gene,sample) %>% 
     mutate(countT = sum(count)) %>% 
     group_by(end, .add = TRUE) %>% 
     mutate(per = round(100*count/countT,2))
-  
-  cca_summary = aggregate(cca_prop$per, by=list(gene=cca_prop$gene, end=cca_prop$end, condition = cca_prop$condition), 
+
+  cca_summary = aggregate(cca_prop$per, by=list(gene = cca_prop$gene,
+                                               end = cca_prop$end,
+                                               condition = cca_prop$condition),
                           function(x) c(mean = mean(x), sd = sd(x)))
   cca_summary = do.call("data.frame", cca_summary)
-  
+
   if (length(unique(cca_counts$condition)) > 1) {
-    combinations = combn(unique(cca_counts$condition), 2, simplify=FALSE)
-    
+    combinations = combn(unique(cca_counts$condition), 2, simplify = FALSE)
+
     # For each contrast...
     for (i in 1:length(combinations)) {
       cca_summary_sub = subset(cca_summary, condition %in% combinations[[i]])
-      cca_summary_sub = cca_summary_sub %>% mutate(x.mean = ifelse(condition == cca_summary_sub$condition[1], x.mean * -1, x.mean))
+      cca_summary_sub = cca_summary_sub %>%
+                        mutate(x.mean = ifelse(condition == cca_summary_sub$condition[1],
+                                                x.mean * -1,
+                                                x.mean))
       
       cca_prop_sub = subset(cca_prop, condition %in% combinations[[i]])
-      cca_prop_sub = cca_prop_sub %>% mutate(per = ifelse(condition == cca_summary_sub$condition[1], per * -1, per))
+      cca_prop_sub = cca_prop_sub %>%
+                     mutate(per = ifelse(condition == cca_summary_sub$condition[1],
+                                         per * -1,
+                                         per))
       
       cca_prop_sub$bar_pos = NA
       cca_prop_sub$bar_pos[cca_prop_sub$end == "Absent"] = cca_prop_sub$per[cca_prop_sub$end == "Absent"]

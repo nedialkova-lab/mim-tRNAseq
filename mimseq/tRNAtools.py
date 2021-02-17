@@ -1046,7 +1046,7 @@ def tidyFiles (out_dir, cca):
 			shutil.move(full_file, out_dir + "annotation")
 		if (file.endswith("tRNAgenome") or file.endswith("index") or "index.log" in file):
 			shutil.move(full_file, out_dir + "indices")
-		if (file.endswith("bam") or "align.log" in file or file == "mapping_stats.txt" or "alignstats.pdf" in file):
+		if (file.endswith("bam") or file.endswith("bam.bai") or "align.log" in file or file == "mapping_stats.txt" or "alignstats.pdf" in file):
 			shutil.move(full_file, out_dir + "align")
 		if ("cov" in file):
 			shutil.move(full_file, out_dir + "cov")

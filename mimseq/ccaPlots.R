@@ -46,7 +46,7 @@ if (length(args) == 0) {
   
   cca_prop = cca_counts %>% group_by(gene,sample) %>% 
     mutate(countT = sum(count)) %>% 
-    group_by(end, add = TRUE) %>% 
+    group_by(end, .add = TRUE) %>% 
     mutate(per = round(100*count/countT,2))
   
   cca_summary = aggregate(cca_prop$per, by=list(gene=cca_prop$gene, end=cca_prop$end, condition = cca_prop$condition), 

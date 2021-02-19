@@ -216,8 +216,8 @@ def main():
 	options.add_argument('--pretRNAs', required = False, dest = 'pretrnas', action = 'store_true',\
 		help = "Input reference sequences are pretRNAs. Enabling this option will disable the removal of intron sequences and addition of 3'-CCA to generate \
 		mature tRNA sequences. Useful for mapping and discovering pretRNA sequence reads.")
-	options.add_argument('--cluster', required = False, dest = 'cluster', action = 'store_true',\
-		help = 'Enable usearch sequence clustering of tRNAs by isodecoder - drastically reduces rate of multi-mapping reads.')
+	options.add_argument('--no-cluster', required = False, dest = 'cluster', action = 'store_false',\
+		help = 'Disable usearch sequence clustering of tRNAs by isodecoder which drastically reduces the rate of multi-mapping reads. Default is enabled.')
 	options.add_argument('--cluster-id', metavar = 'clustering identity threshold', dest = 'cluster_id', type = restrictedFloat, nargs = '?', default = 0.97,\
 		required = False, help = 'Identity cutoff for usearch clustering between 0 and 1. Default is 0.97.')
 	options.add_argument('--deconv-cov-ratio', metavar='deconvolution coverage threshold', dest='cov_diff', type = restrictedFloat, nargs = '?', default=0.5,\
@@ -231,9 +231,9 @@ def main():
 	options.add_argument('--control-condition', metavar = 'control condition', required = True, dest = 'control_cond', \
 		help = 'Name of control/wild-type condition as per user defined group specified in sample data input. This must exactly match the group name \
 		specified in sample data. This is used for differential expression analysis so that results are always in the form mutant/treatment vs WT/control. REQUIRED')
-	options.add_argument('--cca-analysis', required = False, dest = 'cca', action = 'store_true',\
-		help = "Enable analysis of 3'-CCA ends: Calculates proportions of CC vs CCA ending reads per cluster and performs DESeq2 analysis. \
-		Useful for comparing functional to non-functional mature tRNAs.")
+	options.add_argument('--no-cca-analysis', required = False, dest = 'cca', action = 'store_false',\
+		help = "Disable analysis of 3'-CCA ends. When enabled, this calculates proportions of CC vs CCA ending reads per cluster and performs DESeq2 analysis. \
+		Useful for comparing functional to non-functional mature tRNAs. Default is enabled.")
 	options.add_argument('--double-cca', required = False, dest = 'double_cca', action = "store_true",\
 		help = "Enable analysis of 3'-CCACCA tagging for tRNA degradation pathway. Note that this will alter the output of the CCA analysis pipeline.")
 	options.add_argument('--local-modomics', required=False, dest = 'local_mod', action='store_true',\
@@ -247,8 +247,8 @@ def main():
 	align.add_argument('--remap-mismatches', metavar = 'allowed mismatches for remap', required = False, dest = 'remap_mismatches', type = float,\
 		help = 'Maximum number of mismatches allowed during remapping of all reads. Treated similarly to --max-mismatches. This is important to control misalignment of reads to similar clusters/tRNAs \
 		Note that the SNP index will be updated with new SNPs from the first round of alignment and so this should be relatively small to prohibit misalignment.')
-	align.add_argument('--snp-tolerance', required = False, dest = 'snp_tolerance', action = 'store_true',\
-		help = 'Enable GSNAP SNP-tolerant read alignment, where known modifications from Modomics are mapped as SNPs.')
+	align.add_argument('--no-snp-tolerance', required = False, dest = 'snp_tolerance', action = 'store_false',\
+		help = 'Disable GSNAP SNP-tolerant read alignment, where known modifications from Modomics are mapped as SNPs. Default is enabled.')
 
 
 	outputs = parser.add_argument_group("Output options")
@@ -260,10 +260,10 @@ def main():
 		'Keeps multi-mapping and unmapped bam files from GSNAP alignments. Default is false.')
 
 	bedtools = parser.add_argument_group("Bedtools coverage options")
-	bedtools.add_argument('--min-cov', metavar = 'Minimum coverage per cluster', required = False, dest = 'min_cov', type = restrictedFloat2, \
+	bedtools.add_argument('--min-cov', metavar = 'Minimum coverage per cluster', required = False, dest = 'min_cov', type = restrictedFloat2, default=0.0005, \
 		help = "Minimum coverage per cluster required to include this cluster in coverage plots, modification analysis, and 3'-CCA analysis. \
 		Can be a fraction of total mapped reads between 0 and 1, or an integer of absolute coverage. Any cluster not meeting the threshold in 1 or more sample will be excluded. \
-		Note that all clusters are included for differential expression analysis with DESeq2.")
+		Note that all clusters are included for differential expression analysis with DESeq2. Default = 0.0005 (0.05% mapped reads).")
 	bedtools.add_argument('--max-multi', metavar = 'Bedtools coverage multithreading', required = False, dest = 'max_multi', type = int, \
 		help = 'Maximum number of bam files to run bedtools coverage on simultaneously. Increasing this number reduces processing time\
 		by increasing number of files processed simultaneously. However, depending on the size of the bam files to process and\

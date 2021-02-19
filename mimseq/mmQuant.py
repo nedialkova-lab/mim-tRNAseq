@@ -305,8 +305,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		#modTable_prop_melt = addNA(modTable_prop_melt, tRNA_struct, cluster_dict, "mods")
 		modTable_prop_melt = modTable_prop_melt[['isodecoder','pos', 'type','proportion','condition', 'bam', 'cov']]
 
-		# Shorten isodecoder names for cov_table after merge with modTable (still long names here), then save
-		cov_table_melt.loc[~cov_table_melt['isodecoder'].str.contains("chr"), 'isodecoder'] = cov_table_melt['isodecoder'].str.split("-").str[:-1].str.join("-")
+		# save
 		cov_table_melt.to_csv(out_dir + inputs.split("/")[-1] + "_coverage.txt", sep = "\t", index = False)
 
 		# reformat stopTable and add gaps 
@@ -613,29 +612,47 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 
 		dinuc_table = pd.DataFrame()
 		CCAvsCC_table = pd.DataFrame()
+
+		for bam in bamlist:
+			countsTable = pd.read_csv(bam + "countTable.csv", header = 0, sep = "\t")
+			os.remove(bam + "countTable.csv")
+			if countsTable_total.empty:
+				countsTable_total = pd.concat([countsTable_total, countsTable], ignore_index = True)
+			else:
+				countsTable_total = pd.merge(countsTable_total, countsTable, on = "isodecoder", how = "left")
+
+		# get isodecoders to filter from mods and stops
+		countsTable_total.index = countsTable_total.isodecoder
+		countsTable_total.drop(columns = ['isodecoder'], inplace = True)
+		filtered, filter_warning = filterCoverage(countsTable_total, min_cov)
  
 		for bam in bamlist:
 			# read in temp files and then delete
 			modTable = pd.read_csv(bam + "mismatchTable.csv", header = 0, sep = "\t")
+			modTable = modTable[~modTable.isodecoder.isin(filtered)]
+			modTable = modTable[~modTable.isodecoder.isin(splitBool)]
 			modTable['canon_pos'] = modTable['pos'].map(cons_pos_dict)
 			# edit misinc. propoportions of inosines to reflect true level of Gs, set As to NA
+			log.info("Editing inosine proportions for {}".format(bam))
 			for cluster in Inosine_clusters:
 				for isodecoder in cluster_dict[cluster]:
 					if any(modTable.isodecoder.str.contains(isodecoder)):
 						modTable.at[(modTable.canon_pos == '34') & (modTable['type'] == 'G') & (modTable.isodecoder == isodecoder), 'proportion'] = 1 - sum(modTable[(modTable.canon_pos == '34') & (modTable['type'] != 'G') & (modTable.isodecoder == isodecoder)]['proportion'].dropna())
 						modTable.at[(modTable.canon_pos == '34') & (modTable['type'] == 'A') & (modTable.isodecoder == isodecoder), 'proportion'] = np.nan
+			log.info("Finished for {}".format(bam))
 			os.remove(bam + "mismatchTable.csv")
 
 			stopTable = pd.read_csv(bam + "RTstopTable.csv", header = 0, sep = "\t")
+			stopTable = stopTable[~stopTable.isodecoder.isin(filtered)]
+			stopTable = stopTable[~stopTable.isodecoder.isin(splitBool)]
 			stopTable['canon_pos'] = stopTable['pos'].map(cons_pos_dict)
 			os.remove(bam + "RTstopTable.csv")
 
 			readthroughTable = pd.read_csv(bam + "readthroughTable.csv", header = 0, sep = "\t")
+			readthroughTable = readthroughTable[~readthroughTable.isodecoder.isin(filtered)]
+			readthroughTable = readthroughTable[~readthroughTable.isodecoder.isin(splitBool)]
 			readthroughTable['canon_pos'] = readthroughTable['pos'].map(cons_pos_dict)
 			os.remove(bam + "readthroughTable.csv")
-
-			countsTable = pd.read_csv(bam + "countTable.csv", header = 0, sep = "\t")
-			os.remove(bam + "countTable.csv")
 
 			newModsTable = pd.read_csv(bam + "_predictedModstemp.csv", header = None, names = ['isodecoder', 'pos', 'identity', 'bam'], sep = "\t")
 			os.remove(bam + "_predictedModstemp.csv")
@@ -644,10 +661,6 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 			modTable_total = pd.concat([modTable_total,modTable], ignore_index = True)
 			stopTable_total = pd.concat([stopTable_total, stopTable], ignore_index = True)
 			readthroughTable_total = pd.concat([readthroughTable_total, readthroughTable], ignore_index = True)
-			if countsTable_total.empty:
-				countsTable_total = pd.concat([countsTable_total, countsTable], ignore_index = True)
-			else:
-				countsTable_total = pd.merge(countsTable_total, countsTable, on = "isodecoder", how = "left")
 			newMods_total = pd.concat([newMods_total, newModsTable], ignore_index = True)
 
 			if cca:
@@ -655,24 +668,18 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 				dinuc = pd.read_csv(bam + "_dinuc.csv", header = None, keep_default_na=False, sep = "\t")
 				os.remove(bam + "_dinuc.csv")
 				CCA = pd.read_table(bam + "_CCAcounts.csv", header = None)
+				CCA = CCA[~CCA[0].isin(filtered)]
 				os.remove(bam + "_CCAcounts.csv")
 
 				dinuc_table = pd.concat([dinuc_table, dinuc], ignore_index = True)
 				CCAvsCC_table = pd.concat([CCAvsCC_table, CCA], ignore_index = True)
 
-		# get isodecoders to filter from mods and stops
-		countsTable_total.loc[~countsTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = countsTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
-		countsTable_total.index = countsTable_total.isodecoder
-		countsTable_total.drop(columns = ['isodecoder'], inplace = True)
-		filtered, filter_warning = filterCoverage(countsTable_total, min_cov)
-
 		# edit splitBool isodecoder names for filtering from tables and adding to Single_isodecoder in counts files
 		splitBool = ["-".join(x.split("-")[:-1]) for x in splitBool]
 
-		# filter and output tables
+		# output tables
+		log.info("Output final tables, counts and new mods...")
 		modTable_total.loc[~modTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = modTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
-		modTable_total = modTable_total[~modTable_total.isodecoder.isin(filtered)]
-		modTable_total = modTable_total[~modTable_total.isodecoder.isin(splitBool)]
 		modTable_total.drop_duplicates(inplace = True)
 		modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 		with open(out_dir + "mods/allModsTable.csv", "w") as known:
@@ -682,16 +689,17 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 					known.write("-".join(cluster.split("-")[:-1]) + "\t" + str(pos+1) + "\n")
 
 		stopTable_total.loc[~stopTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = stopTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
-		stopTable_total = stopTable_total[~stopTable_total.isodecoder.isin(filtered)]
 		stopTable_total.drop_duplicates(inplace = True)
 		stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		readthroughTable_total.loc[~readthroughTable_total['isodecoder'].str.contains("chr"), 'isodecoder'] = readthroughTable_total['isodecoder'].str.split("-").str[:-1].str.join("-")
-		readthroughTable_total = readthroughTable_total[~readthroughTable_total.isodecoder.isin(filtered)]
 		readthroughTable_total.drop_duplicates(inplace = True)
 		readthroughTable_total.to_csv(out_dir + "mods/readthroughTable.csv", sep = "\t", index = False, na_rep = 'NA')	
 		
 		# add column to counts to indicate complete isodecoder split or not, sizes, and parent
+		countsTable_total['isodecoder'] = countsTable_total.index
+		countsTable_total.loc[~countsTable_total.isodecoder.str.contains("chr"), "isodecoder"] = countsTable_total.isodecoder.str.split("-").str[:-1].str.join("-")
+		countsTable_total.set_index("isodecoder", inplace=True)
 		countsTable_total['Single_isodecoder'] = "NA"
 		isodecoder_sizes_short = defaultdict()
 		for iso, size in isodecoder_sizes.items():
@@ -735,7 +743,6 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 			dinuc_table.to_csv(out_dir + "CCAanalysis/AlignedDinucProportions.csv", sep = "\t", index = False, na_rep = 'NA')
 			CCAvsCC_table.columns = ['gene', 'end', 'sample', 'condition', 'count']
 			CCAvsCC_table.loc[~CCAvsCC_table['gene'].str.contains("chr"), 'gene'] = CCAvsCC_table['gene'].str.split("-").str[:-1].str.join("-")
-			CCAvsCC_table = CCAvsCC_table[~CCAvsCC_table.gene.isin(filtered)]
 			CCAvsCC_table.drop_duplicates(inplace = True)
 			CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 

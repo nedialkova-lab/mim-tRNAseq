@@ -64,7 +64,10 @@ def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
 
 	for bam, info in baminfo.items():
 
-		coverage = pd.read_csv(out_dir + bam.split("/")[-1] + "_coverage.txt", index_col = 0, sep = "\t") 
+		coverage = pd.read_csv(out_dir + bam.split("/")[-1] + "_coverage.txt", sep = "\t") 
+		coverage = coverage[~coverage.isodecoder.isin(filtered_cov)]
+		coverage.loc[~coverage['isodecoder'].str.contains("chr"), 'isodecoder'] = coverage['isodecoder'].str.split("-").str[:-1].str.join("-")
+		coverage.set_index("isodecoder", inplace=True)
 		coverage['aa'] = coverage.index.format()
 		coverage.loc[coverage.aa.str.contains('chr'), 'aa'] = coverage[coverage.aa.str.contains('chr')].aa.str.split("-").str[-4]
 		coverage.loc[coverage.aa.str.contains('mito'), 'aa'] = "mito" + coverage[coverage.aa.str.contains('mito')].aa.str.split("-").str[-3]
@@ -83,7 +86,6 @@ def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
 
 	# concatenate all tables together, groupby + mean
 	cov_mean = pd.concat(cov_mean, axis = 0)
-	cov_mean = cov_mean[~cov_mean.index.isin(filtered_cov)]
 	cov_mean_gene = cov_mean.copy()
 	cov_mean_gene['Cluster'] = cov_mean_gene.index.format()
 	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("mito"), "Cluster"] = "mito" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("mito")].Cluster.str.split("-").str[1:].str.join('-')

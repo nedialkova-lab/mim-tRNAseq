@@ -4,8 +4,9 @@
 # Wrapper functions for read aligmnent and placement #
 ######################################################
 
-import subprocess, os, sys, re, logging, copy
+import subprocess, os, re, logging, copy
 from pybedtools import BedTool
+import pysam
 from collections import defaultdict
 from pathlib import Path
 import glob
@@ -216,8 +217,7 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 	subprocess.check_call(map_cmd, stderr = open(out_dir + "align.log", "a"))
 	
 	# remove transloc sam output if no reads present (often the case)
-	cmd = ["samtools", "view", "-c", out_dir + output_prefix + ".unpaired_transloc"]
-	readcount = int(subprocess.check_output(cmd))
+	readcount = int(pysam.view("-@",str(threads),"-c", out_dir + output_prefix + ".unpaired_transloc").strip())
 	if readcount == 0:
 		os.remove(out_dir + output_prefix + ".unpaired_transloc")
 
@@ -227,8 +227,7 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 		align_pathlist = Path(out_dir).glob(output_prefix + "*")
 		for file in align_pathlist:
 			if re.search("mult",file.name) and not re.search("bam", file.name):
-				cmd = ["samtools", "view" ,"-@", str(threads), "-F", "0x904", "-c", out_dir + file.name]
-				multi_count = int(subprocess.check_output(cmd))
+				multi_count = int(pysam.view("-@",str(threads),"-F", "0x904", "-c", out_dir + file.name).strip())
 				if keep_temp or remap:
 					cmd = ["samtools", "view", "-@", str(threads), "-bh", "-o", out_dir + file.name + ".bam", out_dir + file.name]
 					subprocess.check_call(cmd)
@@ -236,16 +235,16 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 				elif not keep_temp or not remap:
 					os.remove(out_dir + file.name)
 			elif re.search("uniq",file.name) and not re.search("bam", file.name):
-				cmd = ["samtools", "view", "-@", str(threads), "-c", out_dir + file.name]
-				unique_count = int(subprocess.check_output(cmd))
+				unique_count = int(pysam.view("-@",str(threads),"-c", out_dir + file.name).strip())
 				unique_bam = out_dir + file.name + ".bam"
 				ps = subprocess.Popen(["samtools", "view", "-@", str(threads), "-bh", out_dir + file.name], stdout = subprocess.PIPE)
 				cmd = ["samtools", "sort", "-@", str(threads), "-o", unique_bam]
 				subprocess.check_call(cmd, stdin = ps.stdout)
+				index_cmd = ["samtools", "index", "-@", str(threads), unique_bam]
+				subprocess.check_call(index_cmd)
 				os.remove(out_dir + file.name)
 			elif re.search("nomapping",file.name) and not re.search("bam", file.name):
-				cmd = ["samtools", "view", "-@", str(threads), "-c", out_dir + file.name]
-				unmapped_count = int(subprocess.check_output(cmd))
+				unmapped_count = int(pysam.view("-@",str(threads),"-c", out_dir + file.name).strip())
 				if keep_temp or remap:
 					cmd = ["samtools", "view", "-@", str(threads), "-bh", "-o", out_dir + file.name + ".bam", out_dir + file.name]
 					subprocess.check_call(cmd)

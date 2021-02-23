@@ -82,7 +82,7 @@ def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
 		coverage['bin'] = coverage.groupby([coverage.index])['pos'].transform(lambda x: pd.qcut(x, 25, labels=range(4,104,4)))
 		# append big coverage table and remove original coverage output
 		cov_mean.append(coverage)
-		#os.remove(out_dir + bam.split("/")[-1] + "_coverage.txt")	 
+		os.remove(out_dir + bam.split("/")[-1] + "_coverage.txt")	 
 
 	# concatenate all tables together, groupby + mean
 	cov_mean = pd.concat(cov_mean, axis = 0)

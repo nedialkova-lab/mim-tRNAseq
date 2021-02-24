@@ -48,6 +48,7 @@ def tRNAclassifier(ungapped = False):
 	cons_pos_dict = defaultdict()
 	openstem_count = 0
 	closestem_count = 0
+	enum = 0
 	for pos, char in enumerate(ss_cons):
 		if not ss_cons[pos] == ".":
 			if cons_pos < 46:
@@ -79,15 +80,21 @@ def tRNAclassifier(ungapped = False):
 				if (not closestem_count == openstem_count) or (closestem_count == 0 or openstem_count == 0):
 					if ss_cons[pos] == "<":
 						openstem_count += 1
-						cons_pos_dict[pos+1] = 'e'
-						cons_pos_list.append("e")
+						enum += 1
+						current_e = "e" + str(enum)
+						cons_pos_dict[pos+1] = current_e
+						cons_pos_list.append(current_e)
 					elif ss_cons[pos] == ">":
 						closestem_count += 1
-						cons_pos_dict[pos+1] = 'e'
-						cons_pos_list.append("e")
+						enum += 1
+						current_e = "e" + str(enum)
+						cons_pos_dict[pos+1] = current_e
+						cons_pos_list.append(current_e)
 					elif ss_cons[pos] == "_":
-						cons_pos_dict[pos+1] = 'e'
-						cons_pos_list.append("e")
+						enum += 1
+						current_e = "e" + str(enum)
+						cons_pos_dict[pos+1] = current_e
+						cons_pos_list.append(current_e)
 
 				elif (closestem_count == openstem_count) and (not closestem_count == 0 or not openstem_count == 0):
 					cons_pos_dict[pos+1] = str(cons_pos)
@@ -101,7 +108,7 @@ def tRNAclassifier(ungapped = False):
 
 		elif ss_cons[pos] == ".":
 			cons_pos_dict[pos+1] = '-'
-			cons_pos_list.append("-")
+			#cons_pos_list.append("-")
 
 	cons_pos_list = "_".join(cons_pos_list)
 
@@ -142,7 +149,7 @@ def tRNAclassifier(ungapped = False):
 
 	return(tRNA_struct, tRNA_ungap2canon, cons_pos_list, cons_pos_dict)
 
-def tRNAclassifier_nogaps():
+def tRNAclassifier_nogaps(oneBased = False):
 
 	struct_dict = structureParser()
 	tRNA_struct = defaultdict(dict)
@@ -157,7 +164,10 @@ def tRNAclassifier_nogaps():
 
 		for i, letter in enumerate(seq):
 			if letter.upper() in bases:
-				tRNA_struct[tRNA][pos] = struct_dict[i+1]
+				if oneBased:
+					tRNA_struct[tRNA][pos+1] = struct_dict[i+1]
+				else:
+					tRNA_struct[tRNA][pos] = struct_dict[i+1]
 				pos += 1
 
 	return(tRNA_struct)
@@ -231,9 +241,10 @@ def modContext(out):
 					up -= 1
 				while seq[down].upper() not in ['A','C','G','U','T']:
 					down += 1
-				upstream_dict[gene][pos].append(identity) 
-				upstream_dict[gene][pos].append(seq[up]) # upstream base
-				upstream_dict[gene][pos].append(seq[down]) # downstream base
+				canon_pos = cons_pos_dict[pos]
+				upstream_dict[gene][canon_pos].append(identity) 
+				upstream_dict[gene][canon_pos].append(seq[up]) # upstream base
+				upstream_dict[gene][canon_pos].append(seq[down]) # downstream base
 
 	try:
 		os.mkdir(out + "mods")
@@ -241,7 +252,7 @@ def modContext(out):
 		pass
 
 	with open(out + "mods/modContext.txt", 'w') as outfile:
-		outfile.write("cluster\tpos\tidentity\tupstream\tdownstream\n")
+		outfile.write("cluster\tcanon_pos\tidentity\tupstream\tdownstream\n")
 		for cluster, data in upstream_dict.items():
 			for pos, base in data.items():
 				outfile.write(cluster + "\t" + str(pos) + "\t" + base[0] + "\t" + base[1] + "\t" + base[2] + "\n")
@@ -251,7 +262,7 @@ def modContext(out):
 	# mod_sites are canonical numberings of these positions
 	# cons_pos_list is the full list of tRNA positions numbered according to canonical numbering scheme obtained from multiple seq alignments
 	# cons_pos_dict is the same as list but a dictionary with matching gapped tRNA positions to each canonically numbered position
-	return(mod_sites, cons_pos_list, cons_pos_dict)
+	return(mod_sites, cons_pos_list)
 
 def structureParser():
 # read in stk file generated above and define structural regions for each tRNA input

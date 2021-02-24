@@ -140,7 +140,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
 	# Output modification context file for plotting
-	mod_sites, cons_pos_list, cons_pos_dict = modContext(out)
+	mod_sites, cons_pos_list = modContext(out)
 
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	
@@ -263,7 +263,7 @@ def main():
 	bedtools.add_argument('--min-cov', metavar = 'Minimum coverage per cluster', required = False, dest = 'min_cov', type = restrictedFloat2, default=0.0005, \
 		help = "Minimum coverage per cluster required to include this cluster in coverage plots, modification analysis, and 3'-CCA analysis. \
 		Can be a fraction of total mapped reads between 0 and 1, or an integer of absolute coverage. Any cluster not meeting the threshold in 1 or more sample will be excluded. \
-		Note that all clusters are included for differential expression analysis with DESeq2. Default = 0.0005 (0.05% mapped reads).")
+		Note that all clusters are included for differential expression analysis with DESeq2. Default = 0.0005 (0.05%% mapped reads).")
 	bedtools.add_argument('--max-multi', metavar = 'Bedtools coverage multithreading', required = False, dest = 'max_multi', type = int, \
 		help = 'Maximum number of bam files to run bedtools coverage on simultaneously. Increasing this number reduces processing time\
 		by increasing number of files processed simultaneously. However, depending on the size of the bam files to process and\

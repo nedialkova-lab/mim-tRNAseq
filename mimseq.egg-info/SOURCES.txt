@@ -13,7 +13,6 @@ mimseq/mmQuant.py
 mimseq/modPlot.R
 mimseq/modifications
 mimseq/splitClusters.py
-mimseq/splitClustersOLD.py
 mimseq/ssAlign.py
 mimseq/tRNAmap.py
 mimseq/tRNAtools.py

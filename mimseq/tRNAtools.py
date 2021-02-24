@@ -749,7 +749,7 @@ def additionalModsParser(input_species, out_dir):
 	# initialise dictionaries of structure (with and without gapped numbering) and anticodon positions to define canonical mod sites
 	tRNA_struct = tRNAclassifier()[0]
 	cons_pos_dict = tRNAclassifier()[3]
-	tRNA_struct_nogap = tRNAclassifier_nogaps()
+	tRNA_struct_nogap = tRNAclassifier_nogaps(oneBased=False)
 	cons_anticodon = getAnticodon()
 
 	# dictionary storing additional mods per tRNA cluster with corrected positions

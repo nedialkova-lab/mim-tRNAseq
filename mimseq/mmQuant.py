@@ -535,7 +535,7 @@ def addNA(tRNA_struct, data_type, name, table):
 
 	return(table)
 
-def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering, canon_only):
+def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, clustering):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:

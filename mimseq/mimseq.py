@@ -140,7 +140,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
 	# Output modification context file for plotting
-	mod_sites, cons_pos_list, cons_pos_dict = modContext(out)
+	mod_sites, cons_pos_list = modContext(out)
 
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	

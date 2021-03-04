@@ -7,7 +7,7 @@ Installation
 To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time improvements can be made to installing mimseq using mamba which we will use within the mimseq environment:
 ::
 	conda create -n mimseq python=3.7
-	conda actiavte mimseq
+	conda activate mimseq
 	conda install -c conda-forge mamba
 	mamba install -c bioconda mimseq
 

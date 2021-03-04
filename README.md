@@ -7,7 +7,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ### Modification-induced misincorporation tRNA sequencing.
 
-This package is an automated analysis pipeline for the quantification and analysis of tRNA expression and modification. Given trimmed sequencing reads in fastq format, this pipeline will:
+This package is an automated analysis pipeline for the quantitation and analysis of tRNA expression and modification. Given trimmed sequencing reads in fastq format, this pipeline will:
 * Cluster tRNAs, index modifications, and perform SNP-tolerant read alignment with [GSNAP](http://research-pub.gene.com/gmap/)
 * Calculate coverage information and plots (useful for QC)
 * Quantify expression

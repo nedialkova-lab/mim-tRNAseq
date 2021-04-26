@@ -11,13 +11,14 @@ The outputs are split into various subdirectories described below:
 
 Outputs for coverage analysis.
 
+* `\*coverage_byaa_norm.pdf`: Coverage per sample, stacked by isotype and normalised as a fraction of library size.
+* `\*coverage_byaa_norm_scaled.pdf`: Normalized coverage as above, scaled relative to second last bin for comparability between samples.
 * `sampleData\*.txt`: Sample data information with library size for coverage normalization.
 * `coverage_bygene.txt`: Coverage and normalized coverage per tRNA/cluster per 4% bin by gene length.
 * `coverage_byaa.txt`: Coverage and normalized coverage summed for isoacceptors per 4% bin by gene length.
 * `coverage_bycluster_norm.pdf`: Plot of normalized coverage along gene length for each tRNA/cluster.
 * `coverage_byaa_line.pdf`: Coverage per amino acid group in line graph.
-* `\*coverage_byaa_norm.pdf`: Normalized coverage per amino acid and alignment file. Available for mitochondrial tRNAs if -m is given.
-* `\*coverage_byaa_norm_scaled.pdf`: Normalized coverage scaled relative to second last bin (94%) for comparability between samples. Available for mitochondrial tRNAs if -m is given.
+
 
 **align**
 
@@ -35,8 +36,9 @@ Read alignment outputs.
 
 Read count outputs.
 
-* `Anticodon_counts.txt`: Read counts summed by tRNAs sharing anticodons.
-* `Isodecoder_counts.txt`: Deconvoluted isodecoder counts, parent info and size (i.e. number of identical sequences/gene copies). See methods in Behrens et al., 2021. Only produced if cluster-id < 1. The `Single_isodecoder` column indicates if this isodecoder was able to be deconvoluted from the parent or not based on coverage at the required mismatch. Counts for "False" sequences should be interpreted/used with caution. Such isodecoders and their parents are excluded from DESeq2 analysis.
+* `Anticodon_counts_raw.txt`: Raw read counts summed by tRNAs sharing anticodons.
+* `Isodecoder_counts_raw.txt`: Raw deconvoluted isodecoder counts, parent info and size (i.e. number of identical sequences/gene copies). See methods in Behrens et al., 2021. Only produced if cluster-id < 1. The `Single_isodecoder` column indicates if this isodecoder was able to be deconvoluted from the parent or not based on coverage at the required mismatch. Counts for "False" sequences should be interpreted/used with caution. Such isodecoders and their parents are excluded from DESeq2 analysis.
+* `*_counts_DESEqNormalized.txt`: Same as above, but read counts are DESeq2 counts normalized by library size factors.
 
 **CCAanalysis**
 

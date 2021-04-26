@@ -38,7 +38,7 @@ Read count outputs.
 
 * `Anticodon_counts_raw.txt`: Raw read counts summed by tRNAs sharing anticodons.
 * `Isodecoder_counts_raw.txt`: Raw deconvoluted isodecoder counts, parent info and size (i.e. number of identical sequences/gene copies). See methods in Behrens et al., 2021. Only produced if cluster-id < 1. The `Single_isodecoder` column indicates if this isodecoder was able to be deconvoluted from the parent or not based on coverage at the required mismatch. Counts for "False" sequences should be interpreted/used with caution. Such isodecoders and their parents are excluded from DESeq2 analysis.
-* `*_counts_DESEqNormalized.txt`: Same as above, but read counts are DESeq2 counts normalized by library size factors.
+* `*_counts_DESEqNormalized.txt`: Same as above, but read counts are DESeq2 counts normalized by library size factors. Same as counts appended to DESeq2 results files. Use these for as normalized expression counts for isodecoders and anticodon families.
 
 **CCAanalysis**
 

@@ -739,7 +739,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		clusterInfo.drop(columns = ['isodecoder'], inplace = True)
 		countsTable_total = countsTable_total.join(clusterInfo)
 		countsTable_total.sort_values(by=["isodecoder"], inplace = True)
-		countsTable_total.to_csv(out_dir + "Isodecoder_counts.txt", sep = "\t", index = True, na_rep = "0")
+		countsTable_total.to_csv(out_dir + "Isodecoder_counts_raw.txt", sep = "\t", index = True, na_rep = "0")
 
 		# map canon_pos for each isodecoder ungapped pos to newMods
 		newMods_total = newMods_total[~newMods_total.isodecoder.isin(filtered)]
@@ -763,9 +763,9 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 			CCAvsCC_table.to_csv(out_dir + "CCAanalysis/CCAcounts.csv", sep = "\t", index = False)
 
 		# Anticodon and/or isodecoder counts counts
-		countReads(out_dir + "Isodecoder_counts.txt", out_dir, isodecoder_sizes, clustering, newtRNA_dict, clusterInfo)
+		countReads(out_dir + "Isodecoder_counts_raw.txt", out_dir, isodecoder_sizes, clustering, newtRNA_dict, clusterInfo)
 
-		log.info("** Read counts per isodecoder saved to " + out_dir + "counts/Isodecoder_counts.txt **")
+		log.info("** Read counts per isodecoder saved to " + out_dir + "counts/Isodecoder_counts_raw.txt **")
 
 	return(new_mods, new_Inosines, filtered, filter_warning)
 

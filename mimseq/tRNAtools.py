@@ -1001,7 +1001,7 @@ def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict, c
 
 	count_anticodon_pd = pd.DataFrame.from_dict(count_dict_anticodon, orient='index')
 	count_anticodon_pd.index.name = 'Anticodon'
-	count_anticodon_pd.to_csv(out_dir + 'Anticodon_counts.txt', sep = '\t')
+	count_anticodon_pd.to_csv(out_dir + 'Anticodon_counts_raw.txt', sep = '\t')
 
 	if not clustering:
 		new_count_isodecoder = defaultdict(lambda: defaultdict(int))
@@ -1028,7 +1028,7 @@ def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict, c
 		count_isodecoder_pd = count_isodecoder_pd.join(clusterInfo)
 		count_isodecoder_pd.to_csv(out_dir + 'Isodecoder_counts.txt', sep = '\t')
 
-	log.info("** Read counts per anticodon saved to " + out_dir + "counts/Anticodon_counts.txt **")
+	log.info("** Read counts per anticodon saved to " + out_dir + "counts/Anticodon_counts_raw.txt **")
 
 def tidyFiles (out_dir, cca):
 	

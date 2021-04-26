@@ -7,23 +7,12 @@
 suppressMessages(library(DESeq2))
 suppressMessages(library(RColorBrewer))
 suppressMessages(library(pheatmap))
+suppressMessages(library(ComplexHeatmap))
 suppressMessages(library(ggplot2))
 suppressMessages(library(calibrate))
 suppressMessages(library(plyr))
 suppressMessages(library(grid))
 suppressMessages(library(dplyr))
-
-## Volcano plot with "significant" genes labeled
-volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="bottomright", labelsig=FALSE, textcx=1, ...) {
-  with(res, plot(log2FoldChange, -log10(pvalue), pch=19, main=main, xlab="log2 Fold Change", ylab="-log10(p-value)", ...))
-  with(subset(res, padj<sigthresh ), points(log2FoldChange, -log10(pvalue), pch=19, col="#d95f02", ...))
-  if (labelsig) {
-    require(calibrate)
-    #with(subset(res, padj<sigthresh & abs(log2FoldChange)>lfcthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
-    with(subset(res, padj<sigthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
-  }
-  legend(legendpos, xjust=1, yjust=1, legend=c(paste("FDR < ",sigthresh,sep="")), pch=19, col="#d95f02", bg="white")
-}
 
 # Function to order control/WT condition last in combinations so that contrasts for DE are always mutant/condition vs WT/control
 lastlevel = function(f, control) {
@@ -59,9 +48,9 @@ setwd(file.path(outdir))
 # Filter out mito counts
 # Import data from counts and sampleData
 # Filter out mito counts
-anticodon_countdata = read.table("Anticodon_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+anticodon_countdata = read.table("Anticodon_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
 anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)), ,drop = FALSE]
-isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+isodecoder_countdata = read.table("Isodecoder_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
 isodecoder_countdata = isodecoder_countdata[grepl("True", isodecoder_countdata$Single_isodecoder),]
 isodecoder_countdata$Single_isodecoder = NULL
 isodecoder_countdata$size = NULL
@@ -151,7 +140,7 @@ if (nrow(coldata) == 1) {
   }
   
   if (single_reps == TRUE) {
-    # Merge normalized count data with genen copy number info
+    # Merge normalized count data with gene copy number info
     anticodon_counts$rn = rownames(anticodon_counts)
     isodecoder_counts$rn = rownames(isodecoder_counts)
     
@@ -211,6 +200,10 @@ if (nrow(coldata) == 1) {
       # Run the DESeq pipeline
       dds_anticodon = DESeq(dds_anticodon)
       dds_isodecoder = DESeq(dds_isodecoder)
+
+      # Normalized counts
+      count_df_anticodon = as.data.frame(counts(dds_anticodon, normalized=TRUE))
+      count_df_isodecoder = as.data.frame(counts(dds_isodecoder, normalized=TRUE))
       
       # count tables with mean per condition for dot plots below
       baseMeanPerLvl_anticodon = as.data.frame(sapply(levels(dds_anticodon$condition), function(lvl) rowMeans(counts(dds_anticodon,normalized=TRUE)[,dds_anticodon$condition == lvl] )))
@@ -300,7 +293,7 @@ if (nrow(coldata) == 1) {
       
       # Get combinations of coditions for various DE contrasts
       ordered_levels = levels(lastlevel(unique(dds_anticodon$condition), control_cond))
-      combinations = combn(ordered_levels, 2, simplify=FALSE)
+      combinations = combn(ordered_levels, 2, simplify = FALSE)
       
       # For each contrast...
       for (i in 1:length(combinations)) {
@@ -313,8 +306,6 @@ if (nrow(coldata) == 1) {
         res_isodecoder = res_isodecoder[order(res_isodecoder$padj), ]
         res_anticodon$rn = rownames(res_anticodon)
         res_isodecoder$rn = rownames(res_isodecoder)
-        count_df_anticodon = as.data.frame(counts(dds_anticodon, normalized=TRUE))
-        count_df_isodecoder = as.data.frame(counts(dds_isodecoder, normalized=TRUE))
         count_df_anticodon$rn = rownames(count_df_anticodon)
         count_df_isodecoder$rn = rownames(count_df_isodecoder)
         
@@ -385,17 +376,20 @@ if (nrow(coldata) == 1) {
         ## Write results
         write.csv(resdata_anticodon, file=paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))
         write.csv(resdata_isodecoder, file=paste(subdir_isodecoder, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))
+
+        ## Write normalized counts to /counts dir
+        count_df_isodecoder = left_join(count_df_isodecoder, isodecoderInfo, by="rn")
+        count_df_anticodon = left_join(count_df_anticodon, isoacceptorInfo, by="rn")
+        names(count_df_anticodon)[names(count_df_anticodon) == "rn"] = "Anticodon"
+        names(count_df_isodecoder)[names(count_df_isodecoder) == "rn"] = "isodecoder"
+        col_idx = grep("Anticodon", names(count_df_anticodon))
+        count_df_anticodon = count_df_anticodon[, c(col_idx, (1:ncol(count_df_anticodon))[-col_idx])]
+        col_idx = grep("isodecoder", names(count_df_isodecoder))
+        count_df_isodecoder = count_df_isodecoder[, c(col_idx, (1:ncol(count_df_isodecoder))[-col_idx])]
+        write.table(count_df_isodecoder, file = "Isodecoder_counts_DESEqNormalized.csv", sep = "\t", quote = FALSE, row.names = FALSE)
+        write.table(count_df_anticodon, file = "Anticodon_counts_DESEqNormalized.csv", sep = "\t", quote = FALSE, row.names = FALSE)
+        print("DESeq2 normalized counts saved to counts/*_normalized.txt")
       }
-      
-      # ## MA plot
-      
-      # png(paste(subdir_anticodon, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
-      # plotMA(dds_anticodon)
-      # dev.off()
-      
-      # png(paste(subdir_isodecoder, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
-      # plotMA(dds_isodecoder)
-      # dev.off()
     }
   }
 }

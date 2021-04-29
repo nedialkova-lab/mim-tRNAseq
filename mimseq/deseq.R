@@ -410,61 +410,75 @@ if (nrow(coldata) == 1) {
       rownames(scaled_counts_anticodon) = comb_anticodon$Anticodon
       
       # Heatmaps
+      # note that all tables and plots only built if DE tables are not empty
       col_fun = colorRamp2(c(-3, 0, 3), c("#CC5803", "#f7f7f7", "#36682B"))
       
       # Annotation for baseMean counts
-      baseMeanAnno_iso = rowAnnotation(base_mean = anno_lines(comb_isodecoder$baseMean, 
-                                                              gp = gpar(lwd = 1.5, col = "#084081")), 
-                                       annotation_name_rot = 90,
-                                       width = unit("0.8", "cm"))
+      if (nrow(comb_isodecoder) != 0) {
+        baseMeanAnno_iso = rowAnnotation(base_mean = anno_lines(comb_isodecoder$baseMean, 
+                                                                gp = gpar(lwd = 1.5, col = "#084081")), 
+                                         annotation_name_rot = 90,
+                                         width = unit("0.8", "cm"))
+        
+        hm_iso = Heatmap(scaled_counts_isodecoder,
+                         col = col_fun,
+                         show_row_names = FALSE,
+                         border = "gray20",
+                         cluster_columns = TRUE)
+      }
       
-      baseMeanAnno_anti = rowAnnotation(base_mean = anno_lines(comb_anticodon$baseMean, 
-                                                               gp = gpar(lwd = 1.5, col = "#084081")), 
-                                        annotation_name_rot = 90,
-                                        width = unit("0.8", "cm"))
-      
-      hm_iso = Heatmap(scaled_counts_isodecoder,
-                       col = col_fun,
-                       show_row_names = FALSE,
-                       border = "gray20",
-                       cluster_columns = TRUE)
-      
-      hm_anti = Heatmap(scaled_counts_anticodon,
-                        col = col_fun,
-                        row_names_side = "left",
-                        row_names_gp = gpar(fontsize = 6),
-                        border = "gray20",
-                        cluster_columns = TRUE)
-      
+      if (nrow(comb_anticodon) != 0) {
+        baseMeanAnno_anti = rowAnnotation(base_mean = anno_lines(comb_anticodon$baseMean, 
+                                                                 gp = gpar(lwd = 1.5, col = "#084081")), 
+                                          annotation_name_rot = 90,
+                                          width = unit("0.8", "cm"))
+        
+        hm_anti = Heatmap(scaled_counts_anticodon,
+                          col = col_fun,
+                          row_names_side = "left",
+                          row_names_gp = gpar(fontsize = 6),
+                          border = "gray20",
+                          cluster_columns = TRUE)
+      }
       
       for (i in seq_len(length(combinations))){
         if (control_cond %in% combinations[[i]]) {
           lfc = paste(paste(combinations[[i]], collapse="vs"), "l2FC", sep="_")
-          lfc_iso = Heatmap(comb_isodecoder[lfc],
-                            col = col_fun,
-                            width = unit(0.5, "cm"), na_col = "white",
-                            border = "gray20",
-                            show_heatmap_legend = FALSE)
-          lfc_anti = Heatmap(comb_anticodon[lfc],
-                             col = col_fun,
-                             width = unit(0.5, "cm"), na_col = "white",
-                             border = "gray20",
-                             show_heatmap_legend = FALSE)
-          hm_iso = hm_iso + lfc_iso
+          if (nrow(comb_isodecoder) != 0) {
+            lfc_iso = Heatmap(comb_isodecoder[lfc],
+                              col = col_fun,
+                              width = unit(0.5, "cm"), na_col = "white",
+                              border = "gray20",
+                              show_heatmap_legend = FALSE)
+            hm_iso = hm_iso + lfc_iso
+          }
+          if (nrow(comb_anticodon) != 0) {
+            lfc_anti = Heatmap(comb_anticodon[lfc],
+                               col = col_fun,
+                               width = unit(0.5, "cm"), na_col = "white",
+                               border = "gray20",
+                               show_heatmap_legend = FALSE)
           hm_anti = hm_anti + lfc_anti
+          }
         }
       }
       
-      hm_iso = hm_iso + baseMeanAnno_iso
-      hm_anti = hm_anti + baseMeanAnno_anti
+      if (nrow(comb_isodecoder) != 0) {
+        hm_iso = hm_iso + baseMeanAnno_iso
+        
+        pdf(paste(subdir_isodecoder,"DE_isodecodersScaled_hm.pdf",sep="/"))
+        draw(hm_iso)
+        dev.off()
+      }
       
-      pdf(paste(subdir_isodecoder,"DE_isodecodersScaled_hm.pdf",sep="/"))
-      draw(hm_iso)
-      dev.off()
-      
-      pdf(paste(subdir_anticodon,"DE_anticodonScaled_hm.pdf",sep="/"))
-      draw(hm_anti)
-      dev.off()
+      if (nrow(comb_anticodon) != 0) {
+        hm_anti = hm_anti + baseMeanAnno_anti
+        
+        
+        pdf(paste(subdir_anticodon,"DE_anticodonScaled_hm.pdf",sep="/"))
+        draw(hm_anti)
+        dev.off()
+      }
     }
   }
 }

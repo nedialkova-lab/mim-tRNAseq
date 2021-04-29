@@ -115,7 +115,8 @@ for (i in unique(mods_agg$condition)) {
   col_anno_data = aggregate(sub_mods_agg$x,
                             by = list(pos = sub_mods_agg$canon_pos),
                             FUN = mean)
-  col_anno_data[missing, 'x'] = 0
+  col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+  col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
   col_anno_data = col_anno_data$x
   col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
                                                    height = unit(1.5, 'cm'),
@@ -158,7 +159,8 @@ for (i in unique(mods_agg$condition)) {
   col_anno_data = aggregate(sub_stops_agg$x,
                             by = list(pos = sub_stops_agg$canon_pos),
                             FUN = mean)
-  col_anno_data[missing, 'x'] = 0
+  col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+  col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
   col_anno_data = col_anno_data$x
   col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
                                                    height = unit(1.5, 'cm'),
@@ -210,7 +212,8 @@ for (i in unique(mods_agg$condition)) {
       col_anno_data = aggregate(sub_mods_agg$x,
                                 by = list(pos = sub_mods_agg$canon_pos),
                                 FUN = mean)
-      col_anno_data[missing, 'x'] = 0
+      col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+      col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
       col_anno_data = col_anno_data$x
       col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
                                                        height = unit(1.5, 'cm'),  
@@ -252,7 +255,8 @@ for (i in unique(mods_agg$condition)) {
       col_anno_data = aggregate(sub_stops_agg$x,
                                 by = list(pos = sub_stops_agg$canon_pos),
                                 FUN = mean)
-      col_anno_data[missing, 'x'] = 0
+      col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+      col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
       col_anno_data = col_anno_data$x
       col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
                                                        height = unit(1.5, 'cm'),
@@ -424,10 +428,10 @@ for (i in unique(mods_agg$condition)) {
   
   if (!is.na(mito_trnas)){
     sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$isodecoder) | grepl("nmt", sub_mods_aggtype$isodecoder), ]
-    
+    sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, canon_pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
+
     if(nrow(sub_mods_aggtype_mito) != 0) {
       # renormalise by sum of misinc at each site for each isodecoder in each bam file - this makes sum all misinc types = 1
-      sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, canon_pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
       #sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, downstream = sub_mods_aggtype_mito$downstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
       #sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
       sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))

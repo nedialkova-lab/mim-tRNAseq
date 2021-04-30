@@ -7,23 +7,13 @@
 suppressMessages(library(DESeq2))
 suppressMessages(library(RColorBrewer))
 suppressMessages(library(pheatmap))
+suppressMessages(library(ComplexHeatmap))
 suppressMessages(library(ggplot2))
 suppressMessages(library(calibrate))
 suppressMessages(library(plyr))
 suppressMessages(library(grid))
 suppressMessages(library(dplyr))
-
-## Volcano plot with "significant" genes labeled
-volcanoplot = function (res, sigthresh=0.05, main="Volcano Plot", legendpos="bottomright", labelsig=FALSE, textcx=1, ...) {
-  with(res, plot(log2FoldChange, -log10(pvalue), pch=19, main=main, xlab="log2 Fold Change", ylab="-log10(p-value)", ...))
-  with(subset(res, padj<sigthresh ), points(log2FoldChange, -log10(pvalue), pch=19, col="#d95f02", ...))
-  if (labelsig) {
-    require(calibrate)
-    #with(subset(res, padj<sigthresh & abs(log2FoldChange)>lfcthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
-    with(subset(res, padj<sigthresh), textxy(log2FoldChange, -log10(pvalue), labs=Gene, cex=textcx, ...))
-  }
-  legend(legendpos, xjust=1, yjust=1, legend=c(paste("FDR < ",sigthresh,sep="")), pch=19, col="#d95f02", bg="white")
-}
+suppressMessages(library(circlize))
 
 # Function to order control/WT condition last in combinations so that contrasts for DE are always mutant/condition vs WT/control
 lastlevel = function(f, control) {
@@ -59,9 +49,9 @@ setwd(file.path(outdir))
 # Filter out mito counts
 # Import data from counts and sampleData
 # Filter out mito counts
-anticodon_countdata = read.table("Anticodon_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+anticodon_countdata = read.table("Anticodon_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
 anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)), ,drop = FALSE]
-isodecoder_countdata = read.table("Isodecoder_counts.txt", header=TRUE, row.names=1, check.names = FALSE)
+isodecoder_countdata = read.table("Isodecoder_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
 isodecoder_countdata = isodecoder_countdata[grepl("True", isodecoder_countdata$Single_isodecoder),]
 isodecoder_countdata$Single_isodecoder = NULL
 isodecoder_countdata$size = NULL
@@ -79,24 +69,24 @@ coldata = coldata[order(rownames(coldata)), , drop = FALSE]
 anticodon_countdata = as.matrix(anticodon_countdata)
 isodecoder_countdata = as.matrix(isodecoder_countdata)
 
-isoacceptorFile = list.files(path="./", pattern="isoacceptorInfo.txt", full.names=T)
-isoacceptorInfo = read.table(isoacceptorFile[1], header=T, row.names=1)
+isoacceptorFile = list.files(path="./", pattern = "isoacceptorInfo.txt", full.names = T)
+isoacceptorInfo = read.table(isoacceptorFile[1], header = T, row.names = 1)
 isoacceptorInfo = isoacceptorInfo[ , 'size', drop=F]
 isoacceptorInfo$rn = rownames(isoacceptorInfo)
 
 # cluster_id == 1 means that mim-seq clusters are already representative of isodecoders, therefore get isodecoder info directly from custerInfo
 # cluster_id == '' means clustering is disabled
 if (cluster_id == 1){
-  isodecoderFile = list.files(path="./", pattern="clusterInfo.txt", full.names=T)
-  isodecoderInfo = read.table(isodecoderFile[1], header=T)
+  isodecoderFile = list.files(path="./", pattern = "clusterInfo.txt", full.names = T)
+  isodecoderInfo = read.table(isodecoderFile[1], header = T)
   isodecoderInfo = isodecoderInfo[!duplicated(isodecoderInfo$parent),]
   isodecoderInfo = isodecoderInfo[, 'cluster_size', drop = F]
   colnames(isodecoderInfo) = 'size'
   isodecoderInfo$rn = rownames(isodecoderInfo)
 } else {
-  isodecoderFile = list.files(path="./", pattern="isodecoderInfo.txt", full.names=T)
-  isodecoderInfo = read.table(isodecoderFile[1], header=T, row.names=1)
-  isodecoderInfo = isodecoderInfo[ , 'size', drop=F]
+  isodecoderFile = list.files(path="./", pattern = "isodecoderInfo.txt", full.names = T)
+  isodecoderInfo = read.table(isodecoderFile[1], header = T, row.names = 1)
+  isodecoderInfo = isodecoderInfo[ , 'size', drop = F]
   isodecoderInfo$rn = rownames(isodecoderInfo)
 } 
 
@@ -151,7 +141,7 @@ if (nrow(coldata) == 1) {
   }
   
   if (single_reps == TRUE) {
-    # Merge normalized count data with genen copy number info
+    # Merge normalized count data with gene copy number info
     anticodon_counts$rn = rownames(anticodon_counts)
     isodecoder_counts$rn = rownames(isodecoder_counts)
     
@@ -161,9 +151,9 @@ if (nrow(coldata) == 1) {
     names(anticodon_counts)[1] = "Gene"
     names(isodecoder_counts)[1] = "Gene"
     col_idx = grep("Gene", names(anticodon_counts))
-    resdata_anticodon = anticodon_counts[, c(col_idx, (1:ncol(anticodon_counts))[-col_idx])]
+    resdata_anticodon = anticodon_counts[, c(col_idx, (seq_len(ncol(anticodon_counts)))[-col_idx])]
     col_idx = grep("Gene", names(isodecoder_counts))
-    resdata_isodecoder = isodecoder_counts[, c(col_idx, (1:ncol(isodecoder_counts))[-col_idx])]
+    resdata_isodecoder = isodecoder_counts[, c(col_idx, (seq_len(ncol(isodecoder_counts)))[-col_idx])]
     
     write.csv(resdata_anticodon, file=paste(subdir_anticodon, 'singleRep-normCounts.csv', sep="/"), row.names = FALSE)
     write.csv(resdata_isodecoder, file=paste(subdir_isodecoder, 'singleRep-normCounts.csv', sep="/"), row.names = FALSE)
@@ -196,9 +186,9 @@ if (nrow(coldata) == 1) {
       names(anticodon_counts)[1] = "Gene"
       names(isodecoder_counts)[1] = "Gene"
       col_idx = grep("Gene", names(anticodon_counts))
-      resdata_anticodon = anticodon_counts[, c(col_idx, (1:ncol(anticodon_counts))[-col_idx])]
+      resdata_anticodon = anticodon_counts[, c(col_idx, (seq_len(ncol(anticodon_counts)))[-col_idx])]
       col_idx = grep("Gene", names(isodecoder_counts))
-      resdata_isodecoder = isodecoder_counts[, c(col_idx, (1:ncol(isodecoder_counts))[-col_idx])]
+      resdata_isodecoder = isodecoder_counts[, c(col_idx, (seq_len(ncol(isodecoder_counts)))[-col_idx])]
       
       write.csv(resdata_anticodon, file=paste(subdir_anticodon, paste(toString(unique(coldata$condition)), 'normCounts.csv', sep="-"), sep="/"), row.names = FALSE)
       write.csv(resdata_isodecoder, file=paste(subdir_isodecoder, paste(toString(unique(coldata$condition)), 'normCounts.csv', sep="-"), sep="/"), row.names = FALSE)
@@ -211,6 +201,12 @@ if (nrow(coldata) == 1) {
       # Run the DESeq pipeline
       dds_anticodon = DESeq(dds_anticodon)
       dds_isodecoder = DESeq(dds_isodecoder)
+      
+      # Normalized counts
+      count_df_anticodon = as.data.frame(counts(dds_anticodon, normalized=TRUE))
+      count_df_isodecoder = as.data.frame(counts(dds_isodecoder, normalized=TRUE))
+      count_df_anticodon$rn = rownames(count_df_anticodon)
+      count_df_isodecoder$rn = rownames(count_df_isodecoder)
       
       # count tables with mean per condition for dot plots below
       baseMeanPerLvl_anticodon = as.data.frame(sapply(levels(dds_anticodon$condition), function(lvl) rowMeans(counts(dds_anticodon,normalized=TRUE)[,dds_anticodon$condition == lvl] )))
@@ -272,38 +268,15 @@ if (nrow(coldata) == 1) {
         coord_fixed()
       ggsave(paste(subdir_isodecoder, "qc-pca.png", sep="/"), height = 7, width = 8)
       
-      # Gene expression heatmaps
-      
-      cols = as.data.frame(colData(dds_isodecoder)[,'condition'])
-      rownames(cols) <- colnames(dds_isodecoder)
-      names(cols) <- "Condition"
-      isodecoder_mat <- assay(vsd_isodecoder)
-      isodecoder_mat = (isodecoder_mat - rowMeans(isodecoder_mat))
-      isodecoder_mat[is.na(isodecoder_mat)] = 0
-      isodecoder_mat = isodecoder_mat[,order(cols$Condition)]
-      pheatmap(isodecoder_mat, cluster_rows = TRUE, cluster_cols = FALSE, show_rownames = FALSE, 
-               annotation_col = cols, filename = paste(subdir_isodecoder, "Isodecoder_vst_hm.png", sep="/"), 
-               color = colorRampPalette(rev(brewer.pal(n = 11, name = "RdBu")))(100), 
-               show_colnames = FALSE)
-      
-      cols = as.data.frame(colData(dds_anticodon)[,'condition'])
-      rownames(cols) = colnames(dds_anticodon)
-      names(cols) <- "Condition"
-      anticodon_mat <- assay(vsd_anticodon)
-      anticodon_mat = (anticodon_mat - rowMeans(anticodon_mat))
-      rownames(anticodon_mat) = paste(unlist(strsplit(rownames(anticodon_mat), "-"))[3*(1:nrow(anticodon_mat))-1],unlist(strsplit(rownames(anticodon_mat), "-"))[3*(1:nrow(anticodon_mat))], sep = "-")
-      anticodon_mat[is.na(anticodon_mat)] = 0
-      anticodon_mat = anticodon_mat[,order(cols$Condition)]
-      pheatmap(anticodon_mat, cluster_rows = TRUE, cluster_cols = FALSE, annotation_col = cols, 
-               filename = paste(subdir_anticodon, "Anticodon_vst_hm.png", sep="/"), 
-               color = colorRampPalette(rev(brewer.pal(n = 11, name = "RdBu")))(100), show_colnames = FALSE)
-      
       # Get combinations of coditions for various DE contrasts
       ordered_levels = levels(lastlevel(unique(dds_anticodon$condition), control_cond))
-      combinations = combn(ordered_levels, 2, simplify=FALSE)
+      combinations = combn(ordered_levels, 2, simplify = FALSE)
       
+      # initialise lists for DE info from all contrasts vs control, for DE heatmaps
+      DEcounts_list_isodecoder = list()
+      DEcounts_list_anticodon = list()
       # For each contrast...
-      for (i in 1:length(combinations)) {
+      for (i in seq_len(length(combinations))) {
         # Get differential expression results
         res_anticodon = results(dds_anticodon, contrast=c("condition",as.vector(combinations[[i]])))
         res_isodecoder = results(dds_isodecoder, contrast=c("condition",as.vector(combinations[[i]])))
@@ -313,10 +286,6 @@ if (nrow(coldata) == 1) {
         res_isodecoder = res_isodecoder[order(res_isodecoder$padj), ]
         res_anticodon$rn = rownames(res_anticodon)
         res_isodecoder$rn = rownames(res_isodecoder)
-        count_df_anticodon = as.data.frame(counts(dds_anticodon, normalized=TRUE))
-        count_df_isodecoder = as.data.frame(counts(dds_isodecoder, normalized=TRUE))
-        count_df_anticodon$rn = rownames(count_df_anticodon)
-        count_df_isodecoder$rn = rownames(count_df_isodecoder)
         
         ## Merge with normalized count data
         resdata_anticodon = join_all(list(as.data.frame(res_anticodon), count_df_anticodon, isoacceptorInfo), by="rn", type = 'left')
@@ -324,9 +293,9 @@ if (nrow(coldata) == 1) {
         names(resdata_anticodon)[7] = "Gene"
         names(resdata_isodecoder)[7] = "Gene"
         col_idx = grep("Gene", names(resdata_anticodon))
-        resdata_anticodon = resdata_anticodon[, c(col_idx, (1:ncol(resdata_anticodon))[-col_idx])]
+        resdata_anticodon = resdata_anticodon[, c(col_idx, (seq_len(ncol(resdata_anticodon)))[-col_idx])]
         col_idx = grep("Gene", names(resdata_isodecoder))
-        resdata_isodecoder = resdata_isodecoder[, c(col_idx, (1:ncol(resdata_isodecoder))[-col_idx])]
+        resdata_isodecoder = resdata_isodecoder[, c(col_idx, (seq_len(ncol(resdata_isodecoder)))[-col_idx])]
         
         # Count plots
         # add significance to baseMean matrices for current contrast
@@ -385,17 +354,131 @@ if (nrow(coldata) == 1) {
         ## Write results
         write.csv(resdata_anticodon, file=paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))
         write.csv(resdata_isodecoder, file=paste(subdir_isodecoder, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-results.csv", sep="_"), sep="/"))
+        
+        # Build DE tables for heatmaps only if the current contrast is to the control condition
+        if (control_cond %in% combinations[[i]]) {
+          temp_lfc_isodecoder = as.data.frame(res_isodecoder[,c("log2FoldChange","padj")])
+          temp_lfc_isodecoder = subset(temp_lfc_isodecoder, padj <= 0.01)
+          colnames(temp_lfc_isodecoder) = c(paste(paste(combinations[[i]], collapse = "vs"), "_l2FC", sep = ""), paste(paste(combinations[[i]], collapse = "vs"), "_padj", sep = ""))
+          temp_lfc_isodecoder = tibble::rownames_to_column(temp_lfc_isodecoder, var = "isodecoder")
+          temp_lfc_isodecoder = temp_lfc_isodecoder[!grepl("Escherichia_coli", temp_lfc_isodecoder$isodecoder),]
+          DEcounts_list_isodecoder[[paste(combinations[[i]], collapse = "vs")]] = temp_lfc_isodecoder
+          
+          temp_lfc_anticodon = as.data.frame(res_anticodon[,c("log2FoldChange","padj")])
+          temp_lfc_anticodon = subset(temp_lfc_anticodon, padj <= 0.01)
+          colnames(temp_lfc_anticodon) = c(paste(paste(combinations[[i]], collapse = "vs"), "_l2FC", sep = ""), paste(paste(combinations[[i]], collapse = "vs"), "_padj", sep = ""))
+          temp_lfc_anticodon = tibble::rownames_to_column(temp_lfc_anticodon, var = "Anticodon")
+          temp_lfc_anticodon = temp_lfc_anticodon[!grepl("Escherichia_coli", temp_lfc_anticodon$Anticodon),]
+          DEcounts_list_anticodon[[paste(combinations[[i]], collapse = "vs")]] = temp_lfc_anticodon
+        }
       }
       
-      # ## MA plot
+      ## Write normalized counts to /counts dir
+      count_df_isodecoder_out = left_join(count_df_isodecoder, isodecoderInfo, by="rn")
+      count_df_anticodon_out = left_join(count_df_anticodon, isoacceptorInfo, by="rn")
+      names(count_df_anticodon_out)[names(count_df_anticodon_out) == "rn"] = "Anticodon"
+      names(count_df_isodecoder_out)[names(count_df_isodecoder_out) == "rn"] = "isodecoder"
+      col_idx = grep("Anticodon", names(count_df_anticodon_out))
+      count_df_anticodon_out = count_df_anticodon_out[, c(col_idx, (seq_len(ncol(count_df_anticodon_out)))[-col_idx])]
+      col_idx = grep("isodecoder", names(count_df_isodecoder_out))
+      count_df_isodecoder_out = count_df_isodecoder_out[, c(col_idx, (seq_len(ncol(count_df_isodecoder_out)))[-col_idx])]
+      write.table(count_df_isodecoder_out, file = "Isodecoder_counts_DESEqNormalized.csv", sep = "\t", quote = FALSE, row.names = FALSE)
+      write.table(count_df_anticodon_out, file = "Anticodon_counts_DESEqNormalized.csv", sep = "\t", quote = FALSE, row.names = FALSE)
+      print("DESeq2 normalized counts saved to counts/*_normalized.txt")
       
-      # png(paste(subdir_anticodon, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
-      # plotMA(dds_anticodon)
-      # dev.off()
+      # Build combined filtered tables for DE heatmaps and scale counts
+      comb_isodecoder = DEcounts_list_isodecoder %>% Reduce(function(dtf1,dtf2) full_join(dtf1,dtf2,by="isodecoder"), .)
+      basemean_isodecoder = as.data.frame(res_isodecoder) %>% select(baseMean) %>% tibble::rownames_to_column(var = "isodecoder")
+      normcounts_isodecoder = subset(count_df_isodecoder_out, select = -c(size))
+      comb_isodecoder = list(comb_isodecoder, basemean_isodecoder, normcounts_isodecoder) %>% Reduce(function(dtf1,dtf2) left_join(dtf1,dtf2,by="isodecoder"), .)
+      comb_isodecoder$isodecoder = sub("Homo_sapiens_tRNA-","",comb_isodecoder$isodecoder)
+      comb_isodecoder = comb_isodecoder[!grepl("tRX", comb_isodecoder$isodecoder),]
       
-      # png(paste(subdir_isodecoder, "diffexpr-maplot.png", sep="/"), 1500, 1000, pointsize=20)
-      # plotMA(dds_isodecoder)
-      # dev.off()
+      scaled_counts_isodecoder = as.matrix(t(scale(t(comb_isodecoder[,!grepl("isodecoder|l2FC|padj|baseMean", colnames(comb_isodecoder))]))), rownames.force = TRUE)
+      scaled_counts_isodecoder[is.na(scaled_counts_isodecoder)] = 0
+      rownames(scaled_counts_isodecoder) = comb_isodecoder$isodecoder
+      
+      comb_anticodon = DEcounts_list_anticodon %>% Reduce(function(dtf1,dtf2) full_join(dtf1,dtf2,by="Anticodon"), .)
+      basemean_anticodon = as.data.frame(res_anticodon) %>% select(baseMean) %>% tibble::rownames_to_column(var = "Anticodon")
+      normcounts_anticodon = subset(count_df_anticodon_out, select = -c(size))
+      comb_anticodon = list(comb_anticodon, basemean_anticodon, normcounts_anticodon) %>% Reduce(function(dtf1,dtf2) left_join(dtf1,dtf2,by="Anticodon"), .)
+      comb_anticodon$Anticodon = sub("Homo_sapiens_tRNA-","",comb_anticodon$Anticodon)
+      comb_anticodon = comb_anticodon[!grepl("tRX", comb_anticodon$Anticodon),]
+      
+      scaled_counts_anticodon = as.matrix(t(scale(t(comb_anticodon[,!grepl("Anticodon|l2FC|padj|baseMean", colnames(comb_anticodon))]))), rownames.force = TRUE)
+      scaled_counts_anticodon[is.na(scaled_counts_anticodon)] = 0
+      rownames(scaled_counts_anticodon) = comb_anticodon$Anticodon
+      
+      # Heatmaps
+      # note that all tables and plots only built if DE tables are not empty
+      col_fun = colorRamp2(c(-3, 0, 3), c("#CC5803", "#f7f7f7", "#36682B"))
+      
+      # Annotation for baseMean counts
+      if (nrow(comb_isodecoder) != 0) {
+        baseMeanAnno_iso = rowAnnotation(base_mean = anno_lines(comb_isodecoder$baseMean, 
+                                                                gp = gpar(lwd = 1.5, col = "#084081")), 
+                                         annotation_name_rot = 90,
+                                         width = unit("0.8", "cm"))
+        
+        hm_iso = Heatmap(scaled_counts_isodecoder,
+                         col = col_fun,
+                         show_row_names = FALSE,
+                         border = "gray20",
+                         cluster_columns = TRUE)
+      }
+      
+      if (nrow(comb_anticodon) != 0) {
+        baseMeanAnno_anti = rowAnnotation(base_mean = anno_lines(comb_anticodon$baseMean, 
+                                                                 gp = gpar(lwd = 1.5, col = "#084081")), 
+                                          annotation_name_rot = 90,
+                                          width = unit("0.8", "cm"))
+        
+        hm_anti = Heatmap(scaled_counts_anticodon,
+                          col = col_fun,
+                          row_names_side = "left",
+                          row_names_gp = gpar(fontsize = 6),
+                          border = "gray20",
+                          cluster_columns = TRUE)
+      }
+      
+      for (i in seq_len(length(combinations))){
+        if (control_cond %in% combinations[[i]]) {
+          lfc = paste(paste(combinations[[i]], collapse="vs"), "l2FC", sep="_")
+          if (nrow(comb_isodecoder) != 0) {
+            lfc_iso = Heatmap(comb_isodecoder[lfc],
+                              col = col_fun,
+                              width = unit(0.5, "cm"), na_col = "white",
+                              border = "gray20",
+                              show_heatmap_legend = FALSE)
+            hm_iso = hm_iso + lfc_iso
+          }
+          if (nrow(comb_anticodon) != 0) {
+            lfc_anti = Heatmap(comb_anticodon[lfc],
+                               col = col_fun,
+                               width = unit(0.5, "cm"), na_col = "white",
+                               border = "gray20",
+                               show_heatmap_legend = FALSE)
+          hm_anti = hm_anti + lfc_anti
+          }
+        }
+      }
+      
+      if (nrow(comb_isodecoder) != 0) {
+        hm_iso = hm_iso + baseMeanAnno_iso
+        
+        pdf(paste(subdir_isodecoder,"DE_isodecodersScaled_hm.pdf",sep="/"))
+        draw(hm_iso)
+        dev.off()
+      }
+      
+      if (nrow(comb_anticodon) != 0) {
+        hm_anti = hm_anti + baseMeanAnno_anti
+        
+        
+        pdf(paste(subdir_anticodon,"DE_anticodonScaled_hm.pdf",sep="/"))
+        draw(hm_anti)
+        dev.off()
+      }
     }
   }
 }

@@ -48,7 +48,7 @@ mods$proportion[is.infinite(mods$proportion)] = 0
 mods$isodecoder = sub(".*_mito_tRNA-", "mito", mods$isodecoder)
 mods$isodecoder = sub(".*_nmt_tRNA-", "nmt", mods$isodecoder)
 mods$isodecoder = sub(".*_tRNA-", "", mods$isodecoder)
-mods$isodecoder = sub(".*_tRX-", "", mods$isodecoder)
+mods$isodecoder = sub(".*_tRX-", "tRX-", mods$isodecoder)
 mods$isodecoder = ifelse(mods$isodecoder == 'eColiLys-TTT-1-1', 'eColiLys', mods$isodecoder)
 mods = mods[!grepl("-", mods$canon_pos), ]
 mods_agg = aggregate(mods$proportion, by = list(isodecoder = mods$isodecoder,
@@ -71,6 +71,7 @@ stops$proportion[is.infinite(stops$proportion)] = 0
 stops$isodecoder = sub(".*_mito_tRNA-", "mito", stops$isodecoder)
 stops$isodecoder = sub(".*_nmt_tRNA-", "nmt", stops$isodecoder)
 stops$isodecoder = sub(".*_tRNA-","", stops$isodecoder)
+stops$isodecoder = sub(".*_tRX-", "tRX-", stops$isodecoder)
 stops$isodecoder = ifelse(stops$isodecoder == "eColiLys-TTT-1-1", "eColiLys",
                           stops$isodecoder)
 stops = stops[!grepl("-", stops$canon_pos), ]
@@ -87,6 +88,7 @@ colnames(context_info) = c("isodecoder", "canon_pos", "identity", "upstream", "d
 context_info$isodecoder = sub(".*_mito_tRNA-", "mito", context_info$isodecoder)
 context_info$isodecoder = sub(".*_nmt_tRNA-", "nmt", context_info$isodecoder)
 context_info$isodecoder = sub(".*_tRNA-", "", context_info$isodecoder)
+context_info$isodecoder = sub(".*_tRX-", "tRX-", context_info$isodecoder)
 context_info$isodecoder = ifelse(context_info$isodecoder == "eColiLys-TTT-1-1",
                                  "eColiLys",
                                  context_info$isodecoder)
@@ -115,7 +117,8 @@ for (i in unique(mods_agg$condition)) {
   col_anno_data = aggregate(sub_mods_agg$x,
                             by = list(pos = sub_mods_agg$canon_pos),
                             FUN = mean)
-  col_anno_data[missing, 'x'] = 0
+  col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+  col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
   col_anno_data = col_anno_data$x
   col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
                                                    height = unit(1.5, 'cm'),
@@ -158,7 +161,8 @@ for (i in unique(mods_agg$condition)) {
   col_anno_data = aggregate(sub_stops_agg$x,
                             by = list(pos = sub_stops_agg$canon_pos),
                             FUN = mean)
-  col_anno_data[missing, 'x'] = 0
+  col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+  col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
   col_anno_data = col_anno_data$x
   col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
                                                    height = unit(1.5, 'cm'),
@@ -210,7 +214,8 @@ for (i in unique(mods_agg$condition)) {
       col_anno_data = aggregate(sub_mods_agg$x,
                                 by = list(pos = sub_mods_agg$canon_pos),
                                 FUN = mean)
-      col_anno_data[missing, 'x'] = 0
+      col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+      col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
       col_anno_data = col_anno_data$x
       col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
                                                        height = unit(1.5, 'cm'),  
@@ -252,7 +257,8 @@ for (i in unique(mods_agg$condition)) {
       col_anno_data = aggregate(sub_stops_agg$x,
                                 by = list(pos = sub_stops_agg$canon_pos),
                                 FUN = mean)
-      col_anno_data[missing, 'x'] = 0
+      col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+      col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
       col_anno_data = col_anno_data$x
       col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
                                                        height = unit(1.5, 'cm'),
@@ -424,10 +430,10 @@ for (i in unique(mods_agg$condition)) {
   
   if (!is.na(mito_trnas)){
     sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$isodecoder) | grepl("nmt", sub_mods_aggtype$isodecoder), ]
+    sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, canon_pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
     
     if(nrow(sub_mods_aggtype_mito) != 0) {
       # renormalise by sum of misinc at each site for each isodecoder in each bam file - this makes sum all misinc types = 1
-      sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, canon_pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
       #sub_mods_aggtype_mito = aggregate(sub_mods_aggtype_mito$proportion, by = list(identity = sub_mods_aggtype_mito$identity, type = sub_mods_aggtype_mito$type, upstream = sub_mods_aggtype_mito$upstream, downstream = sub_mods_aggtype_mito$downstream, pos = sub_mods_aggtype_mito$pos, canon_pos=sub_mods_aggtype_mito$canon_pos), FUN = function(x) c(mean=mean(x), sd=sd(x)))
       #sub_mods_aggtype_mito = do.call("data.frame", sub_mods_aggtype_mito)
       sub_mods_aggtype_mito$canon_pos = factor(sub_mods_aggtype_mito$canon_pos, levels = c('9', '20', '20a', '26','32','34','37','58'))
@@ -481,6 +487,13 @@ if (length(unique(mods$condition)) > 1) {
   dir.create(file.path(paste(out,"mods_logOR/", sep="/")), showWarnings = FALSE)
   
   # Plots for logOR between conditions, including significance tests for each OR with chi-squared tests
+  
+  # read in all known and predicted mods from mimseq to filter heatmap for these sites only
+  # reduces noise at potentially unmodified sites
+  allmods = read.table(paste(out, "mods/allModsTable.csv", sep = ''), sep = "\t", header=T)
+  allmods = allmods[!grepl("mito", allmods$isodecoder),]
+  allmods$isodecoder = sub(".*_tRNA-", "", allmods$isodecoder)
+  allmods$isodecoder = sub(".*_tRX-", "tRX-", allmods$isodecoder)
   
   # modify mods and aggregate for total misinc. (sum of all types) and by condition (mean)
   mods$cov[is.na(mods$cov)] = 0
@@ -597,6 +610,15 @@ if (length(unique(mods$condition)) > 1) {
     # Corrrect for multiple testing using FDR and filter low effect size changes and lowly modified sites
     chisq = matrix(p.adjust(chisq, method = 'fdr'), nrow = nrow(temp))
     temp[chisq > 0.01 | foldchange < 0.25 | (mat1_mod_props < 0.1 & mat2_mod_props < 0.1)] = 0
+    
+    # filter sites not in allModsTable
+    for (i in rownames(temp)){
+      for (j in colnames(temp)){
+        if (plyr::empty(allmods[(allmods$isodecoder == i) & (allmods$canon_pos == j),])) {
+          temp[i,j] = 0
+        }
+      }
+    }
     
     # heatmaps
     # only draw if temp consists of something other than 0s

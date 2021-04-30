@@ -232,7 +232,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 	# This reflects the proportion of reads at a given site that stop at this site, as opposed to the proportion of all reads for the reference that stop here
 
 	modTable_prop = {isodecoder: {pos: {
-				group: count / cov[isodecoder][pos]
+				group: count / (cov[isodecoder][pos]) if cov[isodecoder][pos] != 0 else 0
 				  for group, count in data.items() if group in ['A','C','G','T']
 								}
 			for pos, data in values.items()
@@ -241,14 +241,14 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 					}
 
 	stopTable_prop = {isodecoder: {
-			pos: count / geneCov[isodecoder]
+			pos: (count / geneCov[isodecoder]) if geneCov[isodecoder] != 0 else 0
 			for pos, count in values.items()
 						}
 		for isodecoder, values in stopTable.items()
 				}
 
 	readthroughTable = {isodecoder: {
-			pos: 1 - (count / cov[isodecoder][pos]) # 1 - stops gives readthrough
+			pos: (1 - (count / cov[isodecoder][pos])) if cov[isodecoder][pos] != 0 else 0 # 1 - stops gives readthrough
 			for pos, count in values.items()
 						}
 		for isodecoder, values in stopTable.items()
@@ -606,6 +606,12 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 
 		# Redo newModsParser here so that knownTable is updated with new mods from second round and written to allModsTable
 		Inosine_clusters, snp_tolerance, newtRNA_dict, newknownTable = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering, remap, snp_tolerance = True)
+		# convert newknownTable to DataFrame for merging and canon_pos addition
+		newknownTable_df = pd.DataFrame.from_dict(newknownTable, orient = "index").melt(ignore_index=False).dropna()[['value']].reset_index()
+		newknownTable_df.columns = ['isodecoder', 'pos']
+		newknownTable_df.loc[~newknownTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newknownTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
+		newknownTable_df = pd.merge(newknownTable_df, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
+		newknownTable_df.to_csv(out_dir + "mods/allModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		modTable_total = pd.DataFrame()
 		countsTable_total = pd.DataFrame()
@@ -697,12 +703,12 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		modTable_total.drop_duplicates(inplace = True)
 		modTable_total.sort_values(by=['isodecoder', 'pos'], inplace = True)
 		modTable_total.to_csv(out_dir + "mods/mismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
-		with open(out_dir + "mods/allModsTable.csv", "w") as known:
-			known.write("cluster\tpos\n")
-			for cluster, data in newknownTable.items():
-				for pos in data:
-					known.write("-".join(cluster.split("-")[:-1]) + "\t" + str(pos+1) + "\n")
-
+ 		#with open(out_dir + "mods/allModsTable.csv", "w") as known:
+		#	known.write("cluster\tpos\n")
+		#	for cluster, data in newknownTable.items():
+		#		for pos in data:
+		#			known.write("-".join(cluster.split("-")[:-1]) + "\t" + str(pos+1) + "\n")
+		
 		stopTable_total.drop_duplicates(inplace = True)
 		stopTable_total.sort_values(by=['isodecoder', 'pos'], inplace = True)
 		stopTable_total.to_csv(out_dir + "mods/RTstopTable.csv", sep = "\t", index = False, na_rep = 'NA')

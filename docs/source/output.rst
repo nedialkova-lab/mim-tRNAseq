@@ -68,7 +68,7 @@ Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
 
 Differential modification analysis. Only generated if mods analysis is performed (see above) and if there are more than 1 condition in the experiment
 
-* `ConditionAvsConditionB_logOR.pdf`: Heatmaps of filtered, significant log10 odds ratios (logOR) for each tRNA at each position between condition A and B. Performed for all pairwise condition comparisons. Values are FDR adjusted chi-squared p-values <= 0.01.
+* `ConditionAvsConditionB_logOR.pdf`: Heatmaps of filtered, significant log10 odds ratios (logOR) for each tRNA at each position between condition A and B. Performed for all pairwise condition comparisons. Values are FDR adjusted chi-squared p-values <= 0.01, and filtered for known and newly detected modified sites in mimseq.
 * 'ConditionAvsConditionB_logOR.csv': Data table for heatmap plotting.
 
 **DESeq2**

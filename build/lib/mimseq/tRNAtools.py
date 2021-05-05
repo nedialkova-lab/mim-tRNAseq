@@ -330,8 +330,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	# if clustering is not activated then write full gff and report on total SNPs written 
 	if not cluster:
 		coverage_bed = tRNAbed.name
-		mod_lists = dict()
-		Inosine_lists = dict()
+		mod_lists = defaultdict(list)
+		Inosine_lists = defaultdict(list)
 		with open(out_dir + experiment_name + "_tRNA.gff","w") as tRNAgff, open(out_dir + experiment_name + "isoacceptorInfo.txt","w") as isoacceptorInfo:	
 			isoacceptor_dict = defaultdict(int)
 			isoacceptorInfo.write("Isoacceptor\tsize\n")
@@ -445,8 +445,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 
 		# read cluster files, get nonredudant set of mod positions of all members of a cluster, create snp_records for writing SNP index
 		cluster_pathlist = Path(temp_dir).glob("**/*_clusters.uc")
-		mod_lists = dict() # stores non-redundant sets of mismatches and mod positions for clusters
-		Inosine_lists = dict() # stores positions of inosines for clusters
+		mod_lists = defaultdict(list) # stores non-redundant sets of mismatches and mod positions for clusters
+		Inosine_lists = defaultdict(list) # stores positions of inosines for clusters
 		snp_records = list()
 		cluster_dict = defaultdict(list) # info about clusters and members
 		mismatch_dict = defaultdict(list) # dictionary of mismatches only (not mod positions - required for exclusion from misincorporation analysis in mmQuant)

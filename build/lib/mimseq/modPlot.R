@@ -491,9 +491,18 @@ if (length(unique(mods$condition)) > 1) {
   # read in all known and predicted mods from mimseq to filter heatmap for these sites only
   # reduces noise at potentially unmodified sites
   allmods = read.table(paste(out, "mods/allModsTable.csv", sep = ''), sep = "\t", header=T)
+  allmods = allmods[,c('isodecoder', 'canon_pos')]
   allmods = allmods[!grepl("mito", allmods$isodecoder),]
   allmods$isodecoder = sub(".*_tRNA-", "", allmods$isodecoder)
   allmods$isodecoder = sub(".*_tRX-", "tRX-", allmods$isodecoder)
+
+  predictedmods = read.table(paste(out, "mods/predictedMods.csv", sep = ''), sep = "\t", header=T)
+  predictedmods = predictedmods[,c('isodecoder','canon_pos')]
+  predictedmods = predictedmods[!grepl("mito", predictedmods$isodecoder),]
+  predictedmods$isodecoder = sub(".*_tRNA-", "", predictedmods$isodecoder)
+  predictedmods$isodecoder = sub(".*_tRX-", "tRX-", predictedmods$isodecoder)
+
+  knownmods = rbind(allmods, predictedmods)
   
   # modify mods and aggregate for total misinc. (sum of all types) and by condition (mean)
   mods$cov[is.na(mods$cov)] = 0
@@ -611,10 +620,10 @@ if (length(unique(mods$condition)) > 1) {
     chisq = matrix(p.adjust(chisq, method = 'fdr'), nrow = nrow(temp))
     temp[chisq > 0.01 | foldchange < 0.25 | (mat1_mod_props < 0.1 & mat2_mod_props < 0.1)] = 0
     
-    # filter sites not in allModsTable
+    # filter sites not in knownmods
     for (i in rownames(temp)){
       for (j in colnames(temp)){
-        if (plyr::empty(allmods[(allmods$isodecoder == i) & (allmods$canon_pos == j),])) {
+        if (plyr::empty(knownmods[(knownmods$isodecoder == i) & (knownmods$canon_pos == j),])) {
           temp[i,j] = 0
         }
       }

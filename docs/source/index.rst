@@ -11,7 +11,7 @@ mim-tRNAseq
 
 :Author: Drew Behrens
 
-:Version: 0.3.1
+:Version: 0.3.4
 
 Modification-induced misincorporation tRNA sequencing.
 

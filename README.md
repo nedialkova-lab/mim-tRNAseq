@@ -41,6 +41,7 @@ usearch needs to be acquired and installed. Please do the following:
 ```bash
 	wget https://drive5.com/downloads/usearch10.0.240_i86linux32.gz
 	gunzip usearch10.0.240_i86linux32.gz
+	chmod +x usearch10.0.240_i86linux32
 	mv usearch10.0.240_i86linux32 usearch
 	cp usearch /usr/local/bin
 ```

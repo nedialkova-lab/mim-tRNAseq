@@ -57,6 +57,7 @@ def unknownMods(inputs, knownTable, cluster_dict, modTable, misinc_thresh, cov_t
 				isodecoder, pos = line.split("\t")[0:2]
 				predRound1[isodecoder].append(int(pos))
 		knownTable = {cluster:[pos for pos in knownTable[cluster] if pos not in predRound1[cluster]] for cluster, pos in knownTable.items()} # subtraction
+		knownTable = defaultdict(list, knownTable)
 	except:
 		next
 

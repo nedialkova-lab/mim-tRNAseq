@@ -49,7 +49,7 @@ def restrictedFloat2(x):
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
 def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, pretrnas, local_mod, sample_data):
+	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, pretrnas, local_mod, p_adj, sample_data):
 	
 # Main wrapper
 	# Integrity check for output folder argument...
@@ -176,7 +176,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	\n| Differential expression analysis with DESeq2 |\
 	\n+----------------------------------------------+")
 
-	deseq_cmd = ["Rscript", script_path + "/deseq.R", out, sample_data, control_cond, str(cluster_id)]
+	deseq_cmd = ["Rscript", script_path + "/deseq.R", out, sample_data, control_cond, str(cluster_id), str(p_adj)]
 	#subprocess.check_call(deseq_cmd)
 	process = subprocess.Popen(deseq_cmd, stdout = subprocess.PIPE)
 	while True:
@@ -239,6 +239,10 @@ def main():
 	options.add_argument('--local-modomics', required=False, dest = 'local_mod', action='store_true',\
 		help = "Disable retrieval of Modomics data from online. Instead use older locally stored data. Warning - this leads\
 			to usage of older Modomics data!")
+	options.add_argument('--p-adj', required = False, dest = 'p_adj', type = restrictedFloat, default=0.05,\
+		help = "Adjusted p-value threshold for DESeq2 pairwise condition differential epxression dot plots. \
+			tRNAs with DESeq2 adjusted p-values equal to or below this value will be displayed as green or orange triangles for up- or down-regulated tRNAs, respectively. \
+				Default p-adj <= 0.05")
 
 	align = parser.add_argument_group("GSNAP alignment options")
 	align.add_argument('--max-mismatches', metavar = 'allowed mismatches', required = False, dest = 'mismatches', type = float, \
@@ -358,7 +362,7 @@ def main():
 			mimseq(args.trnas, args.trnaout, args.name, args.species, args.out, args.cluster, args.cluster_id, args.cov_diff, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
 				args.keep_temp, args.cca, args.double_cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
-				args.misinc_thresh, args.mito, args.pretrnas, args.local_mod, args.sampledata)
+				args.misinc_thresh, args.mito, args.pretrnas, args.local_mod, args.p_adj, args.sampledata)
 
 if __name__ == '__main__':
 	main()

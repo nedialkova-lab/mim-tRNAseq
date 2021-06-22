@@ -38,6 +38,7 @@ outdir = args[1]
 sampleData = args[2]
 control_cond = args[3]
 cluster_id = as.numeric(args[4])
+p_adj = as.numeric(args[5])
 subdir = "DESeq2/"
 subdir_isodecoder = "DESeq2/isodecoder"
 subdir_anticodon = "DESeq2/anticodon"
@@ -299,9 +300,9 @@ if (nrow(coldata) == 1) {
         
         # Count plots
         # add significance to baseMean matrices for current contrast
-        baseMeanPerLvl_anticodon$sig = res_anticodon[rownames(baseMeanPerLvl_anticodon),'padj'] < 0.05
+        baseMeanPerLvl_anticodon$sig = res_anticodon[rownames(baseMeanPerLvl_anticodon),'padj'] <= p_adj
         baseMeanPerLvl_anticodon$sig = !is.na(baseMeanPerLvl_anticodon$sig) & baseMeanPerLvl_anticodon$sig # deal with NAs turning them into FALSE
-        baseMeanPerLvl_isodecoder$sig = res_isodecoder[rownames(baseMeanPerLvl_isodecoder),'padj'] < 0.05
+        baseMeanPerLvl_isodecoder$sig = res_isodecoder[rownames(baseMeanPerLvl_isodecoder),'padj'] <= p_adj
         baseMeanPerLvl_isodecoder$sig = !is.na(baseMeanPerLvl_isodecoder$sig) & baseMeanPerLvl_isodecoder$sig # deal with NAs turning them into FALSE
         
         # add direction of DE to baseMean
@@ -331,8 +332,8 @@ if (nrow(coldata) == 1) {
           scale_x_log10() + scale_y_log10() + 
           #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
           geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
-          scale_color_manual('Differential expression', labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
-          scale_shape_manual('Differential expression', labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
+          scale_color_manual(paste('Differential expression\n(p-adj <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
+          scale_shape_manual(paste('Differential expression\n(p-adj <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
           scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", anticodon_cor), parse = TRUE)
@@ -342,8 +343,8 @@ if (nrow(coldata) == 1) {
           scale_x_log10() + scale_y_log10() + 
           #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
           geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
-          scale_color_manual('Differential expression', labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
-          scale_shape_manual('Differential expression', labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
+          scale_color_manual(paste('Differential expression\n(p-adj <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
+          scale_shape_manual(paste('Differential expression\n(p-adj <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
           scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", isodecoder_cor), parse = TRUE)

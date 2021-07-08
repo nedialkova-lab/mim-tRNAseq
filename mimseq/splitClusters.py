@@ -65,7 +65,7 @@ def natural_keys_list(text):
     
     return(l)
 
-def findUniqueSubset (inputDict, outputDict):
+def findUniqueSubset (inputDict, outputDict, tRNA_dict):
 # For dictionary of mismatches, insertions and deletions, find unique minimal distinguishing subset of positions and update outputDict
 
     for cluster, data in inputDict.items():
@@ -121,11 +121,12 @@ def findUniqueSubset (inputDict, outputDict):
         
             outputDict[cluster][min_uss].append(isodecoder)
             outputDict[cluster][min_uss].append(temp_fullset_dict[isodecoder])
-
     # add "-1" so that referencing this isodecoder by its full gene name elsewhere in code is not an issue
     for cluster, data in outputDict.items():
         for uss, isodecoder in data.items():
-            newIso = isodecoder[0] + "-1" if not "chr" in isodecoder[0] else isodecoder[0]
+            isodecoder_list = [x for x in tRNA_dict.keys() if isodecoder[0] in x and not "chr" in isodecoder[0]]
+            iso_min = min([x.split("-")[-1] for x in isodecoder_list])
+            newIso = isodecoder[0] + "-" + str(iso_min) if not "chr" in isodecoder[0] else isodecoder[0]
             newData = [newIso, isodecoder[1]]
             outputDict[cluster][uss] = newData
 
@@ -133,7 +134,6 @@ def findUniqueSubset (inputDict, outputDict):
 
 def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_dict, cluster_dict, out_dir, experiment_name):
 # Determine minimal set of most 3' mismatches and/or insertions that characterise an isodecoder
-
     log.info("\n+------------------------------------------------------------------------------+\
         \n| Characterizing cluster mismatches for read splitting by unique tRNA sequence |\
        \n+------------------------------------------------------------------------------+")
@@ -169,7 +169,7 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
     
     # Build nested dictionary of unique minimal set of mismatches and insertions that distinguish an isodecoder from parent and all others in cluster
     unique_isodecoderMMs = defaultdict(dd)
-    unique_isodecoderMMs = findUniqueSubset(cluster_MemberMismatchPos, unique_isodecoderMMs)
+    unique_isodecoderMMs = findUniqueSubset(cluster_MemberMismatchPos, unique_isodecoderMMs, tRNA_dict)
     isodecoder_sizes = defaultdict(int)
 
     # Check that all unique sequences can be deconvoluted
@@ -193,7 +193,7 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
         # count isodecoder sizes
         isodecoder_sizes[cluster] = len([info['sequence'].upper() for tRNA, info in tRNA_dict.items() if info['sequence'].upper() == tRNA_dict[cluster]['sequence'].upper()])
         for isodecoder in data.values():
-            isodecoder_sizes[isodecoder[0]] = len([info['sequence'].upper() for tRNA, info in tRNA_dict.items() if info['sequence'].upper() == tRNA_dict[isodecoder[0]]['sequence'].upper()])
+            isodecoder_sizes[isodecoder[0]] = len([info['sequence'].upper() for tRNA, info in tRNA_dict.items() if info['sequence'].upper() == tRNA_dict[isodecoder[0]]['sequence'].upper()])    
         deconv_sequences_num += 1
         unique_deconv = {member[0] for member in data.values()}
         deconv_sequences_num += len(unique_deconv)
@@ -264,17 +264,11 @@ def covCheck_mp(coverageBed, unique_isodecoderMMs, covDiff, input):
                 endCov = int(cov_df.loc[(cov_df.name == cluster) & (cov_df.thickStart == end - 5), 'thickEnd'])
                 # use this end - 5 (to exlude variability at 3'-CCA coverage) as the 3' position to measure against
                 ratio = cov_df.loc[(cov_df.name == cluster) & (cov_df.thickStart == minMismatch), 'thickEnd'].astype(float) / endCov
-            #try:
+
                 if float(ratio) < covDiff:
                     unsplit.add(cluster)
                     unsplit.add(unique_isodecoderMMs[cluster][mismatch][0])
                     unsplit_isosOnly.add(unique_isodecoderMMs[cluster][mismatch][0])
-            #except TypeError:
-            #   print(cov_df.head())
-            #   print(mismatch)
-            #    print(minMismatch)
-            #    print(endCov)
-            #    print(ratio)
 
     return(unsplit, unsplit_isosOnly)
 
@@ -303,7 +297,7 @@ def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, threads, co
 
     unsplit_all = list(set().union(*unsplit))
     unsplit_isosAll = len(list(set().union(*unsplit_isosOnly)))
-    log.info("{} unique sequences excluded from deconvolution due to reductions in required coverage at mismatches of more than {:.2%}".format(unsplit_isosAll, covDiff))
+    log.info("{} unique sequences excluded from deconvolution due to reductions in coverage at required mismatches of more than {:.2%}".format(unsplit_isosAll, covDiff))
 
     return(unsplit_all)
 

@@ -332,8 +332,8 @@ if (nrow(coldata) == 1) {
           scale_x_log10() + scale_y_log10() + 
           #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
           geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
-          scale_color_manual(paste('Differential expression\n(p-adj <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
-          scale_shape_manual(paste('Differential expression\n(p-adj <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
+          scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
+          scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
           scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", anticodon_cor), parse = TRUE)
@@ -343,8 +343,8 @@ if (nrow(coldata) == 1) {
           scale_x_log10() + scale_y_log10() + 
           #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
           geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
-          scale_color_manual(paste('Differential expression\n(p-adj <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
-          scale_shape_manual(paste('Differential expression\n(p-adj <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
+          scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
+          scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
           scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", isodecoder_cor), parse = TRUE)
@@ -359,14 +359,14 @@ if (nrow(coldata) == 1) {
         # Build DE tables for heatmaps only if the current contrast is to the control condition
         if (control_cond %in% combinations[[i]]) {
           temp_lfc_isodecoder = as.data.frame(res_isodecoder[,c("log2FoldChange","padj")])
-          temp_lfc_isodecoder = subset(temp_lfc_isodecoder, padj <= 0.01)
+          temp_lfc_isodecoder = subset(temp_lfc_isodecoder, padj <= p_adj)
           colnames(temp_lfc_isodecoder) = c(paste(paste(combinations[[i]], collapse = "vs"), "_l2FC", sep = ""), paste(paste(combinations[[i]], collapse = "vs"), "_padj", sep = ""))
           temp_lfc_isodecoder = tibble::rownames_to_column(temp_lfc_isodecoder, var = "isodecoder")
           temp_lfc_isodecoder = temp_lfc_isodecoder[!grepl("Escherichia_coli", temp_lfc_isodecoder$isodecoder),]
           DEcounts_list_isodecoder[[paste(combinations[[i]], collapse = "vs")]] = temp_lfc_isodecoder
           
           temp_lfc_anticodon = as.data.frame(res_anticodon[,c("log2FoldChange","padj")])
-          temp_lfc_anticodon = subset(temp_lfc_anticodon, padj <= 0.01)
+          temp_lfc_anticodon = subset(temp_lfc_anticodon, padj <= p_adj)
           colnames(temp_lfc_anticodon) = c(paste(paste(combinations[[i]], collapse = "vs"), "_l2FC", sep = ""), paste(paste(combinations[[i]], collapse = "vs"), "_padj", sep = ""))
           temp_lfc_anticodon = tibble::rownames_to_column(temp_lfc_anticodon, var = "Anticodon")
           temp_lfc_anticodon = temp_lfc_anticodon[!grepl("Escherichia_coli", temp_lfc_anticodon$Anticodon),]
@@ -423,9 +423,14 @@ if (nrow(coldata) == 1) {
         
         hm_iso = Heatmap(scaled_counts_isodecoder,
                          col = col_fun,
+                         row_title = paste('n = ', nrow(scaled_counts_isodecoder), sep = ""),
                          show_row_names = FALSE,
                          border = "gray20",
-                         cluster_columns = TRUE)
+                         cluster_columns = TRUE,
+                         heatmap_legend_param = list(
+                            title = paste("Scaled expression\nlog2 fold-change (adj-p <= ", p_adj,")", sep = "")
+                          )
+        )
       }
       
       if (nrow(comb_anticodon) != 0) {
@@ -436,10 +441,15 @@ if (nrow(coldata) == 1) {
         
         hm_anti = Heatmap(scaled_counts_anticodon,
                           col = col_fun,
+                          row_title = paste('n = ', nrow(scaled_counts_anticodon), sep = ""),
                           row_names_side = "left",
                           row_names_gp = gpar(fontsize = 6),
                           border = "gray20",
-                          cluster_columns = TRUE)
+                          cluster_columns = TRUE,
+                          heatmap_legend_param = list(
+                            title = paste("Scaled expression\nlog2 fold-change (adj-p <= ", p_adj,")", sep = "")
+                          )
+        )
       }
       
       for (i in seq_len(length(combinations))){

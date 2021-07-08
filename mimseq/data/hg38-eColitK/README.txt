@@ -34,3 +34,8 @@ Homo_sapiens_tRNA-Asn-GTT-9-2 does not share sequence with GTT-9-1. Rename to Ho
 # Homo_sapiens_tRNA-Asn-GTT-20-1 (tRNAscan-SE ID: chr1.trna116) Asn (GTT) 76 bp Sc: 41.0 chr1:146049197-146049273(-)
 # Homo_sapiens_tRX-Cys-GCA-4-1 (tRNAscan-SE ID: chr7.trna16) Cys (GCA) 83 bp Sc: 26.6 chr7:149628152-149628235(+)
 # Homo_sapiens_tRNA-Cys-GCA-25-1 (tRNAscan-SE ID: chr3.trna11) Cys (GCA) 80 bp Sc: 40.9 chr3:17699892-17699972(-)
+
+#### mitochondrial Tyr-GTA missing a 3'-A which leads to inaccuracies in alignment and shows as mostly CCA-less reads in CCA plots ####
+#### Gene should end on CCA and gain an additional CCA after processing
+#### manually added this A
+#### see https://www.nature.com/articles/s41467-020-18068-6#Sec24 (supplementary data 4)

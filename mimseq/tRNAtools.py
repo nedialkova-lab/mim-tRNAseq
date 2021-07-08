@@ -5,11 +5,11 @@
 ##################################################################################
 
 from __future__ import absolute_import
-from Bio import SeqIO
+from Bio import SeqIO, SearchIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio.Blast.Applications import NcbiblastnCommandline
-from Bio.Blast import NCBIXML
+#from Bio.Blast.Applications import NcbiblastnCommandline
+#from Bio.Blast import NCBIXML
 import re, copy, sys, os, shutil, subprocess, logging, glob
 from pathlib import Path
 from collections import defaultdict
@@ -227,7 +227,7 @@ def getModomics(local_mod):
 
 	return modomics, fetch
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, double_cca, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False):
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0
@@ -291,18 +291,21 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			temp_matchFasta.close()
 
 			#blast
-			blastn_cline = NcbiblastnCommandline(query = temp_tRNAFasta.name, subject = temp_matchFasta.name, task = 'blastn-short', out = temp_dir + "blast_temp.xml", outfmt = 5)
-			blastn_cline()
+			blastn_cmd = ["blastn", "-query", temp_tRNAFasta.name, "-subject", temp_matchFasta.name, "-task", "blastn-short", "-out", temp_dir + "blast_temp.xml", "-outfmt", "5", "-num_threads", str(threads)]
+			subprocess.check_call(blastn_cmd, stdout = subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			#blastn_cline = NcbiblastnCommandline(query = temp_tRNAFasta.name, subject = temp_matchFasta.name, task = 'blastn-short', out = temp_dir + "blast_temp.xml", outfmt = 5)
+			#blastn_cline()
 
 			#parse XML result and store hit with highest bitscore	
-			blast_record = NCBIXML.read(open(temp_dir + "blast_temp.xml","r"))
+			#blast_record = NCBIXML.read(open(temp_dir + "blast_temp.xml","r"))
+			blast_record = SearchIO.read(temp_dir + "blast_temp.xml", "blast-xml")
 			maxbit = 0
 			tophit = ''
-			for alignment in blast_record.alignments:
-				for hsp in alignment.hsps:
-					if (hsp.bits > maxbit) and (hsp.align_length / alignment.length == 1) and (hsp.identities / alignment.length == 1):
-						maxbit = hsp.bits
-						tophit = alignment.title.split(' ')[0]
+			for hit in blast_record:
+				for hsp in hit:
+					if (hsp.bitscore > maxbit) and (hsp.aln_span / blast_record.seq_len == 1) and (hsp.ident_num / blast_record.seq_len == 1):
+						maxbit = hsp.bitscore
+						tophit = hit.id.split(' ')[0]
 			
 			# return list of all modified positions for the match as long as there is only 1, add to tRNA_dict
 			if tophit:
@@ -540,14 +543,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 								for delete in deletion_pos:
 									if delete < insert:
 										adjust_pos_len -= 1
-								#if index != 0:
-								#	if insert == insertion_pos[index-1] + 1:
-								#		adjust_pos_ins -= 1
 								new_insert = insert + adjust_pos_len + adjust_pos_ins
 								member_seq = member_seq[ :new_insert] + cluster_seq[insert] + member_seq[new_insert: ]
-								#insert_dict[cluster_name][new_insert-1].append(member_name)
 								insert_dict[cluster_name][new_insert].append(member_name)
-								#cluster_seq = cluster_seq[ :new_insert] + cluster_seq[new_insert+1: ]
 
 							mismatches = [i for i in range(len(member_seq)) if member_seq[i].upper() != cluster_seq[i].upper()]
 							mismatch_dict[cluster_name] = list(set(mismatch_dict[cluster_name] + mismatches))
@@ -645,7 +643,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		if total_snps == 0:
 			snp_tolerance = False		
 
-		log.info("{:,} modifications written to SNP index".format(total_snps))
+		log.info("{:,} modifications/cluster mismatches written to SNP index".format(total_snps))
 		log.info("{:,} A to G replacements in reference sequences for inosine modifications".format(total_inosines))		
 	
 	# write outputs for indexing 

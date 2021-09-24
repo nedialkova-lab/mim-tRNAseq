@@ -109,7 +109,8 @@ def processModomics(modomics_file, fetch, species, modifications):
 			sameIDcount = 0
 
 			mod_species = data['organism']
-			if not mod_species in species:
+			# exclude modomics entries not for target species, or weird entries for some species with no anticodon or isotype info
+			if (not mod_species in species) or (data['anticodon'] == ""):
 				continue
 			else:
 				perSpecies_count[mod_species] += 1
@@ -990,6 +991,10 @@ def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict, c
 				else:
 					isodecoder = line.split("\t")[0]
 					anticodon = "-".join(isodecoder.split("-")[:-1]) if not "chr" in isodecoder else "-".join(isodecoder.split("-")[:-2])
+					# replace "tRX" with "tRNA" in anticodon names so that low confidence tRX genes also get summed with their respective anticodon
+					anticodon = anticodon.replace("tRX", "tRNA")
+					# replace Mut in the case of custom mutation references so that these counts get added to the corresponsing anticodon
+					anticodon = anticodon.replace("Mut", "")
 					col = 1
 					for sample in sample_list:
 						count_dict_anticodon[anticodon][sample] += float(line.split("\t")[col])

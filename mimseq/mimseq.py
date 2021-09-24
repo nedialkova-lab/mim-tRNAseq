@@ -203,8 +203,8 @@ def main():
 
 	inputs = parser.add_argument_group("Input files")
 	inputs.add_argument('-s','--species', metavar='species', required = not ('-t' in sys.argv), dest = 'species', help = \
-		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap38, Mmus, Scer, Spom, Dmel, Drer, Ecol', \
-		choices = ['Hsap','Hsap19','Ggor','Mmus','Scer','Spom','Dmel', 'Drer', 'Ecol'])
+		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap38, Mmus, Scer, ScerMut, Spom, Dmel, Drer, Ecol', \
+		choices = ['Hsap','Hsap19','Ggor','Mmus','Scer', 'ScerMut', 'Spom','Dmel', 'Drer', 'Ecol'])
 	inputs.add_argument('-t', '--trnas', metavar='genomic tRNAs', required = False, dest = 'trnas', help = \
 		'Genomic tRNA fasta file, e.g. from gtRNAdb or tRNAscan-SE. Already avalable in data folder for a few model organisms.')
 	inputs.add_argument('-o', '--trnaout', metavar = 'tRNA out file', required = (not '--species' or '-s' in sys.argv) or ('-t' in sys.argv), 
@@ -341,6 +341,10 @@ def main():
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-eColitK/sacCer3_eschColitK.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-eColitK/sacCer3_eschColi-tRNAs.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-eColitK/sacCer3-mitotRNAs.fa"
+				if args.species == 'ScerMut':
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-tRNAs_mutant/sacCer3_eschColitK.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-tRNAs_mutant/sacCer3_eschColi-tRNAs.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-tRNAs_mutant/sacCer3-mitotRNAs.fa"
 				if args.species == 'Mmus':
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10_eColitK-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10_eschColi-tRNAs.out"

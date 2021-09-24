@@ -240,14 +240,13 @@ The following isodecoders were not distinguished uniquely from the cluster paren
 
     return(unique_isodecoderMMs, splitBool, isodecoder_sizes)
 
-def covCheck_mp(coverageBed, unique_isodecoderMMs, covDiff, input):
+def covCheck_mp(bedTool, unique_isodecoderMMs, covDiff, input):
     # get positional coverage per cluster per bam file and check if 3':5' coverage is greater than covDiff
     unsplit = set()
     unsplit_isosOnly = set()
     log.info("Calculating nucleotide coverage for {}".format(input))
     bam = pybedtools.BedTool(input)
-    bed = pybedtools.BedTool(coverageBed)
-    cov = bed.coverage(bam, s = True, d = True)
+    cov = bedTool.coverage(bam, s = True, d = True)
     cov_df = cov.to_dataframe()
 
     # check coverage diff for each unique sequence in each cluster
@@ -290,7 +289,8 @@ def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, threads, co
     # initiate custom non-daemonic multiprocessing pool and run with bam names
     log.info("Determining unsplittable sequences...")
     pool = Pool(multi)
-    func = partial(covCheck_mp, coverageBed, unique_isodecoderMMs, covDiff)
+    bed = pybedtools.BedTool(coverageBed)
+    func = partial(covCheck_mp, bed, unique_isodecoderMMs, covDiff)
     unsplit, unsplit_isosOnly = zip(*pool.map(func, bamlist))
     pool.close()
     pool.join()

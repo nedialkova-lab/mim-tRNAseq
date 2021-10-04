@@ -68,6 +68,8 @@ The run should take around 15 minutes on a server using 15 processors (`--thread
 
 ## Contact
 
+Please log all issues/suggestions on the mim-tRNAseq GitHub page: https://github.com/nedialkova-lab/mim-tRNAseq/issues
+
 Drew Behrens: abehrens@biochem.mpg.de
 
 Danny Nedialkova: nedialkova@biochem.mpg.de

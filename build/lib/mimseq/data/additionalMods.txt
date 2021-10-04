@@ -30,3 +30,11 @@ Danio rerio	Pro-AGG	I34
 Danio rerio	Ser-AGA	I34
 Danio rerio	Thr-AGT	I34
 Danio rerio	Val-AAC	I34
+Gorilla gorilla	Ala-AGC	I34
+Gorilla gorilla	Arg-ACG	I34
+Gorilla gorilla	Ile-AAT	I34
+Gorilla gorilla	Leu-AAG	I34
+Gorilla gorilla	Pro-AGG	I34
+Gorilla gorilla	Ser-AGA	I34
+Gorilla gorilla	Thr-AGT	I34
+Gorilla gorilla	Val-AAC	I34

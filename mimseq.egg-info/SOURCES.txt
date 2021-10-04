@@ -1,3 +1,4 @@
+LICENSE.txt
 MANIFEST.in
 README.md
 sampleData_HEKvsK562.txt
@@ -112,6 +113,12 @@ mimseq/data/sacCer3-tRNAs/sacCer3-tRNAs.bed
 mimseq/data/sacCer3-tRNAs/sacCer3-tRNAs.fa
 mimseq/data/sacCer3-tRNAs/sacCer3-tRNAs.out-noChrM
 mimseq/data/sacCer3-tRNAs/sacCer3-tRNAs.ss.sort
+mimseq/data/sacCer3-tRNAs_mutant/README.txt
+mimseq/data/sacCer3-tRNAs_mutant/Turk_2013_mitotRNAbounds_Tab1.bed
+mimseq/data/sacCer3-tRNAs_mutant/sacCer3-mitotRNAs.fa
+mimseq/data/sacCer3-tRNAs_mutant/sacCer3-tRNAs.bed
+mimseq/data/sacCer3-tRNAs_mutant/sacCer3_eschColi-tRNAs.out
+mimseq/data/sacCer3-tRNAs_mutant/sacCer3_eschColitK.fa
 mimseq/data/sacCer3_modOligos/sacCer3_eschColi-tRNAs.out
 mimseq/data/sacCer3_modOligos/sacCer3_eschColitK.fa
 mimseq/data/sacCer3_modOligos/sacCer3_oligoRefsOnly.fa

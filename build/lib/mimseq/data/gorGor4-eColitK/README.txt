@@ -26,11 +26,19 @@ bedtools getfasta -fi /data/genome_misc/gorilla_gorGor4/Gorilla_gorilla.gorGor4.
 >Gorilla_gorilla_tRX-Cys-GCA-6-1 (tRNAscan-SE ID: chr10.trna7) Cys (GCA) 96 bp Sc: 20.7 10:6238138-6238234(-)
 >Gorilla_gorilla_tRNA-Asn-GTT-12-1 (tRNAscan-SE ID: chr1.trna19) Asn (GTT) 76 bp Sc: 52.9 1:125422054-125422130(+)
 
+##### Manually rename problem reference names #######
+
 # >Gorilla_gorilla_tRNA-Gly-CCC-3-2 does not match sequence to Gly-CCC-3-1
 # renamed to >Gorilla_gorilla_tRNA-Gly-CCC-6-1   
 
 # Gorilla_gorilla_tRNA-Glu-CTC-2-1 has same sequence as Glu-CTC-1 isodecoder
 # renamed to >Gorilla_gorilla_tRNA-Glu-CTC-1-6
+
+# >Gorilla_gorilla_tRNA-Glu-CTC-1-1 does not match to other Glu-CTC-1 genes
+# renamed to >Gorilla_gorilla_tRNA-Glu-CTC-2-1
+
+# >Gorilla_gorilla_tRNA-Ser-AGA-1-2 does not match Ser-AGA-1-1
+# renamed to >Gorilla_gorilla_tRNA-Ser-AGA-4-1
 
 #### mitochondrial Tyr-GTA missing a 3'-A which leads to inaccuracies in alignment and shows as mostly CCA-less reads in CCA plots ####
 #### Gene should end on CCA and gain an additional CCA after processing

@@ -606,13 +606,21 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 	if not remap:
 
 		# Redo newModsParser here so that knownTable is updated with new mods from second round and written to allModsTable
-		Inosine_clusters, snp_tolerance, newtRNA_dict, newknownTable = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering, remap, snp_tolerance = True)
-		# convert newknownTable to DataFrame for merging and canon_pos addition
+		Inosine_clusters, snp_tolerance, newtRNA_dict, newknownTable, newInosineTable = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering, remap, snp_tolerance = True)
+		# convert newknownTable to DataFrame
 		newknownTable_df = pd.DataFrame.from_dict(newknownTable, orient = "index").melt(ignore_index=False).dropna()[['value']].reset_index()
 		newknownTable_df.columns = ['isodecoder', 'pos']
 		newknownTable_df.loc[~newknownTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newknownTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
-		newknownTable_df = pd.merge(newknownTable_df, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
-		newknownTable_df.to_csv(out_dir + "mods/allModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
+		# convert newInosineTable to DataFrame 
+		newInosineTable_df = pd.DataFrame.from_dict(newInosineTable, orient = "index").melt(ignore_index=False).dropna()[['value']].reset_index()
+		newInosineTable_df.columns = ['isodecoder', 'pos']
+		newInosineTable_df.loc[~newknownTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newInosineTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
+		
+		# combine new mods and new inosine tables
+		allnewKnownTable_df = pd.concat([newknownTable_df, newInosineTable_df])
+
+		allnewKnownTable_df = pd.merge(allnewKnownTable_df, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
+		allnewKnownTable_df.to_csv(out_dir + "mods/allModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		modTable_total = pd.DataFrame()
 		countsTable_total = pd.DataFrame()

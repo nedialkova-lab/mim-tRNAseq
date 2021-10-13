@@ -723,7 +723,7 @@ def newModsParser(out_dir, experiment_name, new_mods_list, new_Inosines, mod_lis
 				
 		log.info("{:,} modifications written to SNP index".format(total_snps))	
 
-	return(Inosine_clusters, snp_tolerance, tRNA_dict, mod_lists)
+	return(Inosine_clusters, snp_tolerance, tRNA_dict, mod_lists, Inosine_lists)
 
 def additionalModsParser(input_species, out_dir):
 # Reads in manual addition of modifcations in /data/additionalMods.txt

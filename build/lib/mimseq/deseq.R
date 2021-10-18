@@ -392,7 +392,7 @@ if (nrow(coldata) == 1) {
       basemean_isodecoder = as.data.frame(res_isodecoder) %>% dplyr::select(baseMean) %>% tibble::rownames_to_column(var = "isodecoder")
       normcounts_isodecoder = subset(count_df_isodecoder_out, select = -c(size))
       comb_isodecoder = list(comb_isodecoder, basemean_isodecoder, normcounts_isodecoder) %>% Reduce(function(dtf1,dtf2) left_join(dtf1,dtf2,by="isodecoder"), .)
-      comb_isodecoder$isodecoder = sub("Homo_sapiens_tRNA-","",comb_isodecoder$isodecoder)
+      comb_isodecoder$isodecoder = sub(".*?_.*?_tRNA-","",comb_isodecoder$isodecoder)
       comb_isodecoder = comb_isodecoder[!grepl("tRX", comb_isodecoder$isodecoder),]
       
       scaled_counts_isodecoder = as.matrix(t(scale(t(comb_isodecoder[,!grepl("isodecoder|l2FC|padj|baseMean", colnames(comb_isodecoder))]))), rownames.force = TRUE)
@@ -403,7 +403,7 @@ if (nrow(coldata) == 1) {
       basemean_anticodon = as.data.frame(res_anticodon) %>% dplyr::select(baseMean) %>% tibble::rownames_to_column(var = "Anticodon")
       normcounts_anticodon = subset(count_df_anticodon_out, select = -c(size))
       comb_anticodon = list(comb_anticodon, basemean_anticodon, normcounts_anticodon) %>% Reduce(function(dtf1,dtf2) left_join(dtf1,dtf2,by="Anticodon"), .)
-      comb_anticodon$Anticodon = sub("Homo_sapiens_tRNA-","",comb_anticodon$Anticodon)
+      comb_anticodon$Anticodon = sub(".*?_.*?_tRNA-","",comb_anticodon$Anticodon)
       comb_anticodon = comb_anticodon[!grepl("tRX", comb_anticodon$Anticodon),]
       
       scaled_counts_anticodon = as.matrix(t(scale(t(comb_anticodon[,!grepl("Anticodon|l2FC|padj|baseMean", colnames(comb_anticodon))]))), rownames.force = TRUE)

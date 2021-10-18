@@ -8,6 +8,7 @@
 from __future__ import absolute_import
 import os, logging, pickle
 import re
+import gzip
 import pysam
 from itertools import groupby, combinations as comb
 from operator import itemgetter
@@ -117,6 +118,16 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		dinuc_dict = defaultdict(int)
 		dinuc_prop = open(inputs + "_dinuc.csv", "w")
 		CCAvsCC_counts = open(inputs + "_CCAcounts.csv", "w")
+		if not remap:
+			# Open files for single read analysis
+			sample_name = inputs.split("/")[-1].split(".")[0]
+			os.mkdir(out_dir + "single_read_data/" + sample_name)
+			srfiles = dict()
+			for r in tRNA_dict.keys():
+				shortname = "-".join(r.split("-")[:-1]) if not "chr" in r else r
+				srfiles[r] = gzip.open(out_dir + "single_read_data/" + sample_name +"/"+ r +".tsv.gz", "wt")
+				cols = ["READ"]+[str(s) for s in  tRNA_struct.loc[shortname].index]+["Charged"]
+				srfiles[r].write("\t".join(cols)+"\n")
 
 	# process mods by looping through alignments in bam file
 	bam_file = pysam.AlignmentFile(inputs, "rb")
@@ -225,6 +236,39 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 			elif ref_pos <= ref_length - 3:
 				dinuc = "Absent"
 				cca_dict[reference][dinuc] += 1
+			
+			############################
+			# Single-read mods and CCA #
+			############################
+			
+			if not remap:
+				# Modifications
+				shortname = "-".join(reference.split("-")[:-1]) if not "chr" in reference else reference
+				seqtemp = []
+				for n in tRNA_struct.loc[shortname].index:
+					if (n<(offset+1)) or (n>(aln_end)):
+						seqtemp.append("NA")
+					elif n not in temp.keys():
+						seqtemp.append("0")
+					else:
+						b = temp[n]
+						if b!="N":
+							seqtemp.append(b)
+						else:
+							seqtemp.append("NA")
+
+				# Record charging status
+				if aln_end==ref_length:
+					chrg = "1"
+				elif aln_end==(ref_length-1):
+					chrg = "0"
+				else:
+					chrg = "NA"
+                
+				# Add line
+				add = [read.query_name]+seqtemp+[chrg]
+				srfiles[reference].write("\t".join(add)+"\n")
+
 
 	## Edit misincorportation and stop data before writing
 
@@ -385,6 +429,8 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 
 			dinuc_prop.close()
 			CCAvsCC_counts.close()
+			for r in srfiles.keys():
+				srfiles[r].close()
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
@@ -548,6 +594,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		try:
 			os.mkdir(out_dir + "CCAanalysis")
 			os.mkdir(out_dir + "mods")
+			os.mkdir(out_dir + "single_read_data")
 		except FileExistsError:
 			log.warning("Rewriting over old mods and CCA files...")
 
@@ -606,13 +653,21 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 	if not remap:
 
 		# Redo newModsParser here so that knownTable is updated with new mods from second round and written to allModsTable
-		Inosine_clusters, snp_tolerance, newtRNA_dict, newknownTable = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering, remap, snp_tolerance = True)
-		# convert newknownTable to DataFrame for merging and canon_pos addition
+		Inosine_clusters, snp_tolerance, newtRNA_dict, newknownTable, newInosineTable = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering, remap, snp_tolerance = True)
+		# convert newknownTable to DataFrame
 		newknownTable_df = pd.DataFrame.from_dict(newknownTable, orient = "index").melt(ignore_index=False).dropna()[['value']].reset_index()
 		newknownTable_df.columns = ['isodecoder', 'pos']
 		newknownTable_df.loc[~newknownTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newknownTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
-		newknownTable_df = pd.merge(newknownTable_df, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
-		newknownTable_df.to_csv(out_dir + "mods/allModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
+		# convert newInosineTable to DataFrame 
+		newInosineTable_df = pd.DataFrame.from_dict(newInosineTable, orient = "index").melt(ignore_index=False).dropna()[['value']].reset_index()
+		newInosineTable_df.columns = ['isodecoder', 'pos']
+		newInosineTable_df.loc[~newknownTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newInosineTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
+		
+		# combine new mods and new inosine tables
+		allnewKnownTable_df = pd.concat([newknownTable_df, newInosineTable_df])
+
+		allnewKnownTable_df = pd.merge(allnewKnownTable_df, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
+		allnewKnownTable_df.to_csv(out_dir + "mods/allModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		modTable_total = pd.DataFrame()
 		countsTable_total = pd.DataFrame()

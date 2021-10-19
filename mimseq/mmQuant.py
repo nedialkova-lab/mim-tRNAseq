@@ -123,7 +123,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 			sample_name = inputs.split("/")[-1].split(".")[0]
 			os.mkdir(out_dir + "single_read_data/" + sample_name)
 			srfiles = dict()
-			for r in tRNA_dict.keys():
+			for r in isodecoder_sizes.keys():
 				shortname = "-".join(r.split("-")[:-1]) if not "chr" in r else r
 				srfiles[r] = gzip.open(out_dir + "single_read_data/" + sample_name +"/"+ r +".tsv.gz", "wt")
 				cols = ["READ"]+[str(s) for s in  tRNA_struct.loc[shortname].index]+["Charged"]

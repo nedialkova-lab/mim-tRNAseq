@@ -297,7 +297,8 @@ def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, threads, co
 
     unsplit_all = list(set().union(*unsplit))
     unsplit_isosAll = len(list(set().union(*unsplit_isosOnly)))
-    log.info("{} unique sequences excluded from deconvolution due to reductions in coverage at required mismatches of more than {:.2%}".format(unsplit_isosAll, covDiff))
+    log.info("{} unique sequences not split from cluster parent due to reductions in coverage at required mismatches of more than {:.2%}".format(unsplit_isosAll, covDiff))
+    log.info("{} total unique sequences not deconvoluted".format(len(unsplit_all)))
 
     return(unsplit_all)
 

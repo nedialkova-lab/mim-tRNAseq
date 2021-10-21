@@ -10,7 +10,7 @@ import os, logging, pickle
 import re
 import pysam
 from itertools import groupby, combinations as comb
-from operator import itemgetter
+from operator import itemgetter, le
 from .tRNAtools import countReads, newModsParser
 from .getCoverage import getBamList, filterCoverage
 from multiprocessing import Pool
@@ -181,7 +181,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		adjust = 0
 		temp = defaultdict()
 		temp, ref_pos, read_pos, readRef_dif, insertions = countMods(temp, reference, ref_pos, read_pos, read_seq, offset, md_list, ref_deletions, tRNA_dict, mismatch_dict, insert_dict, del_dict, remap)
-		if readRef_dif: # only assign new reference if readRef_dif is recorded which only happend when remap = False (i.e. after 2nd alignment or if remap is never activated)
+		if readRef_dif: # only assign new reference if readRef_dif is recorded which only happens when remap = False (i.e. after 2nd alignment or if remap is never activated)
 			reference, temp, adjust = findNewReference(unique_isodecoderMMs, splitBool, readRef_dif, reference, temp, insertions, insert_dict, del_dict, ref_deletions, adjust)
 		# read counts, stops and coverage
 		counts[inputs][reference] += 1
@@ -644,6 +644,8 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		countsTable_total.index = countsTable_total.isodecoder
 		countsTable_total.drop(columns = ['isodecoder'], inplace = True)
 		filtered, filter_warning = filterCoverage(countsTable_total, min_cov)
+		unsplit_lowCov = set(filtered).intersection(set(splitBool))
+		log.info("{}/{} unique sequences not deconvoluted also do not meet coverage threshold...".format(len(unsplit_lowCov), len(splitBool)))
  
 		for bam in bamlist:
 			# read in temp files and then delete

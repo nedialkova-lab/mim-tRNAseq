@@ -10,7 +10,7 @@ import os, logging, pickle
 import re
 import pysam
 from itertools import groupby, combinations as comb
-from operator import itemgetter
+from operator import itemgetter, le
 from .tRNAtools import countReads, newModsParser
 from .getCoverage import getBamList, filterCoverage
 from multiprocessing import Pool
@@ -181,7 +181,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		adjust = 0
 		temp = defaultdict()
 		temp, ref_pos, read_pos, readRef_dif, insertions = countMods(temp, reference, ref_pos, read_pos, read_seq, offset, md_list, ref_deletions, tRNA_dict, mismatch_dict, insert_dict, del_dict, remap)
-		if readRef_dif: # only assign new reference if readRef_dif is recorded which only happend when remap = False (i.e. after 2nd alignment or if remap is never activated)
+		if readRef_dif: # only assign new reference if readRef_dif is recorded which only happens when remap = False (i.e. after 2nd alignment or if remap is never activated)
 			reference, temp, adjust = findNewReference(unique_isodecoderMMs, splitBool, readRef_dif, reference, temp, insertions, insert_dict, del_dict, ref_deletions, adjust)
 		# read counts, stops and coverage
 		counts[inputs][reference] += 1
@@ -606,13 +606,21 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 	if not remap:
 
 		# Redo newModsParser here so that knownTable is updated with new mods from second round and written to allModsTable
-		Inosine_clusters, snp_tolerance, newtRNA_dict, newknownTable = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering, remap, snp_tolerance = True)
-		# convert newknownTable to DataFrame for merging and canon_pos addition
+		Inosine_clusters, snp_tolerance, newtRNA_dict, newknownTable, newInosineTable = newModsParser(out_dir, name, new_mods, new_Inosines, knownTable, Inosine_lists, tRNA_dict, clustering, remap, snp_tolerance = True)
+		# convert newknownTable to DataFrame
 		newknownTable_df = pd.DataFrame.from_dict(newknownTable, orient = "index").melt(ignore_index=False).dropna()[['value']].reset_index()
 		newknownTable_df.columns = ['isodecoder', 'pos']
 		newknownTable_df.loc[~newknownTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newknownTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
-		newknownTable_df = pd.merge(newknownTable_df, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
-		newknownTable_df.to_csv(out_dir + "mods/allModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
+		# convert newInosineTable to DataFrame 
+		newInosineTable_df = pd.DataFrame.from_dict(newInosineTable, orient = "index").melt(ignore_index=False).dropna()[['value']].reset_index()
+		newInosineTable_df.columns = ['isodecoder', 'pos']
+		newInosineTable_df.loc[~newknownTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newInosineTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
+		
+		# combine new mods and new inosine tables
+		allnewKnownTable_df = pd.concat([newknownTable_df, newInosineTable_df])
+
+		allnewKnownTable_df = pd.merge(allnewKnownTable_df, tRNA_ungap2canon_table, on = ['isodecoder', 'pos'], how = "left")
+		allnewKnownTable_df.to_csv(out_dir + "mods/allModsTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		modTable_total = pd.DataFrame()
 		countsTable_total = pd.DataFrame()
@@ -636,6 +644,8 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		countsTable_total.index = countsTable_total.isodecoder
 		countsTable_total.drop(columns = ['isodecoder'], inplace = True)
 		filtered, filter_warning = filterCoverage(countsTable_total, min_cov)
+		unsplit_lowCov = set(filtered).intersection(set(splitBool))
+		log.info("{}/{} unique sequences not deconvoluted also do not meet coverage threshold...".format(len(unsplit_lowCov), len(splitBool)))
  
 		for bam in bamlist:
 			# read in temp files and then delete

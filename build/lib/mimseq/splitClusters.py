@@ -153,7 +153,7 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
                 del_num = len(set([deletion for deletion in del_dict[cluster] if member in del_dict[cluster][deletion] and deletion < pos]))
                 identity = member_seq[pos-ins_num+del_num]
 
-                isodecoder = "-".join(member.split("-")[:4]) if not "chr" in member else member
+                isodecoder = "-".join(member.split("-")[:-1]) if not "chr" in member else member
                 posIdentity = str(pos) + identity
                 cluster_MemberMismatchPos[cluster][isodecoder].add(posIdentity)
     
@@ -193,7 +193,7 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
         # count isodecoder sizes
         isodecoder_sizes[cluster] = len([info['sequence'].upper() for tRNA, info in tRNA_dict.items() if info['sequence'].upper() == tRNA_dict[cluster]['sequence'].upper()])
         for isodecoder in data.values():
-            isodecoder_sizes[isodecoder[0]] = len([info['sequence'].upper() for tRNA, info in tRNA_dict.items() if info['sequence'].upper() == tRNA_dict[isodecoder[0]]['sequence'].upper()])    
+            isodecoder_sizes[isodecoder[0]] = len([info['sequence'].upper() for tRNA, info in tRNA_dict.items() if info['sequence'].upper() == tRNA_dict[isodecoder[0]]['sequence'].upper()])
         deconv_sequences_num += 1
         unique_deconv = {member[0] for member in data.values()}
         deconv_sequences_num += len(unique_deconv)
@@ -297,7 +297,8 @@ def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, threads, co
 
     unsplit_all = list(set().union(*unsplit))
     unsplit_isosAll = len(list(set().union(*unsplit_isosOnly)))
-    log.info("{} unique sequences excluded from deconvolution due to reductions in coverage at required mismatches of more than {:.2%}".format(unsplit_isosAll, covDiff))
+    log.info("{} unique sequences not split from cluster parent due to reductions in coverage at required mismatches of more than {:.2%}".format(unsplit_isosAll, covDiff))
+    log.info("{} total unique sequences not deconvoluted".format(len(unsplit_all)))
 
     return(unsplit_all)
 

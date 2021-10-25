@@ -172,7 +172,9 @@ Input files
 
 Note: mim-tRNAseq does not require an input from Modomics_ for modification indexing, but automatically connects to the Modomics server and retrieves this information. Therefore an **internet connection is required** to run mim-tRNAseq. However, there is an offline copy of Modomics so that mim-tRNAseq can still run without connection, or if the Modomics database is offline.
 
-mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the `data/` folder and can be specified easily with the `--species` parameter. If not here, you may be able to obtain the required files from the gtRNAdb_. Failing this, the input files can be generated using tRNAscanSE_ on a genome reference file. Input files include:
+mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the `data/` folder and can be specified easily with the `--species` parameter. If not here, you may be able to obtain the required files from the GtRNAdb_, or request new predictions from the maintainers if your species of interest is not there. Failing this, the input files can be generated using tRNAscanSE_ on a genome reference file, but the annotation and naming of tRNAs becomes crucial for mim-tRNAseq functioning. Information on the tRNAscan-SE ID given in parantheses in the fasta file must match entries in the ".out" file for proper processing. This kind of manual prediction, annotation, and input into mim-tRNAseq can conceivably create many issues, as mim-tRNAseq expects files and annotations as thos formatted in GtRNADB files. This functionality has also not been extensively tested. 
+
+Input files include:
 
 * Genomic tRNA sequences: DNA sequences of tRNA loci in genome of interest in fasta format, including introns but excluding trailer and leader sequences.
 * tRNA ".out" file: contains important info about tRNA introns.

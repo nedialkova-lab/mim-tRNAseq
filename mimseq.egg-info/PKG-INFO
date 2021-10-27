@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: mimseq
-Version: 0.3.4.7
+Version: 0.3.4.8
 Summary: Custom high-throughput tRNA sequencing alignment and quantification pipeline based on modification induced misincorporation cDNA synthesis.
 Home-page: https://github.com/nedialkova-lab/mim-tRNAseq
 Author: Drew Behrens

@@ -7,7 +7,6 @@ mimseq/__init__.py
 mimseq/ccaPlots.R
 mimseq/coveragePlot.R
 mimseq/deseq.R
-mimseq/facet_share.R
 mimseq/getCoverage.py
 mimseq/mimseq.py
 mimseq/mmQuant.py

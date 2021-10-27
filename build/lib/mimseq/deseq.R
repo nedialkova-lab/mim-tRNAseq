@@ -234,7 +234,7 @@ if (nrow(coldata) == 1) {
       rownames(sampleDistMatrix_anticodon) <- vsd_anticodon$condition
       colnames(sampleDistMatrix_anticodon) <- NULL
       colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
-      pheatmap(sampleDistMatrix_anticodon,
+      pheatmap::pheatmap(sampleDistMatrix_anticodon,
                anticodoning_distance_rows=sampleDists_anticodon,
                anticodoning_distance_cols=sampleDists_anticodon,
                col=colors, filename=paste(subdir_anticodon,"qc-sampledists.png",sep="/"))
@@ -244,7 +244,7 @@ if (nrow(coldata) == 1) {
       rownames(sampleDistMatrix_isodecoder) <- vsd_isodecoder$condition
       colnames(sampleDistMatrix_isodecoder) <- NULL
       colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
-      pheatmap(sampleDistMatrix_isodecoder,
+      pheatmap::pheatmap(sampleDistMatrix_isodecoder,
                isodecoder_distance_rows=sampleDists_isodecoder,
                isodecoder_distance_cols=sampleDists_isodecoder,
                col=colors, filename=paste(subdir_isodecoder,"qc-sampledists.png",sep="/"))

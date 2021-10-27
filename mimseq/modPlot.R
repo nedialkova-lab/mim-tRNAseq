@@ -571,7 +571,7 @@ if (length(unique(mods$condition)) > 1) {
   mods_OR_hm = list()
   mods_OR_barplot = list()
   
-  ordered_levels = levels(lastlevel(unique(mods_agg$condition), control_cond))
+  ordered_levels = levels(lastlevel(unique(as.factor(mods_agg$condition)), control_cond))
   combinations = combn(ordered_levels, 2, simplify = FALSE)
   for (i in combinations) {
     # load in matrices for comaprison

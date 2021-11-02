@@ -99,6 +99,11 @@ mimseq/data/mm10-eColitK/mm10_eschColi-tRNAs.out
 mimseq/data/mm10-tRNAs/mm10-mitotRNAs.fa
 mimseq/data/mm10-tRNAs/mm10-tRNAs.fa
 mimseq/data/mm10-tRNAs/mm10-tRNAs.out.filtered-noPseudo-noChrM
+mimseq/data/rn7-eColitK/rn7-mitotRNAs.fa
+mimseq/data/rn7-eColitK/rn7-tRNAs-confidence-set.out
+mimseq/data/rn7-eColitK/rn7-tRNAs.bed
+mimseq/data/rn7-eColitK/rn7-tRNAs.fa
+mimseq/data/rn7-eColitK/rn7_eColitK-tRNAs-confidence-set.out
 mimseq/data/sacCer3-Phe_SynVsPur/sacCer3-Phe.fa
 mimseq/data/sacCer3-Phe_SynVsPur/sacCer3-tRNAs.fa
 mimseq/data/sacCer3-Phe_SynVsPur/sacCer3-tRNAs.out-noChrM

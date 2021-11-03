@@ -294,11 +294,8 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 			#blast
 			blastn_cmd = ["blastn", "-query", temp_tRNAFasta.name, "-subject", temp_matchFasta.name, "-task", "blastn-short", "-out", temp_dir + "blast_temp.xml", "-outfmt", "5", "-num_threads", str(threads)]
 			subprocess.check_call(blastn_cmd, stdout = subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-			#blastn_cline = NcbiblastnCommandline(query = temp_tRNAFasta.name, subject = temp_matchFasta.name, task = 'blastn-short', out = temp_dir + "blast_temp.xml", outfmt = 5)
-			#blastn_cline()
 
 			#parse XML result and store hit with highest bitscore	
-			#blast_record = NCBIXML.read(open(temp_dir + "blast_temp.xml","r"))
 			blast_record = SearchIO.read(temp_dir + "blast_temp.xml", "blast-xml")
 			maxbit = 0
 			tophit = ''
@@ -307,12 +304,18 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 					if (hsp.bitscore > maxbit) and (hsp.aln_span / blast_record.seq_len == 1) and (hsp.ident_num / blast_record.seq_len == 1):
 						maxbit = hsp.bitscore
 						tophit = hit.id.split(' ')[0]
-			
+						# track start position of modomics hits to modify mods and inosine positions below
+						hit_start = hsp.hit_start
+
 			# return list of all modified positions for the match as long as there is only 1, add to tRNA_dict
 			if tophit:
 				match_count += 1
-				tRNA_dict[seq]['modified'] = match[tophit]['modified']
-				tRNA_dict[seq]['InosinePos'] = match[tophit]['InosinePos']
+				# some Modomics sequences are weird and have additional 5' nucleotides
+                # if the hit match starts at pos 0 then log all mods and inosines as normal
+                # if not, then the start position of the modomics hit relative to query needs to be accounted for 
+                # wrt mods and inosine positions in the tRNA_dict sequence
+				tRNA_dict[seq]['modified'] = match[tophit]['modified'] if hit_start == 0 else [x - hit_start for x in match[tophit]['modified']]
+				tRNA_dict[seq]['InosinePos'] = match[tophit]['InosinePos'] if hit_start == 0 else [x - hit_start for x in match[tophit]['InosinePos']]
 			elif len(tophit) == 0:
 				nomatch_count += 1
 		if len(match) == 0:
@@ -652,7 +655,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		for item in snp_records:
 			snp_file.write('{}\n'.format(item))
 	
-	shutil.rmtree(temp_dir)
+	#shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, del_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)

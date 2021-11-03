@@ -206,9 +206,10 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
 
     nondeconv_isos = list(multiSeq_names - deconv_names)
     # print warnings if not all clusters deconvoluted
-    if (singleSeq_clusters + multiSeq_size) != (singleSeq_clusters + deconv_sequences_num):
+    if ((singleSeq_clusters + multiSeq_size) != (singleSeq_clusters + deconv_sequences_num)) or (nondeconv_isos):
         log.warning("*** Unique mismatches and indels not found for some unique tRNA sequences in input!!***\n \
-Some clusters not fully deconvoluted. There can be various reasons for this, including errors in input sequences\n \
+Some clusters not fully deconvoluted. There can be various reasons for this, including errors in input sequence naming in reference.\n \
+Ensure all uniquely numbered transcripts are indeed unique in mature sequence.\n \
 The following isodecoders were not distinguished uniquely from the cluster parent:")
         log.warning(nondeconv_isos)
         log.warning("Continuing with analysis - clusters with un-deconvoluted tRNAs will be excluded from differential expression analysis.")

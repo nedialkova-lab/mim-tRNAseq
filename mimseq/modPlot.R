@@ -50,6 +50,7 @@ mods$isodecoder = sub(".*_nmt_tRNA-", "nmt", mods$isodecoder)
 mods$isodecoder = sub(".*_tRNA-", "", mods$isodecoder)
 mods$isodecoder = sub(".*_tRX-", "tRX-", mods$isodecoder)
 mods$isodecoder = ifelse(mods$isodecoder == 'eColiLys-TTT-1-1', 'eColiLys', mods$isodecoder)
+mods$isodecoder = gsub("/[0-9].*", "-multi", mods$isodecoder)
 mods = mods[!grepl("-", mods$canon_pos), ]
 mods_agg = aggregate(mods$proportion, by = list(isodecoder = mods$isodecoder,
                                                 pos = mods$pos,
@@ -74,6 +75,7 @@ stops$isodecoder = sub(".*_tRNA-","", stops$isodecoder)
 stops$isodecoder = sub(".*_tRX-", "tRX-", stops$isodecoder)
 stops$isodecoder = ifelse(stops$isodecoder == "eColiLys-TTT-1-1", "eColiLys",
                           stops$isodecoder)
+stops$isodecoder = gsub("/[0-9].*", "-multi", stops$isodecoder)
 stops = stops[!grepl("-", stops$canon_pos), ]
 stops_agg = aggregate(stops$proportion, by = list(isodecoder = stops$isodecoder,
                                                   pos = stops$pos,
@@ -92,6 +94,7 @@ context_info$isodecoder = sub(".*_tRX-", "tRX-", context_info$isodecoder)
 context_info$isodecoder = ifelse(context_info$isodecoder == "eColiLys-TTT-1-1",
                                  "eColiLys",
                                  context_info$isodecoder)
+context_info$isodecoder = gsub("/[0-9].*", "-multi", context_info$isodecoder)
 
 ### for each condition make a misincorporation and stops heatmap as a combined figure using ComplexHeatmap
 ###... make a scatter plot of misincorporation rates faceted by positions in cons_mods
@@ -495,12 +498,14 @@ if (length(unique(mods$condition)) > 1) {
   allmods = allmods[!grepl("mito", allmods$isodecoder),]
   allmods$isodecoder = sub(".*_tRNA-", "", allmods$isodecoder)
   allmods$isodecoder = sub(".*_tRX-", "tRX-", allmods$isodecoder)
+  allmods$isodecoder = gsub("/[0-9].*", "-multi", allmods$isodecoder)
 
   predictedmods = read.table(paste(out, "mods/predictedMods.csv", sep = ''), sep = "\t", header=T)
   predictedmods = predictedmods[,c('isodecoder','canon_pos')]
   predictedmods = predictedmods[!grepl("mito", predictedmods$isodecoder),]
   predictedmods$isodecoder = sub(".*_tRNA-", "", predictedmods$isodecoder)
   predictedmods$isodecoder = sub(".*_tRX-", "tRX-", predictedmods$isodecoder)
+  predictedmods$isodecoder = gsub("/[0-9].*", "-multi", predictedmods$isodecoder)
 
   knownmods = rbind(allmods, predictedmods)
   
@@ -515,14 +520,27 @@ if (length(unique(mods$condition)) > 1) {
                                                   bam = mods$bam,
                                                   condition = mods$condition,
                                                   canon_pos = mods$canon_pos,
-                                                  cov = mods$cov),
-                       FUN = sum)
+                                                  cov = mods$cov),FUN = sum)
   mods_agg = aggregate(mods_agg$x, by = list(isodecoder = mods_agg$isodecoder,
                                              pos = mods_agg$pos,
                                              condition = mods_agg$condition,
                                              canon_pos = mods_agg$canon_pos,
                                              cov = mods_agg$cov), FUN = mean)
-  
+
+  # if --min-cov = 0 then the conditions may have different numbers of isodecoders which is a problem for logOR analysis
+  # group by condition, count unique iso occurences and filter for those that are in every condition (i.e. count == number of conditions)
+  iso_counts = mods_agg %>% 
+              group_by(condition) %>% 
+              summarise(isos = unique(isodecoder)) %>% 
+              ungroup() %>% group_by(isos) %>%  
+              mutate(iso_count = n()) %>%  
+              ungroup() %>% 
+              filter(iso_count == n_distinct(condition))
+  # get unique list from this
+  unique_iso_set = unique(iso_counts$isos) 
+  # filter mods_agg for these
+  mods_agg = mods_agg %>% filter(isodecoder %in% unique_iso_set)
+
   # for each condition make a misincorporation matrix
   mods_hm_list = list()
   stops_hm_list = list()

@@ -184,18 +184,6 @@ def getAnticodon():
 
 	return(anticodon)
 
-def getAnticodon_1base():
-	# return anticodon position from conserved alignment in 1-based positions - specifically for modContext()
-
-	anticodon = list()
-	rf_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC RF")])
-	# use '*' in rf_cons from stk to delimit the anticodon positions
-	for pos, char in enumerate(rf_cons, 1):
-	 	if char == "*":
-	 		anticodon.append(pos)
-
-	return(anticodon)
-
 def clusterAnticodon(cons_anticodon, cluster):
 	# return anticodon position without gaps for specific cluster
 
@@ -213,7 +201,7 @@ def clusterAnticodon(cons_anticodon, cluster):
 
 	return(cluster_anticodon)
 
-def modContext(out):
+def modContext(out, unsplitCluster_lookup):
 # outputs file of defined mods of interest pos, identity and context sequence for each cluster
 
 	cons_pos_list, cons_pos_dict = tRNAclassifier()[2:4]
@@ -254,6 +242,8 @@ def modContext(out):
 	with open(out + "mods/modContext.txt", 'w') as outfile:
 		outfile.write("cluster\tcanon_pos\tidentity\tupstream\tdownstream\n")
 		for cluster, data in upstream_dict.items():
+			if cluster in unsplitCluster_lookup.keys():
+				cluster = unsplitCluster_lookup[cluster]
 			for pos, base in data.items():
 				outfile.write(cluster + "\t" + str(pos) + "\t" + base[0] + "\t" + base[1] + "\t" + base[2] + "\n")
 

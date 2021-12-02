@@ -8,9 +8,7 @@ from __future__ import absolute_import
 from Bio import SeqIO, SearchIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-#from Bio.Blast.Applications import NcbiblastnCommandline
-#from Bio.Blast import NCBIXML
-import re, copy, sys, os, shutil, subprocess, logging, glob
+import re, os, shutil, subprocess, logging, glob
 from pathlib import Path
 from collections import defaultdict
 import pandas as pd
@@ -431,8 +429,9 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 				for sequence in seq_set:
 					anticodon_seqs.write(">" + sequence + "\n" + seq_set[sequence]['sequence'] + "\n")
 			# run usearch on each anticodon sequence fatsa to cluster
-			cluster_cmd = ["usearch", "-cluster_fast", temp_dir + anticodon + "_allseqs.fa", "-id", str(cluster_id), "-sizeout" ,"-centroids", temp_dir + anticodon + "_centroids.fa", "-uc", temp_dir + anticodon + "_clusters.uc"]
-			#cluster_cmd = ["usearch", "-cluster_smallmem", temp_dir + anticodon + "_allseqs.fa", "-id", str(cluster_id), "--sortedby", "other" ,"-sizeout" ,"-centroids", temp_dir + anticodon + "_centroids.fa", "-uc", temp_dir + anticodon + "_clusters.uc"]			#cluster_cmd = "usearch -cluster_fast " + temp_dir + anticodon + "_allseqs.fa -sort length -id " + str(cluster_id) + " -centroids " + temp_dir + anticodon + "_centroids.fa -uc " + temp_dir + anticodon + "_clusters.uc &> /dev/null"
+			# -fulldp uses non-heuristic ful dynamic programming for best alignment
+			# -minsl controls minimum value of shorter_seq_length / longer_seq_length to prevent very different lenght seqs from clustering
+			cluster_cmd = ["usearch", "-cluster_fast", temp_dir + anticodon + "_allseqs.fa", "-minsl", "0.98", "-fulldp", "-id", str(cluster_id), "-sizeout" ,"-centroids", temp_dir + anticodon + "_centroids.fa", "-uc", temp_dir + anticodon + "_clusters.uc"]
 			subprocess.check_call(cluster_cmd, stdout = subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 			# sort clusters by size (i.e. number of members in cluster)
 			sort_cmd = ["usearch", "-sortbysize", temp_dir + anticodon + "_centroids.fa", "-fastaout", temp_dir + anticodon + "_centroids_sort.fa"]
@@ -655,7 +654,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 		for item in snp_records:
 			snp_file.write('{}\n'.format(item))
 	
-	#shutil.rmtree(temp_dir)
+	shutil.rmtree(temp_dir)
 	
 	# Return coverage_bed (either tRNAbed or clusterbed depending on --cluster) for coverage calculation method
 	return(coverage_bed, snp_tolerance, mismatch_dict, insert_dict, del_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers)
@@ -1048,7 +1047,7 @@ def tidyFiles (out_dir, cca):
 
 	for file in files:
 		full_file = out_dir + file
-		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "cm.log" in file or "clusterInfo" in file or "isoacceptorInfo" in file or "isodecoderInfo" in file or "modificationSNPs" in file):
+		if (file.endswith("bed") or file.endswith("stk") or file.endswith("gff") or file.endswith("fa") or "cm.log" in file or "clusterInfo" in file or "isoacceptorInfo" in file or "isodecoderInfo" in file or "unsplitClusterInfo" in file or "modificationSNPs" in file):
 			shutil.move(full_file, out_dir + "annotation")
 		if (file.endswith("tRNAgenome") or file.endswith("index") or "index.log" in file):
 			shutil.move(full_file, out_dir + "indices")

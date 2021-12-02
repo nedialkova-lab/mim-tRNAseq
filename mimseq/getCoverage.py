@@ -52,7 +52,7 @@ def getBamList (sampleGroups):
 
 	return(baminfo, bamlist)
 
-def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
+def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov, unsplitCluster_lookup):
 # Uses bedtools coverage and pandas generate coverage in 5% intervals per gene and isoacceptor for plotting
 
 	log.info("\n+-----------------------------------+\
@@ -88,13 +88,16 @@ def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
 	cov_mean = pd.concat(cov_mean, axis = 0)
 	cov_mean_gene = cov_mean.copy()
 	cov_mean_gene['Cluster'] = cov_mean_gene.index.format()
-	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("mito"), "Cluster"] = "mito" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("mito")].Cluster.str.split("-").str[1:].str.join('-')
-	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = "nmt" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
-	cov_mean_gene.loc[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = cov_mean_gene[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
+	#cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("mito"), "Cluster"] = "mito" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("mito")].Cluster.str.split("-").str[1:].str.join('-')
+	#cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = "nmt" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
+	#cov_mean_gene.loc[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = cov_mean_gene[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
 	cov_mean_gene = cov_mean_gene[['Cluster','pos','cov','aa','condition','cov_norm','bin','bam']]
 	cov_mean_gene = cov_mean_gene.groupby(['Cluster', 'bin', 'condition', 'bam']).mean()
 	cov_mean_gene = cov_mean_gene.dropna()
-	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t")
+	cov_mean_gene.reset_index(inplace = True)
+	cov_mean_gene = cov_mean_gene[['Cluster','bin','condition','bam','pos','cov','cov_norm']]
+	cov_mean_gene['Cluster'] = cov_mean_gene['Cluster'].replace(unsplitCluster_lookup)
+	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t", index = False)
 
 	# coverage per amino acid
 	cov_mean_aa = cov_mean.groupby(['aa', 'condition', 'bam', 'pos']).sum() # sum coverages for all clusters for each amino acid

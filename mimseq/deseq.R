@@ -53,7 +53,7 @@ setwd(file.path(outdir))
 anticodon_countdata = read.table("Anticodon_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
 anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)), ,drop = FALSE]
 isodecoder_countdata = read.table("Isodecoder_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
-isodecoder_countdata = isodecoder_countdata[grepl("True", isodecoder_countdata$Single_isodecoder),]
+#isodecoder_countdata = isodecoder_countdata[grepl("True", isodecoder_countdata$Single_isodecoder),]
 isodecoder_countdata$Single_isodecoder = NULL
 isodecoder_countdata$size = NULL
 isodecoder_countdata$parent = NULL
@@ -332,8 +332,8 @@ if (nrow(coldata) == 1) {
           scale_x_log10() + scale_y_log10() + 
           #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
           geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
-          scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
-          scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
+          scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#f28f3b", "TRUE1"="#4daf4a")) + 
+          scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"=19, "TRUE-1"=17, "TRUE1"=17)) + 
           scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", anticodon_cor), parse = TRUE)
@@ -343,8 +343,8 @@ if (nrow(coldata) == 1) {
           scale_x_log10() + scale_y_log10() + 
           #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
           geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
-          scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("darkgrey", "#f28f3b", "#4daf4a")) + 
-          scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c(19, 17, 17)) + 
+          scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#f28f3b", "TRUE1"="#4daf4a")) + 
+          scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"=19, "TRUE-1"=17, "TRUE1"=17)) + 
           scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", isodecoder_cor), parse = TRUE)
@@ -419,12 +419,15 @@ if (nrow(coldata) == 1) {
         baseMeanAnno_iso = rowAnnotation(base_mean = anno_lines(comb_isodecoder$baseMean, 
                                                                 gp = gpar(lwd = 1.5, col = "#084081")), 
                                          annotation_name_rot = 90,
-                                         width = unit("0.8", "cm"))
+                                         width = unit("0.8", "cm"),
+                                         height = unit(20, "cm"))
         
         hm_iso = Heatmap(scaled_counts_isodecoder,
                          col = col_fun,
                          row_title = paste('n = ', nrow(scaled_counts_isodecoder), sep = ""),
                          show_row_names = FALSE,
+                         width = unit((length(ordered_levels)*0.7) + 2, "cm"),
+                         height = unit(20, "cm"),
                          border = "gray20",
                          cluster_columns = TRUE,
                          heatmap_legend_param = list(
@@ -437,12 +440,15 @@ if (nrow(coldata) == 1) {
         baseMeanAnno_anti = rowAnnotation(base_mean = anno_lines(comb_anticodon$baseMean, 
                                                                  gp = gpar(lwd = 1.5, col = "#084081")), 
                                           annotation_name_rot = 90,
-                                          width = unit("0.8", "cm"))
+                                          width = unit("0.8", "cm"),
+                                          height = unit(20, "cm"))
         
         hm_anti = Heatmap(scaled_counts_anticodon,
                           col = col_fun,
                           row_title = paste('n = ', nrow(scaled_counts_anticodon), sep = ""),
                           row_names_side = "left",
+                          width = unit((length(ordered_levels)*0.7) + 2, "cm"),
+                          height = unit(20, "cm"),
                           row_names_gp = gpar(fontsize = 6),
                           border = "gray20",
                           cluster_columns = TRUE,
@@ -458,7 +464,9 @@ if (nrow(coldata) == 1) {
           if (nrow(comb_isodecoder) != 0) {
             lfc_iso = Heatmap(comb_isodecoder[lfc],
                               col = col_fun,
-                              width = unit(0.5, "cm"), na_col = "white",
+                              width = unit(0.5, "cm"),
+                              height = unit(20, "cm"),
+                              na_col = "white",
                               border = "gray20",
                               show_heatmap_legend = FALSE)
             hm_iso = hm_iso + lfc_iso
@@ -466,18 +474,25 @@ if (nrow(coldata) == 1) {
           if (nrow(comb_anticodon) != 0) {
             lfc_anti = Heatmap(comb_anticodon[lfc],
                                col = col_fun,
-                               width = unit(0.5, "cm"), na_col = "white",
+                               width = unit(0.5, "cm"), 
+                               height = unit(20, "cm"),
+                               na_col = "white",
                                border = "gray20",
                                show_heatmap_legend = FALSE)
           hm_anti = hm_anti + lfc_anti
           }
         }
       }
+
+      # calculate plot width based on sample numbers
+      plot_width = (length(ordered_levels)*0.8 + 4) + (length(ordered_levels)-1)*1.3 + 0.8
+      plot_width = plot_width/2.54
+      plot_width = max(plot_width, 10)
       
       if (nrow(comb_isodecoder) != 0) {
         hm_iso = hm_iso + baseMeanAnno_iso
         
-        pdf(paste(subdir_isodecoder,"DE_isodecodersScaled_hm.pdf",sep="/"))
+        pdf(paste(subdir_isodecoder,"DE_isodecodersScaled_hm.pdf",sep="/"), width = plot_width, height = 12)
         draw(hm_iso)
         dev.off()
       }
@@ -486,7 +501,7 @@ if (nrow(coldata) == 1) {
         hm_anti = hm_anti + baseMeanAnno_anti
         
         
-        pdf(paste(subdir_anticodon,"DE_anticodonScaled_hm.pdf",sep="/"))
+        pdf(paste(subdir_anticodon,"DE_anticodonScaled_hm.pdf",sep="/"), width = plot_width, height = 12)
         draw(hm_anti)
         dev.off()
       }

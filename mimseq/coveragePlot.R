@@ -127,7 +127,10 @@ if (length(args)==0) {
 
 	## Coverage plots per cluster multipage
 	cov_bygene = read.table(args[1], header = TRUE, sep="\t")
-	colnames(cov_bygene)[1] = 'Cluster'
+	cov_bygene$Cluster = sub(".*_mito_tRNA-", "mito", cov_bygene$Cluster)
+	cov_bygene$Cluster = sub(".*_nmt_tRNA-", "nmt", cov_bygene$Cluster)
+	cov_bygene$Cluster = sub(".*_tRNA-", "", cov_bygene$Cluster)
+	cov_bygene$Cluster = sub(".*_tRX-", "tRX-", cov_bygene$Cluster)
 	cov_bygene$bam = gsub(".unpaired_uniq.bam","",cov_bygene$bam)
 	cov_bygene$bam = gsub("(.*/).*?","\\2",cov_bygene$bam)
 	plot_func = ggplot(cov_bygene, aes(x = bin, y = cov_norm)) + geom_bar(stat = 'identity', fill = "#6BA7BB") + 

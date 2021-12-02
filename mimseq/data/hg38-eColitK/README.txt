@@ -20,6 +20,8 @@ rm hg38-tRNAs-all.tmp.fa
 Some tRNAs incorrectly named!
 Homo_sapiens_tRNA-Asn-GTT-16-5 does not share exact sequence with other GTT-16 genes. Rename to Homo_sapiens_tRNA-Asn-GTT-28-1.
 Homo_sapiens_tRNA-Asn-GTT-9-2 does not share sequence with GTT-9-1. Rename to Homo_sapiens_tRNA-Asn-GTT-14-1
+Homo_sapiens_tRX-Asn-GTT-3-1 shares sequence with Homo_sapiens_tRX-Asn-GTT-2-1. Rename to Homo_sapiens_tRX-Asn-GTT-2-2
+Homo_sapiens_tRX-Phe-GAA-1-1 shares sequence with Homo_sapiens_tRNA-Phe-GAA-10-1. Rename to Homo_sapiens_tRNA-Phe-GAA-10-2
 
 ### Manually removed sequences due to strange sequence, poor score and issues with infernal alignment with mimseq
 ### See hg38-tRNAs-filtered.fa

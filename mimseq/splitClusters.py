@@ -247,11 +247,15 @@ def covCheck_mp(bedTool, unique_isodecoderMMs, covDiff, input):
     unsplit_isosOnly = set()
     log.info("Calculating nucleotide coverage for {}".format(input))
     bam = pybedtools.BedTool(input)
+    # generate a temporary 2 column file with the chromosome names in the bam file
     temp_chrom = input + "_chrom.txt"
     cmd = "samtools view -H " + input + " | grep @SQ|sed 's/@SQ\tSN:\|LN://g' > " + temp_chrom
     subprocess.call(cmd, shell = True)
+    # sort the bedfile to match the bam ordering
     bedTool = bedTool.sort(faidx=temp_chrom)
+    # the sorted options enables a low-memory algorithm for calculating coverage
     cov = bedTool.coverage(bam, s = True, d = True, sorted = True, g = temp_chrom)
+    # remove the temporary chromosome file
     cmd = "rm " + temp_chrom
     subprocess.call(cmd, shell = True)
     cov_df = cov.to_dataframe()

@@ -88,11 +88,11 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 	# check zip status of input reads for command building
 	zipped = ''
 	if re.search(".gz",fq):
- 		zipped = '--gunzip'
- 		output_prefix = fq.split("/")[-1].split(".fastq.gz")[0]
+		zipped = '--gunzip'
+		output_prefix = fq.split("/")[-1].split(".fastq.gz")[0]
 	else:
- 		output_prefix = fq.split("/")[-1].split(".fastq")[0]
-
+		output_prefix = fq.split("/")[-1].split(".fastq")[0]
+	
 	if not mismatches == None:
 		mismatch_list = ["--max-mismatches", str(mismatches)]
 	elif mismatches == None:
@@ -147,7 +147,7 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 					subprocess.check_call(cmd)
 					os.remove(out_dir + file.name)
 				elif not keep_temp or not remap:
-				 	os.remove(out_dir + file.name)
+					os.remove(out_dir + file.name)
 
 		total_count = unique_count + multi_count + unmapped_count
 

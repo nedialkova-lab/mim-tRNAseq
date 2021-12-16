@@ -274,6 +274,16 @@ def covCheck_mp(bedTool, unique_isodecoderMMs, splitBool, covDiff, input):
     temp_chrom = input + "_chrom.txt"
     cmd = "samtools view -H " + input + " | grep @SQ|sed 's/@SQ\tSN:\|LN://g' > " + temp_chrom
     subprocess.call(cmd, shell = True)
+    ### each bam file might have a reduced set of chromosomes compared to the bedTool object and so sorting on all doesn't always work
+    # instead, filter bedTool to have those chromosomes present in the bam
+    # first create list of chromosome names in bam from temp_chrom above
+    temp_chrom_l = list()
+    with open(temp_chrom, "r") as temp_chrom_f:
+        for line in temp_chrom_f:
+            line = line.strip()
+            temp_chrom_l.append(line.split("\t")[0])
+    # filter the bedTool object
+    bedTool = bedTool.filter(lambda b: b.chrom in temp_chrom_l)
     # sort the bedfile to match the bam ordering
     bedTool = bedTool.sort(faidx=temp_chrom)
     # the sorted options enables a low-memory algorithm for calculating coverage
@@ -319,9 +329,9 @@ def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, splitBool, 
     baminfo, bamlist = getBamList(coverageData)
     
     if len(baminfo) > threads:
-	    multi = threads
+        multi = threads
     else:
-	    multi = len(baminfo)
+        multi = len(baminfo)
 
     # initiate custom non-daemonic multiprocessing pool and run with bam names
     log.info("Determining unsplittable sequences...")

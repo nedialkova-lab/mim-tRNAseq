@@ -97,6 +97,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 
 	# define unique mismatches/insertions to assign reads to unique tRNA sequences
 	unique_isodecoderMMs = defaultdict(dict)
+	unique_isodecoderMMs_new = defaultdict(dict)
 	splitBool = list()
 	if cluster and cluster_id != 1:
 		cluster_dict2 = copy.deepcopy(cluster_dict) # copy so splitIsodecoder does not edit main cluster_dict

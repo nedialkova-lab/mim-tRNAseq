@@ -99,6 +99,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	unique_isodecoderMMs = defaultdict(dict)
 	unique_isodecoderMMs_new = defaultdict(dict)
 	splitBool = list()
+	splitBool_new = list()
 	if cluster and cluster_id != 1:
 		cluster_dict2 = copy.deepcopy(cluster_dict) # copy so splitIsodecoder does not edit main cluster_dict
 		unique_isodecoderMMs, splitBool = splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_dict, cluster_dict2, out, name)

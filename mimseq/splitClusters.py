@@ -4,7 +4,6 @@ from __future__ import absolute_import
 import logging
 from collections import defaultdict
 from itertools import chain, combinations as comb
-
 from numpy.core.fromnumeric import shape
 from .ssAlign import aligntRNA, tRNAclassifier
 from .getCoverage import getBamList

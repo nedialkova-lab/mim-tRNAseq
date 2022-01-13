@@ -112,6 +112,8 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 	geneCov = defaultdict(int)
 	condition = info[inputs][0]
 
+	test_dict = defaultdict(int)
+
 	# initialise structures if CCA analysis in on
 	if cca:
 		aln_count = 0
@@ -181,8 +183,12 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		adjust = 0
 		temp = defaultdict()
 		temp, ref_pos, read_pos, readRef_dif, insertions = countMods(temp, reference, ref_pos, read_pos, read_seq, offset, md_list, ref_deletions, tRNA_dict, mismatch_dict, insert_dict, del_dict, remap)
+		# remove duplictae entries from readRed_dif (usually insertions! Not sure the caue...)
+		readRef_dif = tuple(set(readRef_dif))
+		if reference == "Homo_sapiens_tRNA-Phe-GAA-4-1":
+			test_dict[readRef_dif] += 1
 		if readRef_dif: # only assign new reference if readRef_dif is recorded which only happens when remap = False (i.e. after 2nd alignment or if remap is never activated)
-			reference, temp, adjust = findNewReference(unique_isodecoderMMs, splitBool, readRef_dif, reference, temp, insertions, insert_dict, del_dict, ref_deletions, adjust)
+			reference, temp, adjust = findNewReference(unique_isodecoderMMs, readRef_dif, reference, temp, insertions, insert_dict, del_dict, ref_deletions, adjust)
 		# read counts, stops and coverage
 		counts[inputs][reference] += 1
 		geneCov[reference] += 1
@@ -226,6 +232,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 				dinuc = "Absent"
 				cca_dict[reference][dinuc] += 1
 
+	print(test_dict)
 	## Edit misincorportation and stop data before writing
 
 	# build dictionaries for mismatches and stops, normalizing to total coverage per nucleotide
@@ -451,7 +458,7 @@ def countMods(temp, reference, ref_pos, read_pos, read_seq, offset, md_list, ref
 
 	return(temp, ref_pos, read_pos, readRef_dif, insertions)
 
-def findNewReference(unique_isodecoderMMs, splitBool, readRef_dif, reference, temp, insertions, insert_dict, del_dict, ref_deletions, adjust):
+def findNewReference(unique_isodecoderMMs, readRef_dif, reference, temp, insertions, insert_dict, del_dict, ref_deletions, adjust):
 # function to find new reference for read based on mismatches to cluster parent
 
 	old_reference = reference
@@ -463,26 +470,27 @@ def findNewReference(unique_isodecoderMMs, splitBool, readRef_dif, reference, te
 			reference = unique_isodecoderMMs[old_reference][readRef_dif][0]
 		# if it is not found, it may be some shorter combination as unique_isodecoderMMs contains shortest possible combination set
 		else:
-			intersectLen = dict()
+			# find which key(s) in unique_isodecoderMMs is a subset of readRef_diff
+			isSubset = list()
 			for uss in unique_isodecoderMMs[old_reference].keys():
-				uss_set = set(uss) 
-				intersection = uss_set.intersection(readRef_dif)
-				intersectLen[uss] = len(intersection)
-			
-			# however, if intersectLen is empty then the isodecoder was not deconvoluted
-			# likely from distinguishing mismatches at canonical mod sites (see splitClusters:findUniqueSubset)
-			# only if there is intersectLen then find best match
-			if intersectLen:
-				maxIntersect = max(intersectLen.values())
-				matches = [match for match, length in intersectLen.items() if length == maxIntersect and not length == 0]
-				if len(matches) == 1:
-					reference = unique_isodecoderMMs[old_reference][matches[0]][0]
-				elif len(matches) > 1:
-					diffLen = dict()
-					for match in matches:
-						diff = len(set(match) - set(readRef_dif))
-						diffLen[diff] = match
-					minuss = diffLen[min(diffLen.keys())]
+				if set(uss).issubset(readRef_dif):
+					isSubset.append(uss)
+
+			# however, if isSubset is empty then the isodecoder was not deconvoluted
+			# possibly from distinguishing mismatches at canonical mod sites (see splitClusters:findUniqueSubset)
+			# only if there isSubset then find best match
+			if isSubset:
+				if len(isSubset) == 1:
+					reference = unique_isodecoderMMs[old_reference][isSubset[0]][0]
+				# if there are more than 1 uss which are subsets of readRef_dif
+				elif len(isSubset) > 1:
+					# get full sets of transcript differences to ref
+					full_ss ={uss:set(unique_isodecoderMMs[old_reference][uss][1]) for uss in isSubset}
+					# store the length of differences between readRef_dif and each full set
+					difference_ss = {k:len(set(readRef_dif).difference(v)) for k, v in full_ss.items()}
+					# new reference belongs to the set with least differences
+					####!!! Potential future error if there is not only one minuss !!!###
+					minuss = min(difference_ss, key=difference_ss.get)
 					reference = unique_isodecoderMMs[old_reference][minuss][0]
 
 	# handle insertions and deletions between cluster parent and members present in read (different from insertions or deletions in read only)
@@ -798,7 +806,7 @@ def plotCCA(out_dir, double_cca):
 
 	out = out_dir + "CCAanalysis/"
 	script_path = os.path.dirname(os.path.realpath(__file__))
-	command = ["Rscript", script_path + "/ccaPlots.R", out + "AlignedDinucProportions.csv", out + "/CCAcounts.csv", out, str(double_cca), script_path + "/facet_share.R"]
+	command = ["Rscript", script_path + "/ccaPlots.R", out + "AlignedDinucProportions.csv", out + "/CCAcounts.csv", out, str(double_cca)]
 	subprocess.check_call(command)
 
 	log.info("CCA analysis done and plots created. Located in {}".format(out))

@@ -112,8 +112,6 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 	geneCov = defaultdict(int)
 	condition = info[inputs][0]
 
-	test_dict = defaultdict(int)
-
 	# initialise structures if CCA analysis in on
 	if cca:
 		aln_count = 0
@@ -185,8 +183,6 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		temp, ref_pos, read_pos, readRef_dif, insertions = countMods(temp, reference, ref_pos, read_pos, read_seq, offset, md_list, ref_deletions, tRNA_dict, mismatch_dict, insert_dict, del_dict, remap)
 		# remove duplictae entries from readRed_dif (usually insertions! Not sure the caue...)
 		readRef_dif = tuple(set(readRef_dif))
-		if reference == "Homo_sapiens_tRNA-Phe-GAA-4-1":
-			test_dict[readRef_dif] += 1
 		if readRef_dif: # only assign new reference if readRef_dif is recorded which only happens when remap = False (i.e. after 2nd alignment or if remap is never activated)
 			reference, temp, adjust = findNewReference(unique_isodecoderMMs, readRef_dif, reference, temp, insertions, insert_dict, del_dict, ref_deletions, adjust)
 		# read counts, stops and coverage
@@ -232,7 +228,6 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 				dinuc = "Absent"
 				cca_dict[reference][dinuc] += 1
 
-	print(test_dict)
 	## Edit misincorportation and stop data before writing
 
 	# build dictionaries for mismatches and stops, normalizing to total coverage per nucleotide

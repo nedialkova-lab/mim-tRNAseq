@@ -71,15 +71,17 @@ def findUniqueSubset (inputDict, outputDict, tRNA_dict):
 # For dictionary of mismatches, insertions and deletions, find unique minimal distinguishing subset of positions and update outputDict
 
     # define canonical position dictionary to cross check mismatches with canonical modified sites
+    # tuple of values includes identities of mod sites to exlude and list of specific isodecoders to restrict to in case this is known a priori
     tRNA_ungap2canon = tRNAclassifier()[1]
-    mods = {'9':['G', 'A'], 
-            '20':['C', 'T'], 
-            '20a':['T'], 
-            '20b':['T'], 
-            '26':['G'], 
-            '32':['C'], 
-            '37':['G', 'A'], 
-            '58':['A']}
+    mods = {'9':(['G', 'A'],[]), 
+            '20':(['C', 'T'],[]), 
+            '20a':(['T'],[]), 
+            '20b':(['T'],[]), 
+            '26':(['G'],[]), 
+            '32':(['C'],[]), 
+            '37':(['G', 'A'],[]), 
+            '58':(['A'],[]),
+            'e9':(['C'],['Leu-CAG','Ser-AGA','Ser-CGA','Ser-GCT','Ser-TGA'])}
 
     # clusters and isodecoders not split due to canonical modified positions in all unique mismatch subsets
     notSplit_mods_clusterInfo = defaultdict(list)
@@ -92,7 +94,8 @@ def findUniqueSubset (inputDict, outputDict, tRNA_dict):
         temp_fullset_dict = defaultdict(list)
         
         # filtered list of mods in cases where sites aren't present (e.g. 20a or b)
-        modsFilter = {i:v for i, v in mods.items() if i in tRNA_ungap2canon[cluster].values()}
+        # additionally checks if cluster is in specific set of restricted isodecoders added in mods
+        modsFilter = {i:v[0] for i, v in mods.items() if (i in tRNA_ungap2canon[cluster].values()) and (any([re.search(x, cluster) for x in v[1]] if v[1] else ['empty']))}
         # ungapped parent transcript locations of filtered canonical mod sites
         clusterMods_pos = {list(tRNA_ungap2canon[cluster].keys())[list(tRNA_ungap2canon[cluster].values()).index(i)]:v for i, v in modsFilter.items()}
         # concat. pos + nucleotide for each element of clusterMods_pos to match to uss tuples below
@@ -295,24 +298,25 @@ def covCheck_mp(bedTool, unique_isodecoderMMs, splitBool, covDiff, input):
     # check coverage diff for each unique sequence in each cluster that is still able to be split
     # i.e. excluded unsplit clusters due to mismatches overlapping canonical mod positions defined in splitIsodecoder()
     for cluster in unique_isodecoderMMs.keys():
-        for mismatch in unique_isodecoderMMs[cluster]:
-            # split positions from identities in distinguishing mismatches and find most 5' (i.e. min)
-            mismatchNums = [int(re.search('(\d+\.|\d+)+', pos).group(0)) for pos in mismatch]
-            minMismatch = min(mismatchNums) + 1 # 0 to 1 based numbering for cov_df thickStart
+        if cov_df.name.str.contains(cluster).any():
+            for mismatch in unique_isodecoderMMs[cluster]:
+                # split positions from identities in distinguishing mismatches and find most 5' (i.e. min)
+                mismatchNums = [int(re.search('(\d+\.|\d+)+', pos).group(0)) for pos in mismatch]
+                minMismatch = min(mismatchNums) + 1 # 0 to 1 based numbering for cov_df thickStart
 
-            # check coverage at position/coverage at 3' is >= covDiff: thickStart is pos, thickEnd is coverage
-            # determine most 3' pos of current cluster
-            end = max(cov_df.loc[cov_df.name == cluster,'thickStart'])
-            if minMismatch < end:
-                endCov = int(cov_df.loc[(cov_df.name == cluster) & (cov_df.thickStart == end - 5), 'thickEnd'])
-                # use this end - 5 (to exlude variability at 3'-CCA coverage) as the 3' position to measure against
-                ratio = cov_df.loc[(cov_df.name == cluster) & (cov_df.thickStart == minMismatch), 'thickEnd'].astype(float) / endCov
+                # check coverage at position/coverage at 3' is >= covDiff: thickStart is pos, thickEnd is coverage
+                # determine most 3' pos of current cluster
+                end = max(cov_df.loc[cov_df.name == cluster,'thickStart'])
+                if minMismatch < end:
+                    endCov = int(cov_df.loc[(cov_df.name == cluster) & (cov_df.thickStart == end - 5), 'thickEnd'])
+                    # use this end - 5 (to exlude variability at 3'-CCA coverage) as the 3' position to measure against
+                    ratio = cov_df.loc[(cov_df.name == cluster) & (cov_df.thickStart == minMismatch), 'thickEnd'].astype(float) / endCov
 
-                if float(ratio) < covDiff:
-                    unsplit.add(cluster)
-                    unsplit.add(unique_isodecoderMMs[cluster][mismatch][0])
-                    unsplit_isosOnly.add(unique_isodecoderMMs[cluster][mismatch][0])
-                    splitBool[cluster].add(unique_isodecoderMMs[cluster][mismatch][0])
+                    if float(ratio) < covDiff:
+                        unsplit.add(cluster)
+                        unsplit.add(unique_isodecoderMMs[cluster][mismatch][0])
+                        unsplit_isosOnly.add(unique_isodecoderMMs[cluster][mismatch][0])
+                        splitBool[cluster].add(unique_isodecoderMMs[cluster][mismatch][0])
 
 
     return(unsplit, unsplit_isosOnly, splitBool)

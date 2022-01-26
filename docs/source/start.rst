@@ -52,15 +52,15 @@ If you install from source or PyPi, please install all dependencies below before
 +=================+===================+===========+
 | GMAP-GSNAP      | 2019-02-26        | GSNAP_    |
 +-----------------+-------------------+-----------+
-| samtools        | 1.7               | samtools_ |
+| samtools        | >=1.11            | samtools_ |
 +-----------------+-------------------+-----------+
 | usearch         | 10.0.240          | usearch_  |
 +-----------------+-------------------+-----------+
-| bedtools        | 2.26.0            | bedtools_ |
+| bedtools        | >=2.30.0          | bedtools_ |
 +-----------------+-------------------+-----------+
-| INFERNAL        | 1.1.2 (July 2016) | INFERNAL_ |
+| INFERNAL        | >=1.1.4           | INFERNAL_ |
 +-----------------+-------------------+-----------+
-| BLAST           | 2.7.1             | BLAST_    |
+| BLAST           | 2.10.1            | BLAST_    |
 +-----------------+-------------------+-----------+
 | gcc             | 4.8.5             | gcc_      |
 +-----------------+-------------------+-----------+
@@ -78,33 +78,35 @@ If you install from source or PyPi, please install all dependencies below before
 +----------------+------------+----------------------+
 | Package        | Version    | Link                 |
 +================+============+======================+
-| R base         | <3.7.0a0   | R_                   |
+| R base         | >=4        | R_                   |
 +----------------+------------+----------------------+
-| DESeq2         | 1.26.0     | DESeq2_              |
+| DESeq2         | >=1.26.0   | DESeq2_              |
 +----------------+------------+----------------------+
 | RColorBrewer   | 1.1.2      | RColorBrewer_        |
 +----------------+------------+----------------------+
-| pheatmap       | 1.0.12     | pheatmap_            |
+| pheatmap       | >=1.0.12   | pheatmap_            |
 +----------------+------------+----------------------+
-| calibrate      | 1.7.5      | calibrate_           |
+| calibrate      | >=1.7.7    | calibrate_           |
 +----------------+------------+----------------------+
-| gridExtra      | 2.3        | gridExtra_           |
+| gridExtra      | >=2.3      | gridExtra_           |
 +----------------+------------+----------------------+
-| plyr           | 1.8.6      | plyr_                |
+| plyr           | >=1.8.6    | plyr_                |
 +----------------+------------+----------------------+
-| dplyr          | 1.0.0      | dplyr_               |
+| dplyr          | >=1.0.6    | dplyr_               |
 +----------------+------------+----------------------+
-| reshape2       | 1.4.3      | reshape2_            |
+| reshape2       | >=1.4.3    | reshape2_            |
 +----------------+------------+----------------------+
-| circlize       | 0.4.8      | circlize_            |
+| circlize       | >=0.4.8    | circlize_            |
 +----------------+------------+----------------------+
-| tidyverse      | 1.3.0      | tidyverse_           |
+| tidyverse      | >=1.3.0    | tidyverse_           |
 +----------------+------------+----------------------+
-| ComplexHeatmap | 2.2.0      | ComplexHeatmap_      |
+| ComplexHeatmap | >=2.2.0    | ComplexHeatmap_      |
 +----------------+------------+----------------------+
-| devtools       | 2.2.2      | devtools_            |
+| devtools       | >=2.4.1    | devtools_            |
 +----------------+------------+----------------------+
-| ggplot2        | =3.2.1     | ggplot2_             |
+| ggplot2        | >=3.3.5    | ggplot2_             |
++----------------+------------+----------------------+
+| ggpol          | >= 0.0.7   | ggpol_               |
 +----------------+------------+----------------------+
 
 .. _R: https://cran.r-project.org/
@@ -120,29 +122,31 @@ If you install from source or PyPi, please install all dependencies below before
 .. _tidyverse: https://www.tidyverse.org/packages/
 .. _ComplexHeatmap: https://bioconductor.org/packages/release/bioc/html/ComplexHeatmap.html
 .. _devtools: https://cran.r-project.org/web/packages/devtools/index.html
+.. _ggplot2: https://ggplot2.tidyverse.org/
+.. _ggpol: https://github.com/erocoar/ggpol
 
 **Required Python packages:**
 
 +------------+------------+-------------+
 | Package    | Version    | Link        |
 +============+============+=============+
-| Python     | >=3        | Python_     |
+| Python     | =3.7       | Python_     |
 +------------+------------+-------------+
-| Biopython  | 1.70       | Biopython_  |
+| Biopython  | >=1.79     | Biopython_  |
 +------------+------------+-------------+
-| pyfiglet   | 0.7.5      | pyfiglet_   |
+| pyfiglet   | >=0.8.post1| pyfiglet_   |
 +------------+------------+-------------+
-| pysam      | 0.15.3     | pysam_      |
+| pysam      | >=0.16.0.1 | pysam_      |
 +------------+------------+-------------+
-| pandas     | 0.22.0     | pandas_     |
+| pandas     | >=1.3.1    | pandas_     |
 +------------+------------+-------------+
-| numpy      | 1.14.2     | NumPy_      |
+| numpy      | >=1.21.1   | NumPy_      |
 +------------+------------+-------------+
-| seaborn    | 0.10.1     | seaborn_    |
+| seaborn    | >=0.11.1   | seaborn_    |
 +------------+------------+-------------+
-| pybedtools | 0.8.1      | pybedtools_ |
+| pybedtools | >=0.8.2    | pybedtools_ |
 +------------+------------+-------------+
-| requests   | 2.23.0     | requests_   |
+| requests   | >=2.26.0   | requests_   |
 +------------+------------+-------------+
 
 .. _Python: https://www.python.org/

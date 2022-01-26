@@ -96,6 +96,7 @@ Indices required for GSNAP alignment.
 
 Various files describing the tRNA trascriptome of the genome of interest.
 
+* `\*unsplitClusterInfo.txt`: details about cluster parents and members that were unable to be deconvoluted, including parent name, number of unsplit transcripts, the canonical tRNA position that prevented deconvolution, and the reason deconvolution was not possible.
 * `\*tRNATranscripts.fa`: processed, intron spliced, 3'-CCA appended, and His 5'-G appended tRNA transcript sequences in fasta format.
 * `\*modificationSNPs.txt`: SNP index information for each tRNA after matching to Modomics entries for species of interest.
 * `\*isoacceptorInfo.txt`: Information on isoacceptor groups and their size in genome of interest.

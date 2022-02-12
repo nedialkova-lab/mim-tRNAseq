@@ -19,7 +19,7 @@ from .tRNAmap import mainAlign
 from .getCoverage import getCoverage, plotCoverage
 from .mmQuant import generateModsTable, plotCCA
 from .ssAlign import structureParser, modContext 
-from .splitClusters import splitIsodecoder, unsplitClusters, getIsodecoderSizes, getDeconvSizes, writeDeconvTranscripts, writeIsodecoderTranscripts, writeSplitInfo
+from .splitClusters import splitIsodecoder, unsplitClustersCov, getIsodecoderSizes, getDeconvSizes, writeDeconvTranscripts, writeIsodecoderTranscripts, writeSplitInfo, writeIsodecoderInfo
 import sys, os, subprocess, logging, datetime, copy
 import argparse
 from pyfiglet import figlet_format
@@ -98,12 +98,15 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	# define unique mismatches/insertions to assign reads to unique tRNA sequences
 	unique_isodecoderMMs = defaultdict(dict)
 	unique_isodecoderMMs_new = defaultdict(dict)
-	splitBool = list()
-	splitBool_new = list()
+	splitBool = defaultdict(set)
+	splitBool_new = defaultdict(set)
+	unsplitCluster_lookup = defaultdict()
+	notSplit_cov_posInfo = defaultdict(set)
+	notSplit_mods_posInfo = defaultdict(set)
 	if cluster and cluster_id != 1:
 		cluster_dict2 = copy.deepcopy(cluster_dict) # copy so splitIsodecoder does not edit main cluster_dict
-		unique_isodecoderMMs, splitBool = splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_dict, cluster_dict2, out, name)
-		splitBool_new, unique_isodecoderMMs_new = unsplitClusters(coverageData, coverage_bed, unique_isodecoderMMs, splitBool, threads, cov_diff)
+		unique_isodecoderMMs, splitBool, notSplit_mods_posInfo = splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_dict, cluster_dict2, out, name)
+		splitBool_new, unique_isodecoderMMs_new, notSplit_cov_posInfo = unsplitClustersCov(coverageData, coverage_bed, unique_isodecoderMMs, splitBool, threads, map_round, cov_diff)
 		isodecoder_sizes, unsplitCluster_lookup = getDeconvSizes(splitBool_new, tRNA_dict, cluster_dict, unique_isodecoderMMs_new)
 		writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes)
 	elif cluster and cluster_id == 1:
@@ -114,7 +117,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+		new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
 		Inosine_clusters, snp_tolerance, newtRNA_dict, new_mod_lists, new_inosine_lists = newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster, remap, snp_tolerance)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
@@ -127,23 +130,25 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	# redo checks for unsplit isodecoders based on coverage 
 	# use original splitBool and unique_isodecoderMMs in case coverage changes in 2nd alignment round, regenerate splitBool_new and unique_isodecoderMMs_new
 	# rewrite deconv transcripts
-	if map_round == 2 and cluster_id != 1:
-		splitBool_new, unique_isodecoderMMs_new = unsplitClusters(coverageData, coverage_bed, unique_isodecoderMMs, splitBool, threads, cov_diff)
+	if map_round == 2 and cluster and cluster_id != 1:
+		splitBool_new, unique_isodecoderMMs_new, notSplit_cov_posInfo = unsplitClustersCov(coverageData, coverage_bed, unique_isodecoderMMs, splitBool, threads, map_round, cov_diff)
 		isodecoder_sizes, unsplitCluster_lookup = getDeconvSizes(splitBool_new, tRNA_dict, cluster_dict, unique_isodecoderMMs_new)
 		writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes)
-	
-	writeSplitInfo(out, name, splitBool_new)
 
 	# Misincorporation analysis
 	filter_warning = False
 	filtered_cov = list()
 	if snp_tolerance or not mismatches == 0.0:
 		if 'newtRNA_dict' in locals():
-			new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
 		else:
-			new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup, readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
+
+	isodecoder_sizes = writeIsodecoderInfo(out, name, isodecoder_sizes,readRef_unsplit_newNames, tRNA_dict)
+	writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes)
+	writeSplitInfo(out, name, splitBool_new, notSplit_mods_posInfo, notSplit_cov_posInfo)
 
 	# Output modification context file for plotting
 	mod_sites, cons_pos_list = modContext(out, unsplitCluster_lookup)

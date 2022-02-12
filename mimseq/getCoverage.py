@@ -16,6 +16,9 @@ log = logging.getLogger(__name__)
 def filterCoverage (cov_table, min_cov):
 # returns isodecoders as list from counts table with less than min_cov reads (excluding mito clusters)
 
+	log.info("\n+-----------------------------------+ \
+		\n| Final deconvolution and filtering |\
+		\n+-----------------------------------+")
 	# if min_cov is a fraction
 	if min_cov < 1:
 		cov_table_new = cov_table.div(cov_table.sum(axis=0), axis=1)

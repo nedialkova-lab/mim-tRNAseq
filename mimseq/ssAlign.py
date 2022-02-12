@@ -179,9 +179,9 @@ def getAnticodon():
 	rf_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC RF")])
 	# use '*' in rf_cons from stk to delimit the anticodon positions
 	for pos, char in enumerate(rf_cons):
-	 	if char == "*":
-	 		anticodon.append(pos)
-
+		if char == "*":
+			anticodon.append(pos)
+	
 	return(anticodon)
 
 def clusterAnticodon(cons_anticodon, cluster):

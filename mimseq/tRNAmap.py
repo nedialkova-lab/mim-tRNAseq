@@ -100,13 +100,14 @@ def mapReads(fq, genome_index_path, genome_index_name, snp_index_path, snp_index
 
 	if snp_tolerance:
 		map_cmd = ["gsnap", zipped, "-D", genome_index_path, "-d", genome_index_name, "-V", snp_index_path, "-v", \
-		snp_index_name, "-t", str(threads), "--split-output", out_dir + output_prefix, \
-		"--format", "sam", "--genome-unk-mismatch", "0", "--md-lowercase-snp", "--ignore-trim-in-filtering", "1", "--indel-endlength", "0", fq]
+			snp_index_name, "-t", str(threads), "--split-output", out_dir + output_prefix, "--format", "sam", \
+			"--genome-unk-mismatch", "0", "--md-lowercase-snp", "--ignore-trim-in-filtering", "1", fq]
 		map_cmd = list(filter(None, map_cmd))
 		map_cmd[-1:-1] = mismatch_list
 	else:
-		map_cmd = ["gsnap", zipped, "-D", genome_index_path, "-d", genome_index_name, "-t", str(threads),\
-		"--split-output", out_dir + output_prefix, "--format", "sam", "--genome-unk-mismatch", "0", "--md-lowercase-snp", "--ignore-trim-in-filtering", "1", "--indel-endlength", "0", fq]
+		map_cmd = ["gsnap", zipped, "-D", genome_index_path, "-d", genome_index_name, "-t", str(threads), \
+			"--split-output", out_dir + output_prefix, "--format", "sam", "--genome-unk-mismatch", "0", \
+			"--md-lowercase-snp", "--ignore-trim-in-filtering", "1", fq]
 		map_cmd = list(filter(None, map_cmd))
 		map_cmd[-1:-1] = mismatch_list
 

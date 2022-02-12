@@ -978,60 +978,16 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off, dou
 
 	return(seq)
 
-def countReads(input_counts, out_dir, isodecoder_sizes, clustering, tRNA_dict, clusterInfo):
-
+def countsAnticodon(input_counts, out_dir):
 	# Counts per anticodon
-	count_dict_anticodon = defaultdict(lambda: defaultdict(int))
-	count_dict_isodecoder = defaultdict(lambda: defaultdict(int))
 
-	with open(input_counts, "r") as counts_file:
-		for line in counts_file:
-			line = line.strip()
-			if not line.startswith("#"):
-				if line.startswith("isodecoder"):
-					sample_list = [samples for samples in line.split("\t")[1:-3]]
-				else:
-					isodecoder = line.split("\t")[0]
-					anticodon = "-".join(isodecoder.split("-")[:-1]) if not "chr" in isodecoder else "-".join(isodecoder.split("-")[:-2])
-					# replace "tRX" with "tRNA" in anticodon names so that low confidence tRX genes also get summed with their respective anticodon
-					anticodon = anticodon.replace("tRX", "tRNA")
-					# replace Mut in the case of custom mutation references so that these counts get added to the corresponsing anticodon
-					anticodon = anticodon.replace("Mut", "")
-					col = 1
-					for sample in sample_list:
-						count_dict_anticodon[anticodon][sample] += float(line.split("\t")[col])
-						if not clustering:
-							count_dict_isodecoder[isodecoder][sample] = float(line.split("\t")[col])
-						col += 1
-
-	count_anticodon_pd = pd.DataFrame.from_dict(count_dict_anticodon, orient='index')
-	count_anticodon_pd.index.name = 'Anticodon'
-	count_anticodon_pd.to_csv(out_dir + 'Anticodon_counts_raw.txt', sep = '\t')
-
-	if not clustering:
-		new_count_isodecoder = defaultdict(lambda: defaultdict(int))
-		for isodecoder in isodecoder_sizes:
-			sameSeq = [tRNAs for tRNAs in tRNA_dict.keys() if tRNA_dict[tRNAs]['sequence'] == tRNA_dict[isodecoder]['sequence']]
-			for i in sameSeq:
-				i = "-".join(i.split("-")[:-1])
-				for lib in count_dict_isodecoder[isodecoder].keys():
-					new_count_isodecoder[isodecoder][lib] += count_dict_isodecoder[i][lib]
-
-		count_isodecoder_pd = pd.DataFrame.from_dict(new_count_isodecoder, orient='index')
-		count_isodecoder_pd.index.name = 'isodecoder'
-		count_isodecoder_pd['Single_isodecoder'] = "True"
-
-		isodecoder_sizes_short = defaultdict()
-		for iso, size in isodecoder_sizes.items():
-			if not "chr" in iso:
-				short = "-".join(iso.split("-")[:-1])
-			else:
-				short = iso
-			isodecoder_sizes_short[short] = size
-		for cluster in count_isodecoder_pd.index:
-			count_isodecoder_pd.at[cluster, 'size'] = isodecoder_sizes_short[cluster]
-		count_isodecoder_pd = count_isodecoder_pd.join(clusterInfo)
-		count_isodecoder_pd.to_csv(out_dir + 'Isodecoder_counts.txt', sep = '\t')
+	input_counts['Anticodon'] = input_counts.isodecoder.str.split("-").str[:-1].str.join("-")
+	# replace "tRX" with "tRNA" in anticodon names so that low confidence tRX genes also get summed with their respective anticodon
+	input_counts["Anticodon"] = input_counts.Anticodon.str.replace("tRX","tRNA")
+	# replace Mut in the case of custom mutation references so that these counts get added to the corresponsing anticodon
+	input_counts["Anticodon"] = input_counts.Anticodon.str.replace("Mut","")
+	input_counts= input_counts.groupby(["Anticodon"]).agg(sum).reset_index()
+	input_counts.to_csv(out_dir + "Anticodon_counts_raw.txt", sep = "\t", index = False)
 
 	log.info("** Read counts per anticodon saved to " + out_dir + "counts/Anticodon_counts_raw.txt **")
 

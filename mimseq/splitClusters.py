@@ -11,7 +11,6 @@ import re, copy
 import pybedtools
 from multiprocessing import Pool
 from functools import partial
-import pickle
 import subprocess
 
 ####################################################################################################################
@@ -19,6 +18,8 @@ import subprocess
 ####################################################################################################################
 
 log = logging.getLogger(__name__)
+
+tRNA_ungap2canon = ''
 
 def dd_set():
 	return(defaultdict(set))
@@ -84,7 +85,8 @@ def findUniqueSubset (inputDict, outputDict, tRNA_dict):
             'e9':(['C'],['Leu-CAG','Ser-AGA','Ser-CGA','Ser-GCT','Ser-TGA'])}
 
     # clusters and isodecoders not split due to canonical modified positions in all unique mismatch subsets
-    notSplit_mods_clusterInfo = defaultdict(list)
+    notSplit_mods_clusterInfo = defaultdict(list) 
+    notSplit_mods_posInfo = defaultdict(set)
 
     for cluster, data in inputDict.items():
         powersets  = [GetPowerset(data[s]) for s in data]
@@ -120,6 +122,7 @@ def findUniqueSubset (inputDict, outputDict, tRNA_dict):
             uss = sorted(uss, key = natural_keys_list, reverse = True)
 
             # sort within individual subsets and remove subsets that contain canonical modified positions
+            temp_modPos = list()
             for i, s in enumerate(uss):
                 uss[i] = tuple(sorted(s, key=natural_keys))
                 ussPosOnly = [int(re.search("([0-9]*)[A-Z]?", x).group(1)) for x in uss[i] if not re.search("Ins|Del", x)] # extract positions only from uss tuple (exclude Ins Del positions)
@@ -127,10 +130,20 @@ def findUniqueSubset (inputDict, outputDict, tRNA_dict):
                 # if any of member mismatches + identity, or cluster parent identity exists in transcript-specific list of canonical mod sites:
                 # remove this subset
                 if any(x in clusterMods_list for x in uss[i]) or any(y in clusterMods_list for y in ussClusterParent):
+                    temp_modPos.append(s)
                     del uss[i]
+
+            # generate nonredundant set of canonical positions that were removed due to overlap with mod site 
+            if temp_modPos:
+                temp_modPos = [set(x) for x in temp_modPos]
+                modPos = set.intersection(*temp_modPos)
+                modPos =  {int(re.search("([0-9]*)[A-Z]?", x).group(1)) for x in modPos}
+                canonmodPos = {tRNA_ungap2canon[cluster][x] for x in modPos}
+                canonmodPos = canonmodPos.intersection(set(mods.keys()))
 
             if not uss: # if empty after removing uss containing potential mod sites
                 notSplit_mods_clusterInfo[cluster].append(isodecoder)
+                notSplit_mods_posInfo[cluster] = canonmodPos
                 continue
 
             temp_uss_dict[isodecoder] = uss # add full uss set to temp dict
@@ -176,7 +189,7 @@ def findUniqueSubset (inputDict, outputDict, tRNA_dict):
             newIso = isodecoder + "-" + str(iso_min) if not "chr" in isodecoder else isodecoder
             notSplit_mods_clusterInfo[cluster][i] = newIso
 
-    return(outputDict, notSplit_mods_clusterInfo)
+    return(outputDict, notSplit_mods_clusterInfo, notSplit_mods_posInfo)
 
 def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_dict, cluster_dict, out_dir, experiment_name):
 # Determine minimal set of most 3' mismatches and/or insertions that characterise an isodecoder
@@ -215,7 +228,7 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
     
     # Build nested dictionary of unique minimal set of mismatches and insertions that distinguish an isodecoder from parent and all others in cluster
     unique_isodecoderMMs = defaultdict(dd)
-    unique_isodecoderMMs, notSplit_mods_clusterInfo = findUniqueSubset(cluster_MemberMismatchPos, unique_isodecoderMMs, tRNA_dict)
+    unique_isodecoderMMs, notSplit_mods_clusterInfo, notSplit_mods_posInfo = findUniqueSubset(cluster_MemberMismatchPos, unique_isodecoderMMs, tRNA_dict)
     
     # Check that all unique sequences can be deconvoluted
     # count clusters in cluster_dict that are composed of only one sequence and those that are composed of multiple sequences
@@ -264,12 +277,14 @@ Ensure all transcripts with identical isodecoder numbers are indeed unique in ma
     # unnest the dictionary into list and return for filtering these from DESeq2 analysis and metric reporting
     splitBool = notSplit_mods_clusterInfo
 
-    return(unique_isodecoderMMs, splitBool)
+    return(unique_isodecoderMMs, splitBool, notSplit_mods_posInfo)
 
-def covCheck_mp(bedTool, unique_isodecoderMMs, splitBool, covDiff, input):
+def covCheck_mp(bedTool, unique_isodecoderMMs, tRNA_ungap2canon, splitBool, covDiff, input):
     # get positional coverage per cluster per bam file and check if 3':5' coverage is greater than covDiff
     unsplit = set()
     unsplit_isosOnly = set()
+    notSplit_cov_posInfo = defaultdict(list)
+
     log.info("Calculating nucleotide coverage for {}".format(input))
     bam = pybedtools.BedTool(input)
     # generate a temporary 2 column file with the chromosome names in the bam file
@@ -317,15 +332,18 @@ def covCheck_mp(bedTool, unique_isodecoderMMs, splitBool, covDiff, input):
                         unsplit.add(unique_isodecoderMMs[cluster][mismatch][0])
                         unsplit_isosOnly.add(unique_isodecoderMMs[cluster][mismatch][0])
                         splitBool[cluster].add(unique_isodecoderMMs[cluster][mismatch][0])
+                        notSplit_cov_posInfo[cluster].append(minMismatch)
 
+    # canonical positional info for unsplit clusters due to covergae insufficiencies
+    notSplit_cov_posInfo = {k:[tRNA_ungap2canon[k][x]] for k, v in notSplit_cov_posInfo.items() for x in v}
 
-    return(unsplit, unsplit_isosOnly, splitBool)
+    return(unsplit, unsplit_isosOnly, splitBool, notSplit_cov_posInfo)
 
-def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, splitBool, threads, covDiff = 0.5):
+def unsplitClustersCov(coverageData, coverageBed, unique_isodecoderMMs, splitBool, threads, map_round, covDiff = 0.5):
     # Define unique sequences not able to be split based on significant drop in coverage before distinguishing mismatch
    
     log.info("\n+---------------------------------------------------------------------------------+\
-        \n| Determining un-deconvoluted clusters due to insufficient coverage at mismatches |\
+        \n| Determining non-deconvoluted clusters due to insufficient coverage at mismatches |\
         \n+---------------------------------------------------------------------------------+")
 
     log.info("*** Un-deconvoluted sequences being defined based on coverage difference more than {:.2%}".format(covDiff))
@@ -340,14 +358,20 @@ def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, splitBool, 
     log.info("Determining unsplittable sequences...")
     pool = Pool(multi)
     bed = pybedtools.BedTool(coverageBed)
-    func = partial(covCheck_mp, bed, unique_isodecoderMMs, splitBool, covDiff)
-    unsplit, unsplit_isosOnly, splitBool = zip(*pool.map(func, bamlist))
+
+    # tRNA_ungap2canon needs to remain the version using cluster transcripts not isodecoders
+    # store in global variable and only set on round 1
+    if map_round == 1:
+        global tRNA_ungap2canon
+        tRNA_ungap2canon = tRNAclassifier()[1]
+    func = partial(covCheck_mp, bed, unique_isodecoderMMs, tRNA_ungap2canon, splitBool, covDiff)
+    unsplit, unsplit_isosOnly, splitBool, notSplit_cov_posInfo = zip(*pool.map(func, bamlist))
     pool.close()
     pool.join()
 
     # create newSplitBool by updating with new cov unsplit transcripts
-    newSplitBool = defaultdict(set)
     newSplitBool = {cluster: set().union(data) for proc in splitBool for cluster, data in proc.items()}
+    newSplitBool = defaultdict(set, newSplitBool)
 
     # update unique_isodecoderMMs by removing new unsplit transcripts
     unique_isodecoderMMs_new = copy.deepcopy(unique_isodecoderMMs)
@@ -361,13 +385,15 @@ def unsplitClusters(coverageData, coverageBed, unique_isodecoderMMs, splitBool, 
     unsplit_isosAll = len(list(set().union(*unsplit_isosOnly)))
     log.info("{} unique sequences not split from cluster parent".format(unsplit_isosAll))
     log.info("{} parents and isododecoders not deconvoluted due to insufficient coverage at mismatches".format(len(unsplit_all)))
-    log.info("{} total unique sequences not deconvoluted due to mismatches at modified sites OR insufficient coverage".format(len(newSplitBool) + sum([len(data) for data in newSplitBool.values()])))
 
-    return(newSplitBool, unique_isodecoderMMs_new)
+    # merge not split positional info
+    notSplit_cov_posInfo_all = {k:set(v).union(set(v)) for tup in notSplit_cov_posInfo for k, v in tup.items()}
+
+    return(newSplitBool, unique_isodecoderMMs_new, notSplit_cov_posInfo_all)
 
 def getDeconvSizes(splitBool, tRNA_dict, cluster_dict, unique_isodecoderMMs):
     # get isodecoder sizes in the case of deconvolution
-    # this will be a mix of unique transcripts (and their numbers) and unsplit clusters with naming convention: tRNA-AA-Anti-IsoX/Yand their sizes
+    # this will be a mix of unique transcripts (and their numbers) and unsplit clusters with naming convention: tRNA-AA-Anti-IsoX/Y and their sizes
     
     isodecoder_sizes = defaultdict(int)
 
@@ -409,14 +435,6 @@ def getDeconvSizes(splitBool, tRNA_dict, cluster_dict, unique_isodecoderMMs):
     return(isodecoder_sizes, unsplitCluster_lookup)
 
 def writeDeconvTranscripts(out_dir, experiment_name, tRNA_dict, isodecoder_sizes):
-    # write unique transcript and unsplit cluster sequences and size info in the case of deconvolution 
-
-    # save isodecoder info
-    with open(out_dir + experiment_name + "isodecoderInfo.txt", "w") as isodecoderInfo:
-        isodecoderInfo.write("Isodecoder\tsize\n")
-        for isodecoder, size in isodecoder_sizes.items():
-            isodecoder = "-".join(isodecoder.split("-")[:-1]) if not re.search("chr|/", isodecoder) else isodecoder
-            isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
 
 	# write isodecoder fasta for alignment and context analysis
     with open(out_dir + experiment_name + '_isodecoderTranscripts.fa', 'w') as tempSeqs:
@@ -424,7 +442,7 @@ def writeDeconvTranscripts(out_dir, experiment_name, tRNA_dict, isodecoder_sizes
             # new seq to match unsplit cluster parent to tRNA_dict
             if "/" in seq:
                 tempSeq = seq.split("/")[0]
-                isodecoder_list = [x for x in tRNA_dict.keys() if tempSeq in x and not "chr" in isodecoder[0]]
+                isodecoder_list = [x for x in tRNA_dict.keys() if tempSeq in x and not "chr" in x]
                 iso_min = min([x.split("-")[-1] for x in isodecoder_list])
                 newSeq = tempSeq + "-" + str(iso_min)
             else:
@@ -434,14 +452,47 @@ def writeDeconvTranscripts(out_dir, experiment_name, tRNA_dict, isodecoder_sizes
             tempSeqs.write(">" + shortname + "\n" + tRNA_dict[newSeq]['sequence'] + "\n")
     aligntRNA(tempSeqs.name, out_dir)
 
-def writeSplitInfo(out, name, splitBool):
-    # output info about unsplit clusters
+def writeIsodecoderInfo(out_dir, experiment_name, isodecoder_sizes, readRef_unsplit_newNames, tRNA_dict):
+    # write unique transcript and unsplit cluster sequences and size info in the case of deconvolution 
+
+    # unsplit clusters from mismatches to parent are not recorded properly in isodecoder_sizes, delete and readd here using variable from generateModsTable()
+    for name in readRef_unsplit_newNames:
+        base = "-".join(name.split("-")[:-1])
+        count = 0
+        for num in name.split("-")[-1].split("/"):
+            count += 1
+            iso = base + "-" + num
+            isodecoder_list = [x for x in tRNA_dict.keys() if iso in x and not "chr" in x]
+            iso_min = min([x.split("-")[-1] for x in isodecoder_list])
+            gene = iso + "-" + str(iso_min)
+            del isodecoder_sizes[gene]
+        isodecoder_sizes[name] = count
+
+    # save isodecoder info
+    with open(out_dir + experiment_name + "isodecoderInfo.txt", "w") as isodecoderInfo:
+        isodecoderInfo.write("Isodecoder\tsize\n")
+        for isodecoder, size in isodecoder_sizes.items():
+            isodecoder = "-".join(isodecoder.split("-")[:-1]) if not re.search("chr|/", isodecoder) else isodecoder
+            isodecoderInfo.write(isodecoder + "\t" + str(size) + "\n")
+
+    return(isodecoder_sizes)
+
+def writeSplitInfo(out, name, splitBool, notSplit_mods_posInfo, notSplit_cov_posInfo):
+    # output info about unsplit clusters, the positions and the reason they could not be split
 
     with open(out + name + "_unsplitClusterInfo.txt", "w") as unsplitOut:
-        unsplitOut.write("Parent\tSize (total unsplit transctipts)\n")
+        unsplitOut.write("Parent\tSize (total unsplit transcripts)\tUnsplit transcripts\tReason\n")
         for cluster, members in splitBool.items():
             size = len(members) + 1 # add one to incude parent in size
-            unsplitOut.write(cluster + "\t" + str(size) + "\n")
+            members = ["-".join(x.split("-")[:-1]) for x  in members]
+            member_print = ", ".join(members)
+            if cluster in notSplit_mods_posInfo:
+                reason = "potential mod at mismatch {}".format(", ".join(notSplit_mods_posInfo[cluster]))
+            elif cluster in notSplit_cov_posInfo:
+                reason = "insufficient coverage at mismatch {}".format(", ".join(notSplit_cov_posInfo[cluster]))
+            else:
+                reason = ">10% parent assigned reads do not match parent sequence"
+            unsplitOut.write(cluster + "\t" + str(size) + "\t" + member_print + "\t" + reason + "\n")
     log.info("Info on all clusters not deconvoluted written to {}".format(out + "annotation/" + name + "_unsplitClusterInfo.txt"))
 
 def writeIsodecoderTranscripts(out_dir, experiment_name, cluster_dict, tRNA_dict):

@@ -108,7 +108,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 		unique_isodecoderMMs, splitBool, notSplit_mods_posInfo = splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_dict, cluster_dict2, out, name)
 		splitBool_new, unique_isodecoderMMs_new, notSplit_cov_posInfo = unsplitClustersCov(coverageData, coverage_bed, unique_isodecoderMMs, splitBool, threads, map_round, cov_diff)
 		isodecoder_sizes, unsplitCluster_lookup = getDeconvSizes(splitBool_new, tRNA_dict, cluster_dict, unique_isodecoderMMs_new)
-		writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes)
+		writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes, cluster)
 	elif cluster and cluster_id == 1:
 		isodecoder_sizes = {iso:len(members) for iso, members in cluster_dict.items()}
 		writeIsodecoderTranscripts(out, name, cluster_dict, tRNA_dict)
@@ -133,7 +133,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	if map_round == 2 and cluster and cluster_id != 1:
 		splitBool_new, unique_isodecoderMMs_new, notSplit_cov_posInfo = unsplitClustersCov(coverageData, coverage_bed, unique_isodecoderMMs, splitBool, threads, map_round, cov_diff)
 		isodecoder_sizes, unsplitCluster_lookup = getDeconvSizes(splitBool_new, tRNA_dict, cluster_dict, unique_isodecoderMMs_new)
-		writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes)
+		writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes, cluster)
 
 	# Misincorporation analysis
 	filter_warning = False
@@ -147,7 +147,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
 	isodecoder_sizes = writeIsodecoderInfo(out, name, isodecoder_sizes,readRef_unsplit_newNames, tRNA_dict)
-	writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes)
+	writeDeconvTranscripts(out, name, tRNA_dict, isodecoder_sizes, cluster)
 	writeSplitInfo(out, name, splitBool_new, notSplit_mods_posInfo, notSplit_cov_posInfo)
 
 	# Output modification context file for plotting
@@ -170,7 +170,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 			exitcode = process.wait()
 		except subprocess.CalledProcessError:
 			if filter_warning:
-				log.error("Error plotting modifications. Potentially caused by any clusters filtered by --min-cov: lower --min-cov or assess data quality and sequencing depth!")
+				log.error("Error plotting modifications. Potentially caused by all clusters filtered by --min-cov: lower --min-cov or assess data quality and sequencing depth!")
 				raise
 		# CCA analysis (see mmQuant.generateModsTable and mmQuant.countMods_mp for initial counting of CCA vs CC ends)
 		if cca:

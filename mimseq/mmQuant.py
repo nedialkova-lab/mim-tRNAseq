@@ -689,7 +689,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		newInosineTable_df = pd.DataFrame.from_dict(newInosineTable, orient = "index").melt(ignore_index=False).dropna()[['value']].reset_index()
 		newInosineTable_df.columns = ['isodecoder', 'pos']
 		if clustering:
-			newInosineTable_df.loc[~newknownTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newInosineTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
+			newInosineTable_df.loc[~newInosineTable_df['isodecoder'].str.contains("chr"), 'isodecoder'] = newInosineTable_df['isodecoder'].str.split("-").str[:-1].str.join("-")
 		
 		# combine new mods and new inosine tables
 		allnewKnownTable_df = pd.concat([newknownTable_df, newInosineTable_df])
@@ -918,7 +918,8 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 
 		log.info("** Read counts per isodecoder saved to " + out_dir + "counts/Isodecoder_counts_raw.txt **")
 		log.info("{} sequences could not be deconvoluted as >10% parent assigned-reads do not match parent sequence!".format(readRef_unsplit_count + len(readRef_match_set)))
-		log.info("Reasons for this include misaligment of reads to an incorrect cluster, or inaccurate aligment by GSNAP (e.g. at indels in reads) prohibiting correct devonvolution.")
+		if len(readRef_match_set) > 0:
+			log.info("Reasons for this include misaligment of reads to an incorrect cluster, or inaccurate aligment by GSNAP (e.g. at indels in reads) prohibiting correct devonvolution.")
 		log.info("{} total unique sequences not deconvoluted due to mismatches at modified sites, insufficient coverage or read mismatches to parent".format(len(splitBool) + sum([len(data) for data in splitBool.values()])))
 
 

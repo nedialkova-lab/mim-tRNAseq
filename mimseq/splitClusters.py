@@ -434,7 +434,7 @@ def getDeconvSizes(splitBool, tRNA_dict, cluster_dict, unique_isodecoderMMs):
 
     return(isodecoder_sizes, unsplitCluster_lookup)
 
-def writeDeconvTranscripts(out_dir, experiment_name, tRNA_dict, isodecoder_sizes):
+def writeDeconvTranscripts(out_dir, experiment_name, tRNA_dict, isodecoder_sizes, clustering):
 
 	# write isodecoder fasta for alignment and context analysis
     with open(out_dir + experiment_name + '_isodecoderTranscripts.fa', 'w') as tempSeqs:
@@ -448,7 +448,10 @@ def writeDeconvTranscripts(out_dir, experiment_name, tRNA_dict, isodecoder_sizes
             else:
                 newSeq = seq
             # make shortnames for fa file
-            shortname = "-".join(seq.split("-")[:-1]) if not re.search("chr|/", seq) else seq.split("/")[0]
+            if clustering:
+                shortname = "-".join(seq.split("-")[:-1]) if not re.search("chr|/", seq) else seq.split("/")[0]
+            else:
+                shortname = seq
             tempSeqs.write(">" + shortname + "\n" + tRNA_dict[newSeq]['sequence'] + "\n")
     aligntRNA(tempSeqs.name, out_dir)
 

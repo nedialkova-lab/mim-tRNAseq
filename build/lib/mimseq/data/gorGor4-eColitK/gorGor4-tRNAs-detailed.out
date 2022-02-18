@@ -1,0 +1,666 @@
+Sequence		tRNA     	Bounds   	tRNA	Anti	Intron Bounds	Inf	HMM	2'Str	Hit	Isotype	Isotype	Type	      
+Name    	tRNA#	Begin    	End      	Type	Codon	Begin	End	Score	Score	Score	Origin	CM	Score	         	Note
+--------	------	-----    	------   	----	-----	-----	----	------	-----	-----	------	-------	-------	---------	------
+chr1	1	16605564	16605634	Gly	CCC	0	0	65.2	46.50	18.70	Inf	Gly	97.8	cytosolic	high confidence set
+chr1	2	16617070	16617141	Glu	TTC	0	0	42.9	25.40	17.50	Inf	Glu	81.0	cytosolic	secondary filtered
+chr1	3	16623204	16623275	Glu	TTC	0	0	68.7	44.50	24.20	Inf	Glu	112.8	cytosolic	high confidence set
+chr1	4	16626081	16626154	Asn	GTT	0	0	44.7	41.70	3.00	Inf	Asn	77.2	cytosolic	pseudo
+chr1	5	16638355	16638426	Glu	TTC	0	0	59.0	34.90	24.10	Inf	Glu	100.0	cytosolic	high confidence set
+chr1	6	16641242	16641315	Asn	GTT	0	0	55.0	39.30	15.70	Inf	Asn	83.1	cytosolic	high confidence set
+chr1	7	16644934	16645005	Glu	TTC	0	0	68.7	44.50	24.20	Inf	Glu	112.8	cytosolic	high confidence set
+chr1	8	16647826	16647899	Asn	GTT	0	0	41.3	31.80	9.50	Inf	Asn	75.8	cytosolic	secondary filtered
+chr1	9	16653642	16653713	Glu	TTC	0	0	50.5	36.50	14.00	Inf	Glu	90.0	cytosolic	high confidence set
+chr1	10	16656524	16656597	Asn	GTT	0	0	44.7	41.70	3.00	Inf	Asn	77.2	cytosolic	pseudo
+chr1	11	16668700	16668773	Asn	ATT	0	0	48.1	37.70	10.40	Inf	Asn	79.9	cytosolic	secondary filtered
+chr1	12	16688961	16689034	Asn	GTT	0	0	77.7	51.90	25.80	Inf	Asn	117.7	cytosolic	high confidence set
+chr1	13	16700128	16700201	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr1	14	16710880	16710953	Asn	GTT	0	0	80.8	55.00	25.80	Inf	Asn	120.5	cytosolic	high confidence set
+chr1	15	39858703	39858775	Lys	CTT	0	0	33.3	47.10	-13.80	Inf	Lys	65.5	cytosolic	pseudo
+chr1	16	95019502	95019586	Arg	TCT	95019539	95019550	71.1	51.20	19.90	Inf	Arg	103.0	cytosolic	high confidence set
+chr1	17	124710846	124710919	Asn	GTT	0	0	36.6	22.30	14.30	Inf	Asn	70.9	cytosolic	secondary filtered
+chr1	18	124884306	124884376	Trp	CCA	0	0	38.7	28.20	10.50	Inf	Gly	68.9	cytosolic	IPD:-52.40,secondary filtered
+chr1	19	125422055	125422130	Asn	GTT	0	0	52.9	29.20	23.70	Inf	Asn	85.9	cytosolic	high confidence set
+chr1	20	125966918	125966989	Gln	CTG	0	0	71.9	44.40	27.50	Inf	Gln	106.7	cytosolic	high confidence set
+chr1	21	126294431	126294502	His	GTG	0	0	60.1	29.80	30.30	Inf	His	104.9	cytosolic	high confidence set
+chr1	22	127258751	127258821	Arg	CCT	0	0	23.8	29.60	-5.80	Inf	Gly	50.7	cytosolic	pseudo,IPD:-55.30
+chr1	23	127282893	127282964	Gln	CTG	0	0	71.9	44.40	27.50	Inf	Gln	106.7	cytosolic	high confidence set
+chr1	24	127396332	127396405	Asn	ATT	0	0	48.4	31.10	17.30	Inf	Asn	76.6	cytosolic	secondary filtered
+chr1	25	127487692	127487763	Gln	CTG	0	0	56.7	30.00	26.70	Inf	Gln	89.5	cytosolic	high confidence set
+chr1	26	127535189	127535260	Trp	CCA	0	0	23.8	31.70	-7.90	Inf	Gln	47.2	cytosolic	pseudo,IPD:-47.20
+chr1	27	128219236	128219307	Gln	CTG	0	0	27.0	28.20	-1.20	Inf	Gln	46.1	cytosolic	pseudo
+chr1	28	128334946	128335017	Gln	CTG	0	0	71.9	44.40	27.50	Inf	Gln	106.4	cytosolic	high confidence set
+chr1	29	129393157	129393239	Leu	CAG	0	0	36.3	27.00	9.30	Inf	Leu	78.9	cytosolic	secondary filtered
+chr1	30	132749033	132749104	iMet	CAT	0	0	60.4	30.80	29.60	Inf	iMet	130.6	cytosolic	high confidence set
+chr1	31	140364548	140364620	Sup	TTA	0	0	26.8	29.00	-2.20	Inf	Glu	53.6	cytosolic	pseudo,IPD:-53.60
+chr1	32	140399657	140399739	Leu	CAG	0	0	78.2	47.50	30.70	Inf	Leu	124.9	cytosolic	high confidence set
+chr1	33	140409109	140409179	Gly	GCC	0	0	59.9	44.80	15.10	Inf	Gly	87.0	cytosolic	high confidence set
+chr1	34	140451719	140451790	Asp	GTC	0	0	23.2	10.00	13.20	Inf	Asp	58.8	cytosolic	secondary filtered
+chr1	35	140460400	140460471	Gly	TCC	0	0	44.7	44.30	0.40	Inf	Gly	73.3	cytosolic	pseudo
+chr1	36	140461391	140461462	Asp	GTC	0	0	28.8	9.80	19.00	Inf	Asp	71.9	cytosolic	pseudo
+chr1	37	140462318	140462389	Asp	GTC	0	0	38.1	17.70	20.40	Inf	Asp	88.7	cytosolic	secondary filtered
+chr1	38	140547190	140547263	Asn	GTT	0	0	81.5	55.70	25.80	Inf	Asn	116.0	cytosolic	high confidence set
+chr1	39	144572216	144572288	Lys	CTT	0	0	59.5	54.70	4.80	Inf	Lys	81.1	cytosolic	secondary filtered
+chr1	40	146730482	146730553	Pro	CGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr1	41	185320237	185320309	Lys	TTT	0	0	56.0	47.20	8.80	Inf	Lys	78.2	cytosolic	secondary filtered
+chr1	42	202520381	202520453	Thr	TGT	0	0	80.8	59.70	21.10	Inf	Thr	95.2	cytosolic	high confidence set
+chr1	45	228839215	228839320	Leu	CAA	228839253	228839274	73.6	52.30	21.30	Inf	Leu	130.6	cytosolic	high confidence set
+chr1	46	228839610	228839681	Glu	CTC	0	0	73.2	49.00	24.20	Inf	Glu	113.6	cytosolic	high confidence set
+chr1	47	186782235	186782159	Pro	TGG	0	0	23.1	32.50	-9.40	Inf	His	8.9	cytosolic	pseudo,IPD:-15.40
+chr1	48	159404134	159404062	Val	AAC	0	0	39.9	26.30	13.60	Inf	Val	75.9	cytosolic	secondary filtered
+chr1	49	151234785	151234710	Undet	NNN	0	0	30.3	26.20	4.10	Inf	Glu	47.9	cytosolic	pseudo
+chr1	50	146731318	146731247	Pro	AGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr1	51	140459712	140459629	Leu	CAA	0	0	40.9	26.20	14.70	Inf	Leu	46.3	cytosolic	secondary filtered
+chr1	52	140452491	140452421	Gly	GCC	0	0	81.0	59.90	21.10	Inf	Gly	111.7	cytosolic	high confidence set
+chr1	53	140399027	140398956	Asp	GTC	0	0	66.5	35.70	30.80	Inf	Asp	109.9	cytosolic	high confidence set
+chr1	54	140398347	140398276	Gly	TCC	0	0	73.8	49.30	24.50	Inf	Gly	102.9	cytosolic	high confidence set
+chr1	55	140397989	140397918	Glu	CTC	0	0	73.2	49.00	24.20	Inf	Glu	113.6	cytosolic	high confidence set
+chr1	56	140391555	140391484	Asp	GTC	0	0	66.5	35.70	30.80	Inf	Asp	109.9	cytosolic	high confidence set
+chr1	57	140390893	140390822	Gly	TCC	0	0	73.8	49.30	24.50	Inf	Gly	102.9	cytosolic	high confidence set
+chr1	58	140378815	140378742	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr1	59	140365841	140365770	Glu	TTC	0	0	50.8	42.00	8.80	Inf	Glu	94.0	cytosolic	secondary filtered
+chr1	60	140343422	140343350	Val	CAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr1	61	138246107	138246034	Arg	TCT	0	0	78.5	56.90	21.60	Inf	Arg	91.4	cytosolic	high confidence set
+chr1	62	129026531	129026461	Ala	AGC	0	0	61.7	45.00	16.70	Inf	Ala	91.1	cytosolic	high confidence set
+chr1	63	128738512	128738442	Ala	TGC	0	0	22.4	24.90	-2.50	Inf	Gly	49.2	cytosolic	pseudo,IPD:-39.20
+chr1	64	128722366	128722293	Asn	GTT	0	0	72.2	50.40	21.80	Inf	Asn	98.4	cytosolic	high confidence set
+chr1	65	128696008	128695936	Val	CAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr1	66	128691105	128691035	Gly	CCC	0	0	78.3	56.60	21.70	Inf	Gly	109.7	cytosolic	high confidence set
+chr1	67	128682433	128682360	Asn	GTT	0	0	38.0	31.30	6.70	Inf	Asn	83.4	cytosolic	secondary filtered
+chr1	68	128676773	128676702	Glu	TTC	0	0	28.9	30.30	-1.40	Inf	Glu	70.4	cytosolic	pseudo
+chr1	69	128625157	128625084	Asn	GTT	0	0	58.9	40.40	18.50	Inf	Asn	101.5	cytosolic	high confidence set
+chr1	70	128500646	128500576	Ala	TGC	0	0	22.4	24.90	-2.50	Inf	Gly	49.2	cytosolic	pseudo,IPD:-39.20
+chr1	71	128448491	128448418	Leu	TAA	0	0	28.9	22.80	6.10	Inf	Glu	61.7	cytosolic	IPD:-61.70,secondary filtered
+chr1	72	128436887	128436816	Glu	TTC	0	0	39.9	20.60	19.30	Inf	Glu	83.9	cytosolic	secondary filtered
+chr1	73	128351153	128351076	Asn	GTT	0	0	28.6	29.50	-0.90	Inf	Asn	47.4	cytosolic	pseudo
+chr1	74	128311049	128310978	Glu	TTC	0	0	68.7	44.50	24.20	Inf	Glu	112.8	cytosolic	high confidence set
+chr1	75	128000181	128000108	Asn	GTT	0	0	68.7	46.10	22.60	Inf	Asn	106.5	cytosolic	high confidence set
+chr1	76	127998316	127998243	Asn	GTT	0	0	76.5	51.10	25.40	Inf	Asn	117.1	cytosolic	high confidence set
+chr1	77	127933098	127933025	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr1	78	127919080	127919007	Asn	GTT	0	0	64.0	49.40	14.60	Inf	Asn	102.5	cytosolic	high confidence set
+chr1	79	127568432	127568359	Asn	GTT	0	0	32.6	31.30	1.30	Inf	Asn	50.6	cytosolic	pseudo
+chr1	80	127460195	127460124	Glu	TTC	0	0	28.6	31.40	-2.80	Inf	Glu	62.1	cytosolic	pseudo
+chr1	81	127452555	127452484	His	GTG	0	0	60.1	29.80	30.30	Inf	His	104.9	cytosolic	high confidence set
+chr1	82	127415060	127414989	Gln	CTG	0	0	74.0	46.50	27.50	Inf	Gln	106.4	cytosolic	high confidence set
+chr1	83	127394111	127394041	Gly	CCC	0	0	25.0	31.20	-6.20	Inf	Gly	44.7	cytosolic	pseudo
+chr1	84	127302430	127302356	Asn	GTT	0	0	69.1	51.10	18.00	Inf	Asn	105.9	cytosolic	high confidence set
+chr1	85	126196365	126196294	Gln	CTG	0	0	45.2	35.20	10.00	Inf	Gln	62.7	cytosolic	secondary filtered
+chr1	86	126193456	126193385	Gln	CTG	0	0	45.2	35.20	10.00	Inf	Gln	62.7	cytosolic	secondary filtered
+chr1	87	126182043	126181972	Gln	CTG	0	0	43.4	35.20	8.20	Inf	Gln	58.8	cytosolic	secondary filtered
+chr1	88	125435754	125435683	Glu	CTC	0	0	66.3	42.10	24.20	Inf	Glu	106.2	cytosolic	high confidence set
+chr1	89	125434386	125434315	Gly	TCC	0	0	73.8	49.30	24.50	Inf	Gly	102.9	cytosolic	high confidence set
+chr1	90	125433438	125433367	His	GTG	0	0	60.1	29.80	30.30	Inf	His	104.9	cytosolic	high confidence set
+chr1	91	125432090	125432018	Lys	CTT	0	0	87.8	68.80	19.00	Inf	Lys	122.7	cytosolic	high confidence set
+chr1	92	124704934	124704861	Asn	GTT	0	0	36.6	22.30	14.30	Inf	Asn	70.9	cytosolic	secondary filtered
+chr1	93	124311047	124310974	Asn	GTT	0	0	48.9	44.60	4.30	Inf	Asn	77.0	cytosolic	pseudo
+chr1	94	124308057	124307984	Asn	GTT	0	0	44.9	43.00	1.90	Inf	Asn	68.1	cytosolic	pseudo
+chr1	95	94679413	94679341	Cys	GCA	0	0	77.8	57.60	20.20	Inf	Cys	112.6	cytosolic	high confidence set
+chr1	96	55571534	55571462	Lys	CTT	0	0	69.7	57.90	11.80	Inf	Lys	102.5	cytosolic	high confidence set
+chr1	97	16519635	16519565	Gly	CCC	0	0	69.6	50.60	19.00	Inf	Gly	102.8	cytosolic	high confidence set
+chr1	98	16510499	16510428	Glu	TTC	0	0	47.3	36.30	11.00	Inf	Glu	94.3	cytosolic	secondary filtered
+chr1	99	16507789	16507719	Glu	TTC	0	0	32.9	20.30	12.60	Inf	Glu	73.7	cytosolic	secondary filtered
+chr1	100	16490716	16490643	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr1	101	16489766	16489693	Asn	GTT	0	0	63.5	43.30	20.20	Inf	Asn	101.9	cytosolic	high confidence set
+chr1	102	16486886	16486813	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr1	103	7601115	7601046	Arg	TCG	0	0	36.1	34.30	1.80	Inf	Glu	57.8	cytosolic	pseudo,IPD:-51.30
+chr10	1	25416894	25416966	Undet	NNN	0	0	22.9	23.40	-0.50	Inf	Val	16.3	cytosolic	pseudo
+chr10	2	47705619	47705692	Undet	NNN	0	0	20.5	18.90	1.60	Inf	Ala	11.7	cytosolic	pseudo
+chr10	3	85403819	85403895	Ile	GAT	0	0	29.0	35.50	-6.50	Inf	Ile	43.4	cytosolic	pseudo
+chr10	4	145928555	145928483	Ser	TGA	0	0	20.3	36.60	-16.30	Inf	His	13.0	cytosolic	pseudo,IPD:-16.30
+chr10	5	25064950	25064877	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr10	7	6238234	6238139	Cys	GCA	0	0	20.7	20.90	-0.20	Inf	Cys	41.8	cytosolic	pseudo
+chr10	8	5901844	5901772	Val	TAC	0	0	73.6	50.30	23.30	Inf	Val	101.9	cytosolic	high confidence set
+chr11	1	9134167	9134246	Leu	CAA	0	0	52.1	52.40	-0.30	Inf	Met	82.9	cytosolic	pseudo,IPD:-92.00
+chr11	3	58694888	58694973	Arg	TCT	58694925	58694937	70.3	50.00	20.30	Inf	Arg	104.1	cytosolic	high confidence set
+chr11	4	58695349	58695431	Leu	TAA	0	0	85.0	53.40	31.60	Inf	Leu	110.5	cytosolic	high confidence set
+chr11	5	58700564	58700636	Lys	TTT	0	0	87.8	67.30	20.50	Inf	Lys	113.5	cytosolic	high confidence set
+chr11	6	65551293	65551374	Ser	GCT	0	0	89.1	62.10	27.00	Inf	Ser	127.7	cytosolic	high confidence set
+chr11	7	75308146	75308243	Pro	AGG	0	0	52.5	26.30	26.20	Inf	Pro	89.7	cytosolic	high confidence set
+chr11	9	109093746	109093828	Ser	AGA	0	0	34.5	24.80	9.70	Inf	Ser	47.3	cytosolic	secondary filtered
+chr11	10	122656023	122656095	Lys	TTT	0	0	87.7	66.60	21.10	Inf	Lys	111.3	cytosolic	high confidence set
+chr11	11	113520858	113520775	Leu	TAG	0	0	47.5	29.70	17.80	Inf	Leu	63.3	cytosolic	secondary filtered
+chr11	12	75308556	75308485	Pro	TGG	0	0	70.5	44.30	26.20	Inf	Pro	115.9	cytosolic	high confidence set
+chr11	13	58710563	58710491	Phe	GAA	0	0	87.9	67.40	20.50	Inf	Phe	123.6	cytosolic	high confidence set
+chr11	14	58704530	58704458	Lys	TTT	0	0	87.8	67.30	20.50	Inf	Lys	113.5	cytosolic	high confidence set
+chr11	15	58701704	58701632	Phe	GAA	0	0	88.9	68.40	20.50	Inf	Phe	124.5	cytosolic	high confidence set
+chr11	16	58694653	58694581	Val	TAC	0	0	80.5	52.30	28.20	Inf	Val	108.4	cytosolic	high confidence set
+chr11	17	58694285	58694213	Val	TAC	0	0	82.9	54.70	28.20	Inf	Val	108.5	cytosolic	high confidence set
+chr11	18	50220963	50220892	Ala	TGC	0	0	61.0	46.50	14.50	Inf	Ala	94.9	cytosolic	high confidence set
+chr11	19	48358445	48358368	Gln	CTG	0	0	23.2	27.70	-4.50	Inf	Gly	4.1	cytosolic	pseudo,IPD:-0.60
+chr11	20	20811586	20811504	Leu	TAA	0	0	90.8	62.10	28.70	Inf	Leu	104.9	cytosolic	high confidence set
+chr12	2	95749496	95749567	Asp	GTC	0	0	66.5	35.70	30.80	Inf	Asp	109.9	cytosolic	high confidence set
+chr12	3	98238483	98238554	Asp	GTC	0	0	65.4	34.70	30.70	Inf	Asp	112.7	cytosolic	high confidence set
+chr12	4	98239230	98239301	Trp	CCA	0	0	74.3	51.60	22.70	Inf	Trp	103.7	cytosolic	high confidence set
+chr12	5	122435877	122435947	Asp	GTC	0	0	30.3	12.70	17.60	Inf	Asp	53.6	cytosolic	secondary filtered
+chr12	6	125010545	125010616	Ala	TGC	0	0	76.2	51.80	24.40	Inf	Ala	106.8	cytosolic	high confidence set
+chr12	7	129418023	129418097	Ile	AAT	0	0	28.2	32.80	-4.60	Inf	Ile	26.2	cytosolic	pseudo
+chr12	8	125010297	125010226	Asp	GTC	0	0	66.5	35.70	30.80	Inf	Asp	109.9	cytosolic	high confidence set
+chr12	9	124999738	124999666	Phe	GAA	0	0	88.9	68.40	20.50	Inf	Phe	124.5	cytosolic	high confidence set
+chr12	10	124999223	124999152	Asp	GTC	0	0	66.5	35.70	30.80	Inf	Asp	109.9	cytosolic	high confidence set
+chr12	11	124991255	124991184	Ala	TGC	0	0	79.7	55.30	24.40	Inf	Ala	111.9	cytosolic	high confidence set
+chr12	12	57335413	57335341	Lys	TTT	0	0	43.0	40.20	2.80	Inf	Lys	72.8	cytosolic	pseudo
+chr12	13	29975820	29975739	Ser	CGA	0	0	89.6	61.30	28.30	Inf	Ser	126.6	cytosolic	high confidence set
+chr13	1	77364988	77364916	Phe	GAA	0	0	88.9	68.40	20.50	Inf	Phe	124.5	cytosolic	high confidence set
+chr13	2	26752670	26752599	Glu	TTC	0	0	71.2	46.50	24.70	Inf	Glu	103.6	cytosolic	high confidence set
+chr13	3	23271212	23271140	Glu	CTC	0	0	34.2	26.60	7.60	Inf	Glu	69.8	cytosolic	secondary filtered
+chr13	4	22854923	22854852	Glu	TTC	0	0	70.4	45.40	25.00	Inf	Glu	107.6	cytosolic	high confidence set
+chr13	5	12304048	12303975	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr14	1	24707853	24707934	Leu	TAG	0	0	38.7	35.60	3.10	Inf	Leu	61.8	cytosolic	pseudo
+chr14	2	24715700	24715785	Tyr	GTA	24715737	24715748	20.7	15.70	5.00	Inf	Cys	25.0	cytosolic	IPD:-1.00,secondary filtered
+chr14	3	24721727	24721820	Tyr	GTA	24721764	24721784	75.3	47.40	27.90	Inf	Tyr	118.0	cytosolic	high confidence set
+chr14	4	24724964	24725057	Tyr	GTA	24725001	24725021	68.1	44.20	23.90	Inf	Tyr	112.2	cytosolic	high confidence set
+chr14	5	24727443	24727536	Tyr	GTA	24727480	24727500	75.3	47.40	27.90	Inf	Tyr	118.0	cytosolic	high confidence set
+chr14	6	24731823	24731916	Tyr	GTA	24731860	24731880	75.3	47.40	27.90	Inf	Tyr	118.0	cytosolic	high confidence set
+chr14	7	24753773	24753845	Thr	TGT	0	0	78.8	54.70	24.10	Inf	Thr	93.4	cytosolic	high confidence set
+chr14	8	24769345	24769417	Thr	TGT	0	0	78.8	54.60	24.20	Inf	Thr	93.6	cytosolic	high confidence set
+chr14	9	24769723	24769794	Pro	AGG	0	0	41.5	23.00	18.50	Inf	Pro	86.3	cytosolic	secondary filtered
+chr14	10	24773769	24773840	Pro	AGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr14	11	56591550	56591621	Cys	GCA	0	0	77.3	57.00	20.30	Inf	Cys	117.1	cytosolic	high confidence set
+chr14	12	72815638	72815710	Ala	AGC	0	0	62.3	37.90	24.40	Inf	Ala	93.6	cytosolic	high confidence set
+chr14	13	86340241	86340314	Ile	AAT	0	0	81.2	64.80	16.40	Inf	Ile	114.0	cytosolic	high confidence set
+chr14	14	57209595	57209517	Lys	TTT	0	0	54.9	48.90	6.00	Inf	Lys	75.0	cytosolic	secondary filtered
+chr14	15	41492545	41492473	Lys	CTT	0	0	88.0	69.30	18.70	Inf	Lys	119.6	cytosolic	high confidence set
+chr14	16	24773073	24772992	Leu	AAG	0	0	74.8	55.10	19.70	Inf	Leu	116.5	cytosolic	high confidence set
+chr14	17	24759638	24759557	Leu	TAG	0	0	74.1	54.10	20.00	Inf	Leu	113.9	cytosolic	high confidence set
+chr14	18	24751999	24751928	Pro	TGG	0	0	74.9	48.50	26.40	Inf	Pro	121.6	cytosolic	high confidence set
+chr14	19	24703283	24703211	Thr	TGT	0	0	78.0	54.80	23.20	Inf	Thr	93.1	cytosolic	high confidence set
+chr14	20	24701700	24701612	Tyr	GTA	24701663	24701648	75.5	47.60	27.90	Inf	Tyr	118.0	cytosolic	high confidence set
+chr14	21	24700954	24700883	Pro	TGG	0	0	70.3	43.90	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr14	22	22445562	22445490	Arg	ACG	0	0	67.6	45.90	21.70	Inf	Arg	101.0	cytosolic	high confidence set
+chr15	1	23360948	23361019	His	GTG	0	0	60.1	29.80	30.30	Inf	His	104.9	cytosolic	high confidence set
+chr15	2	57642360	57642432	Lys	CTT	0	0	88.0	69.30	18.70	Inf	Lys	119.6	cytosolic	high confidence set
+chr15	3	58515655	58515727	Cys	GCA	0	0	68.1	47.80	20.30	Inf	Cys	98.5	cytosolic	high confidence set
+chr15	4	58517561	58517633	Cys	GCA	0	0	62.5	42.20	20.30	Inf	Cys	89.0	cytosolic	high confidence set
+chr15	5	67927276	67927348	Arg	TCG	0	0	74.8	55.10	19.70	Inf	Arg	107.1	cytosolic	high confidence set
+chr15	6	74714671	74714743	Lys	CTT	0	0	26.3	22.40	3.90	Inf	Lys	56.8	cytosolic	pseudo,trunc_start:9
+chr15	7	74706672	74706600	Lys	CTT	0	0	26.3	22.40	3.90	Inf	Lys	56.8	cytosolic	pseudo,trunc_start:9
+chr15	8	55090770	55090697	Lys	CTT	0	0	35.8	42.80	-7.00	Inf	Lys	64.5	cytosolic	pseudo
+chr15	9	44348300	44348229	Gln	CTG	0	0	71.5	44.00	27.50	Inf	Gln	112.1	cytosolic	high confidence set
+chr15	10	23360282	23360211	His	GTG	0	0	60.1	29.80	30.30	Inf	His	104.9	cytosolic	high confidence set
+chr15	11	23358489	23358418	His	GTG	0	0	60.1	29.80	30.30	Inf	His	104.9	cytosolic	high confidence set
+chr15	12	18565240	18565159	Ser	GCT	0	0	88.4	61.60	26.80	Inf	Ser	127.3	cytosolic	high confidence set
+chr15	13	4532816	4532745	Glu	TTC	0	0	71.2	46.50	24.70	Inf	Glu	103.6	cytosolic	high confidence set
+chr16	1	3053227	3053299	Lys	CTT	0	0	56.3	44.60	11.70	Inf	Lys	89.2	cytosolic	high confidence set
+chr16	2	3283279	3283351	Arg	CCG	0	0	67.0	49.40	17.60	Inf	Arg	100.7	cytosolic	high confidence set
+chr16	3	3285966	3286038	Arg	CCT	0	0	71.7	56.30	15.40	Inf	Arg	98.4	cytosolic	high confidence set
+chr16	4	3291878	3291949	Pro	TGG	0	0	70.3	43.90	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr16	5	3293315	3293409	Pro	AGG	3293351	3293366	33.8	25.00	8.80	Inf	Pro	84.5	cytosolic	secondary filtered
+chr16	6	3297652	3297724	Lys	CTT	0	0	81.8	64.10	17.70	Inf	Lys	117.5	cytosolic	high confidence set
+chr16	7	3304772	3304843	Pro	CGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr16	8	3306954	3307030	Lys	CTT	0	0	57.6	45.00	12.60	Inf	Lys	91.6	cytosolic	high confidence set
+chr16	9	3310723	3310795	Lys	CTT	0	0	87.8	68.80	19.00	Inf	Lys	122.7	cytosolic	high confidence set
+chr16	10	3321559	3321630	Pro	TGG	0	0	35.1	23.90	11.20	Inf	Pro	90.2	cytosolic	trunc_end:11,secondary filtered
+chr16	11	3323094	3323165	Pro	AGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr16	12	3324965	3325037	Lys	CTT	0	0	87.8	68.80	19.00	Inf	Lys	122.7	cytosolic	high confidence set
+chr16	13	3325453	3325524	Pro	AGG	0	0	44.4	39.00	5.40	Inf	Pro	84.7	cytosolic	secondary filtered
+chr16	14	3327388	3327460	Arg	CCT	0	0	72.3	54.00	18.30	Inf	Arg	98.8	cytosolic	high confidence set
+chr16	15	3329631	3329703	Lys	CTT	0	0	51.3	56.40	-5.10	Inf	Lys	73.7	cytosolic	pseudo
+chr16	17	8973932	8974001	His	GTG	0	0	20.3	0.00	20.30	Inf	Thr	-2.4	cytosolic	pseudo,IPD:-6.80
+chr16	18	14775899	14775970	Thr	CGT	0	0	79.6	56.00	23.60	Inf	Thr	97.3	cytosolic	high confidence set
+chr16	19	22509116	22509197	Leu	AAG	0	0	74.8	55.10	19.70	Inf	Leu	116.5	cytosolic	high confidence set
+chr16	20	47943100	47943182	Leu	CAG	0	0	77.3	47.50	29.80	Inf	Leu	124.5	cytosolic	high confidence set
+chr16	21	61826291	61826361	Gly	GCC	0	0	48.3	42.90	5.40	Inf	Gly	84.2	cytosolic	secondary filtered
+chr16	22	61827104	61827174	Gly	GCC	0	0	49.0	37.20	11.80	Inf	Gly	76.5	cytosolic	secondary filtered
+chr16	23	62482353	62482425	Met	CAT	0	0	82.7	58.80	23.90	Inf	Met	110.6	cytosolic	high confidence set
+chr16	24	71652143	71652067	Ala	GGC	0	0	28.0	34.10	-6.10	Inf	Cys	16.6	cytosolic	pseudo,IPD:-23.20
+chr16	25	64589228	64589156	Lys	TTT	0	0	89.0	67.80	21.20	Inf	Lys	110.6	cytosolic	high confidence set
+chr16	26	61816712	61816642	Gly	GCC	0	0	81.0	59.90	21.10	Inf	Gly	111.7	cytosolic	high confidence set
+chr16	27	61815893	61815815	Gly	GCC	0	0	48.2	43.20	5.00	Inf	Gly	79.0	cytosolic	secondary filtered
+chr16	28	47943714	47943632	Leu	CAG	0	0	77.3	47.50	29.80	Inf	Leu	124.5	cytosolic	high confidence set
+chr16	29	22407739	22407658	Leu	TAG	0	0	73.9	57.10	16.80	Inf	Leu	115.7	cytosolic	high confidence set
+chr16	30	9007538	9007469	His	GTG	0	0	20.3	0.00	20.30	Inf	Thr	-2.4	cytosolic	pseudo,IPD:-6.80
+chr16	31	5215569	5215490	Leu	CAG	0	0	24.4	26.00	-1.60	Inf	Lys	-6.1	cytosolic	pseudo,IPD:6.10
+chr16	32	3317543	3317472	Pro	TGG	0	0	70.3	43.90	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr16	33	3316073	3316002	Pro	AGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr16	34	3314008	3313936	Lys	CTT	0	0	87.8	68.80	19.00	Inf	Lys	122.7	cytosolic	high confidence set
+chr16	35	3303747	3303677	Pro	TGG	0	0	20.7	22.70	-2.00	Inf	Pro	57.0	cytosolic	pseudo
+chr16	36	3290462	3290390	Lys	CTT	0	0	78.5	65.90	12.60	Inf	Lys	114.7	cytosolic	high confidence set
+chr16	37	658066	657996	Gly	CCC	0	0	75.1	46.00	29.10	Inf	Gly	100.7	cytosolic	high confidence set
+chr17	1	8150450	8150522	Lys	TTT	0	0	87.8	67.30	20.50	Inf	Lys	113.5	cytosolic	high confidence set
+chr17	2	8151039	8151110	Gln	CTG	0	0	71.5	44.00	27.50	Inf	Gln	112.1	cytosolic	high confidence set
+chr17	3	8152200	8152288	Arg	TCT	8152237	8152252	70.8	50.50	20.30	Inf	Arg	101.4	cytosolic	high confidence set
+chr17	4	8157021	8157091	Gly	GCC	0	0	81.0	59.90	21.10	Inf	Gly	111.7	cytosolic	high confidence set
+chr17	5	8218661	8218732	Trp	CCA	0	0	73.3	50.60	22.70	Inf	Trp	106.9	cytosolic	high confidence set
+chr17	6	8219169	8219250	Ser	GCT	0	0	88.4	61.60	26.80	Inf	Ser	127.3	cytosolic	high confidence set
+chr17	7	8219463	8219536	Thr	AGT	0	0	82.6	61.60	21.00	Inf	Thr	105.0	cytosolic	high confidence set
+chr17	8	8219896	8219969	Ile	AAT	0	0	81.2	64.80	16.40	Inf	Ile	114.0	cytosolic	high confidence set
+chr17	9	8249687	8249758	Gly	TCC	0	0	73.8	49.30	24.50	Inf	Gly	102.9	cytosolic	high confidence set
+chr17	10	8255193	8255120	Ile	AAT	0	0	64.3	59.70	4.60	Inf	Ile	90.0	cytosolic	secondary filtered
+chr17	11	8254822	8254741	Ser	AGA	0	0	89.6	56.90	32.70	Inf	Ser	133.1	cytosolic	high confidence set
+chr17	12	8254440	8254367	Thr	AGT	0	0	82.6	61.60	21.00	Inf	Thr	105.0	cytosolic	high confidence set
+chr17	13	8251040	8250969	Pro	CGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr17	14	8250446	8250375	Asp	GTC	0	0	66.5	35.70	30.80	Inf	Asp	109.9	cytosolic	high confidence set
+chr17	15	8249071	8249000	Trp	CCA	0	0	73.4	53.00	20.40	Inf	Trp	105.5	cytosolic	high confidence set
+chr17	16	8172102	8172029	Thr	AGT	0	0	80.1	59.10	21.00	Inf	Thr	101.8	cytosolic	high confidence set
+chr17	17	8171560	8171479	Ser	CGA	0	0	95.1	66.10	29.00	Inf	Ser	130.4	cytosolic	high confidence set
+chr17	18	8151674	8151593	Leu	TAG	0	0	75.2	53.50	21.70	Inf	Leu	119.1	cytosolic	high confidence set
+chr18	1	42750006	42750077	Glu	CTC	0	0	24.4	28.10	-3.70	Inf	Glu	50.9	cytosolic	pseudo
+chr18	2	55007768	55007839	Gly	TCC	0	0	36.2	35.20	1.00	Inf	Gly	67.4	cytosolic	pseudo
+chr18	3	59921751	59921683	Phe	GAA	0	0	23.1	32.90	-9.80	Inf	Phe	67.4	cytosolic	pseudo,trunc_start:14
+chr18	4	43127608	43127536	Lys	CTT	0	0	58.9	50.70	8.20	Inf	Lys	92.7	cytosolic	trunc_start:3,secondary filtered
+chr19	1	1183431	1183504	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr19	2	11940912	11940985	Ala	GGC	0	0	37.8	22.40	15.40	Inf	Thr	50.2	cytosolic	IPD:-30.80,secondary filtered
+chr19	3	32613482	32613555	Thr	AGT	0	0	82.6	61.60	21.00	Inf	Thr	105.0	cytosolic	high confidence set
+chr19	4	35093914	35093986	Lys	CTT	0	0	55.5	43.00	12.50	Inf	Lys	81.9	cytosolic	high confidence set
+chr19	5	51246584	51246514	Lys	CTT	0	0	47.6	39.80	7.80	Inf	Lys	90.3	cytosolic	trunc_start:2,secondary filtered
+chr19	6	48832426	48832354	Lys	TTT	0	0	62.9	55.90	7.00	Inf	Lys	80.2	cytosolic	secondary filtered
+chr19	7	44733343	44733257	SeC	TCA	0	0	146.9	0.00	0.00	Inf	SeC	146.9	cytosolic	high confidence set
+chr19	8	40714086	40714014	Lys	TTT	0	0	65.5	60.00	5.50	Inf	Lys	87.8	cytosolic	secondary filtered
+chr19	9	38941608	38941516	Ile	TAT	38941570	38941552	73.8	45.60	28.20	Inf	Ile	106.3	cytosolic	high confidence set
+chr19	10	4466767	4466695	Val	CAC	0	0	80.4	50.30	30.10	Inf	Val	114.3	cytosolic	high confidence set
+chr19	11	1183300	1183228	Phe	GAA	0	0	87.9	67.40	20.50	Inf	Phe	123.6	cytosolic	high confidence set
+chr1_CABD030129442v1_random	1	4458	4540	Leu	CAG	0	0	78.2	47.50	30.70	Inf	Leu	124.9	cytosolic	high confidence set
+chr1_CABD030129442v1_random	2	3828	3757	Asp	GTC	0	0	66.5	35.70	30.80	Inf	Asp	109.9	cytosolic	high confidence set
+chr1_CABD030129442v1_random	3	3148	3077	Gly	TCC	0	0	73.8	49.30	24.50	Inf	Gly	102.9	cytosolic	high confidence set
+chr1_CABD030129442v1_random	4	2790	2719	Glu	CTC	0	0	73.2	49.00	24.20	Inf	Glu	113.6	cytosolic	high confidence set
+chr20	1	18076144	18076221	Undet	NNN	0	0	36.7	35.80	0.90	Inf	Cys	20.4	cytosolic	pseudo
+chr20	2	49227533	49227452	Leu	AAG	0	0	45.4	41.50	3.90	Inf	Leu	72.8	cytosolic	pseudo
+chr21	1	8511969	8511899	Gly	GCC	0	0	80.9	60.10	20.80	Inf	Gly	108.6	cytosolic	high confidence set
+chr21	2	8507083	8507013	Gly	GCC	0	0	80.9	60.10	20.80	Inf	Gly	108.6	cytosolic	high confidence set
+chr22	1	27716298	27716381	SeC	TCA	0	0	114.0	0.00	0.00	Inf	SeC	114.0	cytosolic	high confidence set
+chr22	2	13834765	13834687	Undet	NNN	0	0	22.3	21.40	0.90	Inf	His	6.6	cytosolic	pseudo
+chr2A	1	36626490	36626560	Gly	CCC	0	0	75.1	46.00	29.10	Inf	Gly	100.7	cytosolic	high confidence set
+chr2A	2	61473527	61473599	Gln	TTG	0	0	38.0	37.80	0.20	Inf	Gln	35.2	cytosolic	pseudo
+chr2A	3	106459306	106459379	Ile	AAT	0	0	86.3	64.40	21.90	Inf	Ile	114.6	cytosolic	high confidence set
+chr2A	4	95920411	95920336	Glu	CTC	0	0	37.0	38.90	-1.90	Inf	Glu	65.3	cytosolic	pseudo
+chr2A	5	80353446	80353358	Tyr	GTA	80353409	80353394	77.9	50.10	27.80	Inf	Tyr	119.0	cytosolic	high confidence set
+chr2A	6	80353014	80352942	Ala	AGC	0	0	59.7	36.10	23.60	Inf	Ala	92.8	cytosolic	high confidence set
+chr2A	7	77295884	77295812	Leu	AAG	0	0	50.2	35.40	14.80	Inf	Arg	71.8	cytosolic	IPD:-73.10,isotype mismatch
+chr2A	8	64470066	64469974	Ile	TAT	64470028	64470010	73.2	45.00	28.20	Inf	Ile	105.7	cytosolic	high confidence set
+chr2A	9	54316401	54316326	Ser	CGA	0	0	27.0	17.80	9.20	Inf	Ser	28.2	cytosolic	trunc_end:35,secondary filtered
+chr2A	10	21919059	21918987	Val	TAC	0	0	47.6	29.80	17.80	Inf	Val	70.8	cytosolic	secondary filtered
+chr2B	1	42460065	42460136	Glu	CTC	0	0	22.0	21.10	0.90	Inf	Glu	46.4	cytosolic	pseudo
+chr2B	2	48591495	48591566	Ala	CGC	0	0	74.4	54.40	20.00	Inf	Ala	109.6	cytosolic	high confidence set
+chr2B	4	98261471	98261543	Glu	CTC	0	0	28.0	24.10	3.90	Inf	Glu	61.8	cytosolic	pseudo
+chr2B	5	111454395	111454487	Tyr	ATA	111454432	111454451	57.6	34.30	23.30	Inf	Tyr	92.4	cytosolic	unexpected anticodon
+chr2B	6	111834569	111834636	Ser	TGA	0	0	26.3	27.40	-1.10	Inf	His	17.8	cytosolic	pseudo,IPD:-32.10
+chr2B	7	118187322	118187402	His	GTG	0	0	24.2	12.40	11.80	Inf	His	37.8	cytosolic	trunc_end:12,secondary filtered
+chr2B	8	116533589	116533517	Lys	TTT	0	0	33.6	40.40	-6.80	Inf	Lys	52.6	cytosolic	pseudo
+chr2B	9	51106929	51106857	Glu	CTC	0	0	27.2	24.80	2.40	Inf	Glu	64.3	cytosolic	pseudo
+chr2B	10	48591943	48591873	Gly	GCC	0	0	81.0	59.90	21.10	Inf	Gly	111.7	cytosolic	high confidence set
+chr2B	11	43941615	43941548	Leu	CAA	0	0	22.0	15.20	6.80	Inf	His	2.9	cytosolic	IPD:-15.40,secondary filtered
+chr2B	12	22322976	22322905	Glu	TTC	0	0	70.4	45.40	25.00	Inf	Glu	107.6	cytosolic	high confidence set
+chr3	1	15484941	15485016	Lys	TTT	0	0	41.4	30.50	10.90	Inf	Lys	72.2	cytosolic	secondary filtered
+chr3	2	125877830	125877902	Pro	GGG	0	0	20.7	19.20	1.50	Inf	Pro	13.2	cytosolic	pseudo
+chr3	3	169706620	169706693	Ile	AAT	0	0	23.2	27.20	-4.00	Inf	Ile	37.2	cytosolic	pseudo
+chr3	4	172568283	172568355	Val	AAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr3	5	186705543	186705624	Ser	TGA	0	0	94.0	64.50	29.50	Inf	Ser	126.7	cytosolic	high confidence set
+chr3	6	187764772	187764702	Asp	GTC	0	0	38.2	16.30	21.90	Inf	Asp	68.8	cytosolic	secondary filtered
+chr3	7	134243091	134243020	Cys	GCA	0	0	77.2	56.90	20.30	Inf	Cys	117.0	cytosolic	high confidence set
+chr3	8	134240396	134240325	Cys	GCA	0	0	79.3	62.00	17.30	Inf	Cys	115.9	cytosolic	high confidence set
+chr3	9	112841589	112841512	Undet	NNN	0	0	25.5	24.40	1.10	Inf	Asp	15.2	cytosolic	pseudo
+chr3	10	46555861	46555789	Arg	ACG	0	0	64.2	45.60	18.60	Inf	Arg	98.9	cytosolic	high confidence set
+chr3	11	45318960	45318880	Lys	TTT	0	0	25.2	29.80	-4.60	Inf	Cys	11.7	cytosolic	pseudo,IPD:-14.50
+chr4	2	135492495	135492424	Cys	GCA	0	0	81.8	61.50	20.30	Inf	Cys	118.4	cytosolic	high confidence set
+chr4	3	40716999	40716927	Gln	TTG	0	0	31.7	26.80	4.90	Inf	Arg	38.8	cytosolic	pseudo,IPD:-41.50
+chr4	4	7487340	7487264	Sup	TTA	0	0	22.0	42.20	-20.20	Inf	Cys	8.6	cytosolic	pseudo,IPD:-8.60
+chr5	1	628674	628745	iMet	CAT	0	0	60.4	30.80	29.60	Inf	iMet	130.6	cytosolic	high confidence set
+chr5	2	8006426	8006498	Arg	CCT	0	0	71.1	52.80	18.30	Inf	Arg	99.8	cytosolic	high confidence set
+chr5	3	14736384	14736458	Cys	GCA	0	0	27.4	22.90	4.50	Inf	His	20.0	cytosolic	pseudo,IPD:-22.00
+chr5	4	15094597	15094669	Arg	CCG	0	0	64.9	47.20	17.70	Inf	Arg	96.9	cytosolic	high confidence set
+chr5	5	15114692	15114764	Arg	CCG	0	0	64.9	47.20	17.70	Inf	Arg	96.9	cytosolic	high confidence set
+chr5	6	18700859	18700932	Thr	AGT	0	0	48.0	33.00	15.00	Inf	Thr	67.7	cytosolic	secondary filtered
+chr5	7	43366228	43366298	Sup	TCA	0	0	32.0	29.00	3.00	Inf	Arg	39.6	cytosolic	pseudo,IPD:-39.60,trunc_start:4
+chr5	8	43400643	43400715	Val	TAC	0	0	50.4	35.90	14.50	Inf	Val	77.3	cytosolic	high confidence set
+chr5	9	44329067	44329138	Cys	GCA	0	0	81.9	61.60	20.30	Inf	Cys	118.5	cytosolic	high confidence set
+chr5	10	44329824	44329895	Cys	GCA	0	0	81.9	61.60	20.30	Inf	Cys	118.5	cytosolic	high confidence set
+chr5	11	44622769	44622840	Cys	GCA	0	0	81.8	62.50	19.30	Inf	Cys	118.1	cytosolic	high confidence set
+chr5	12	44629246	44629310	Cys	GCA	0	0	46.1	30.50	15.60	Inf	Cys	78.2	cytosolic	secondary filtered
+chr5	13	44658719	44658791	Cys	GCA	0	0	57.1	48.00	9.10	Inf	Cys	77.7	cytosolic	secondary filtered
+chr5	14	44746329	44746402	Asn	GTT	0	0	80.9	55.20	25.70	Inf	Asn	120.1	cytosolic	high confidence set
+chr5	16	136368829	136369008	Cys	ACA	136368865	136368965	35.7	39.80	-4.10	Inf	Cys	40.2	cytosolic	pseudo
+chr5	17	165129783	165129864	Leu	AAG	0	0	75.2	53.50	21.70	Inf	Leu	119.1	cytosolic	high confidence set
+chr5	18	165194007	165194079	Val	AAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr5	19	165198060	165198132	Val	CAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr5	20	165216044	165216125	Leu	AAG	0	0	74.8	55.10	19.70	Inf	Leu	116.5	cytosolic	high confidence set
+chr5	21	165235260	165235331	Ala	TGC	0	0	79.7	55.30	24.40	Inf	Ala	111.9	cytosolic	high confidence set
+chr5	22	165236143	165236215	Lys	CTT	0	0	87.8	68.80	19.00	Inf	Lys	122.7	cytosolic	high confidence set
+chr5	23	165250361	165250289	Val	CAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr5	24	165249939	165249867	Lys	CTT	0	0	87.8	68.80	19.00	Inf	Lys	122.7	cytosolic	high confidence set
+chr5	25	165246264	165246192	Val	AAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr5	26	165220108	165220036	Thr	TGT	0	0	78.8	54.70	24.10	Inf	Thr	93.4	cytosolic	high confidence set
+chr5	27	165217274	165217203	Pro	TGG	0	0	70.3	43.90	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr5	28	165216842	165216770	Val	AAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr5	29	165198535	165198454	Leu	AAG	0	0	75.2	53.50	21.70	Inf	Leu	119.1	cytosolic	high confidence set
+chr5	30	165130268	165130196	Val	CAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr5	31	152414872	152414801	Lys	CTT	0	0	26.5	22.10	4.40	Inf	Lys	40.2	cytosolic	pseudo
+chr5	32	125980057	125979986	Asp	GTC	0	0	40.1	25.00	15.10	Inf	Asp	82.5	cytosolic	secondary filtered
+chr5	33	59300045	59299974	Trp	CCA	0	0	75.1	52.40	22.70	Inf	Trp	106.3	cytosolic	high confidence set
+chr5	34	58943851	58943781	Gly	CCC	0	0	66.6	53.80	12.80	Inf	Gly	97.6	cytosolic	high confidence set
+chr5	35	51836300	51836229	Thr	CGT	0	0	78.3	58.20	20.10	Inf	Thr	93.8	cytosolic	high confidence set
+chr5	36	44624480	44624409	Cys	GCA	0	0	81.9	61.60	20.30	Inf	Cys	118.5	cytosolic	high confidence set
+chr5	37	34281955	34281884	Gln	TTG	0	0	72.6	45.70	26.90	Inf	Gln	112.0	cytosolic	high confidence set
+chr5	38	22508000	22507930	Sup	TTA	0	0	49.1	42.10	7.00	Inf	Lys	76.2	cytosolic	IPD:-76.20,secondary filtered
+chr5	39	22497478	22497408	Sup	TTA	0	0	49.1	42.10	7.00	Inf	Lys	76.2	cytosolic	IPD:-76.20,secondary filtered
+chr5	40	8007022	8006950	Arg	CCT	0	0	72.3	54.00	18.30	Inf	Arg	98.8	cytosolic	high confidence set
+chr5	41	8005819	8005747	Arg	TCG	0	0	68.8	48.90	19.90	Inf	Arg	102.3	cytosolic	high confidence set
+chr6	1	19365568	19365639	Gln	CTG	0	0	64.2	43.60	20.60	Inf	Gln	104.4	cytosolic	high confidence set
+chr6	2	26881929	26882000	iMet	CAT	0	0	60.4	30.80	29.60	Inf	iMet	130.6	cytosolic	high confidence set
+chr6	3	26896950	26897022	Arg	TCG	0	0	60.0	45.50	14.50	Inf	Arg	84.2	cytosolic	high confidence set
+chr6	4	26919559	26919631	Arg	TCG	0	0	70.3	47.80	22.50	Inf	Arg	97.8	cytosolic	high confidence set
+chr6	5	26924824	26924905	Ser	AGA	0	0	89.6	56.90	32.70	Inf	Ser	133.1	cytosolic	high confidence set
+chr6	6	26925375	26925447	Arg	ACG	0	0	67.6	45.90	21.70	Inf	Arg	101.0	cytosolic	high confidence set
+chr6	7	27126142	27126224	Leu	CAG	0	0	78.2	47.50	30.70	Inf	Leu	124.9	cytosolic	high confidence set
+chr6	8	27142435	27142507	Arg	ACG	0	0	67.6	45.90	21.70	Inf	Arg	101.0	cytosolic	high confidence set
+chr6	9	27142990	27143062	Val	CAC	0	0	79.4	49.30	30.10	Inf	Val	116.7	cytosolic	high confidence set
+chr6	10	27158651	27158722	Ala	CGC	0	0	79.7	55.30	24.40	Inf	Ala	113.7	cytosolic	high confidence set
+chr6	11	27159270	27159343	Ile	AAT	0	0	81.2	64.80	16.40	Inf	Ile	114.0	cytosolic	high confidence set
+chr6	12	27160416	27160487	Pro	AGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr6	13	27161660	27161732	Lys	CTT	0	0	87.8	68.80	19.00	Inf	Lys	122.7	cytosolic	high confidence set
+chr6	14	27175618	27175708	Tyr	GTA	27175655	27175672	77.9	50.00	27.90	Inf	Tyr	120.3	cytosolic	high confidence set
+chr6	15	27182337	27182426	Tyr	GTA	27182374	27182390	75.4	50.50	24.90	Inf	Tyr	115.0	cytosolic	high confidence set
+chr6	16	27183870	27183958	Tyr	GTA	27183907	27183922	78.0	50.10	27.90	Inf	Tyr	120.3	cytosolic	high confidence set
+chr6	17	27202037	27202125	Tyr	GTA	27202074	27202089	75.1	48.90	26.20	Inf	Tyr	117.5	cytosolic	high confidence set
+chr6	18	27222149	27222237	Tyr	GTA	27222186	27222201	75.1	48.90	26.20	Inf	Tyr	117.5	cytosolic	high confidence set
+chr6	19	27298379	27298451	Ala	AGC	0	0	58.9	34.90	24.00	Inf	Ala	94.1	cytosolic	high confidence set
+chr6	20	27321627	27321699	Met	CAT	0	0	74.8	50.90	23.90	Inf	Met	106.9	cytosolic	high confidence set
+chr6	21	27325501	27325573	Ala	AGC	0	0	59.1	36.50	22.60	Inf	Ala	89.3	cytosolic	high confidence set
+chr6	22	27371631	27371703	Ala	AGC	0	0	28.7	26.20	2.50	Inf	Ala	53.5	cytosolic	pseudo
+chr6	23	27372343	27372415	Ala	AGC	0	0	53.7	29.60	24.10	Inf	Ala	86.3	cytosolic	high confidence set
+chr6	24	27392414	27392486	Met	CAT	0	0	82.7	58.80	23.90	Inf	Met	110.6	cytosolic	high confidence set
+chr6	25	27407428	27407501	Ile	AAT	0	0	87.6	64.40	23.20	Inf	Ile	115.0	cytosolic	high confidence set
+chr6	26	27578766	27578859	Ile	TAT	27578804	27578823	73.1	45.00	28.10	Inf	Ile	105.7	cytosolic	high confidence set
+chr6	27	27650424	27650495	Pro	CGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr6	28	27655981	27656062	Ser	GCT	0	0	88.4	61.60	26.80	Inf	Ser	127.3	cytosolic	high confidence set
+chr6	29	27719322	27719394	Undet	NNN	0	0	30.6	27.50	3.10	Inf	Val	60.4	cytosolic	pseudo
+chr6	30	27727220	27727291	His	GTG	0	0	60.1	29.80	30.30	Inf	His	104.9	cytosolic	high confidence set
+chr6	31	27731361	27731434	Thr	AGT	0	0	77.5	60.60	16.90	Inf	Thr	97.2	cytosolic	high confidence set
+chr6	32	27777579	27777660	Ser	CGA	0	0	92.1	63.10	29.00	Inf	Ser	120.5	cytosolic	high confidence set
+chr6	33	27782985	27783057	Arg	ACG	0	0	67.1	44.90	22.20	Inf	Arg	100.9	cytosolic	high confidence set
+chr6	34	27801888	27801960	Val	AAC	0	0	74.3	44.30	30.00	Inf	Val	110.7	cytosolic	high confidence set
+chr6	35	27827824	27827898	Ile	AAT	0	0	24.3	23.20	1.10	Inf	Ile	33.8	cytosolic	pseudo
+chr6	36	27840827	27840900	Ile	AAT	0	0	79.5	61.90	17.60	Inf	Ile	106.8	cytosolic	high confidence set
+chr6	37	27852641	27852714	Ile	AAT	0	0	37.6	42.00	-4.40	Inf	Ile	63.1	cytosolic	pseudo
+chr6	38	27859269	27859341	Val	TAC	0	0	63.0	32.60	30.40	Inf	Val	99.7	cytosolic	high confidence set
+chr6	39	27862542	27862615	Ile	AAT	0	0	29.9	28.10	1.80	Inf	Ile	55.6	cytosolic	pseudo
+chr6	40	27864093	27864164	Gln	CTG	0	0	70.0	42.20	27.80	Inf	Gln	112.2	cytosolic	high confidence set
+chr6	41	27866655	27866736	Ser	GCT	0	0	86.2	61.30	24.90	Inf	Ser	120.7	cytosolic	high confidence set
+chr6	42	28059199	28059280	Ser	AGA	0	0	89.6	56.90	32.70	Inf	Ser	133.1	cytosolic	high confidence set
+chr6	43	28060232	28060303	Asp	GTC	0	0	66.5	35.70	30.80	Inf	Asp	109.9	cytosolic	high confidence set
+chr6	44	28074823	28074904	Ser	AGA	0	0	89.6	56.90	32.70	Inf	Ser	133.1	cytosolic	high confidence set
+chr6	45	28082231	28082312	Ser	AGA	0	0	89.6	56.90	32.70	Inf	Ser	133.1	cytosolic	high confidence set
+chr6	46	28082936	28083007	Asp	GTC	0	0	64.4	31.90	32.50	Inf	Asp	101.9	cytosolic	high confidence set
+chr6	47	28097617	28097688	Gln	CTG	0	0	71.5	44.00	27.50	Inf	Gln	112.1	cytosolic	high confidence set
+chr6	48	28116744	28116825	Ser	AGA	0	0	90.3	57.50	32.80	Inf	Ser	133.5	cytosolic	high confidence set
+chr6	49	28130067	28130148	Ser	TGA	0	0	85.8	55.10	30.70	Inf	Ser	127.6	cytosolic	high confidence set
+chr6	50	28146580	28146666	Arg	TCT	28146617	28146630	70.7	51.20	19.50	Inf	Arg	104.2	cytosolic	high confidence set
+chr6	51	28160503	28160575	Lys	TTT	0	0	78.6	61.60	17.00	Inf	Lys	103.1	cytosolic	high confidence set
+chr6	52	28202648	28202720	Arg	CCT	0	0	64.9	44.30	20.60	Inf	Thr	78.4	cytosolic	IPD:-18.30,isotype mismatch
+chr6	53	28215768	28215861	Ile	TAT	28215806	28215825	73.1	45.00	28.10	Inf	Ile	105.7	cytosolic	high confidence set
+chr6	54	28255412	28255487	Phe	GAA	28255449	28255451	44.3	41.10	3.20	Inf	Phe	70.7	cytosolic	pseudo
+chr6	55	28259214	28259287	Ile	AAT	0	0	81.2	64.80	16.40	Inf	Ile	114.0	cytosolic	high confidence set
+chr6	56	28279398	28279471	Ile	AAT	0	0	86.3	64.40	21.90	Inf	Ile	114.6	cytosolic	high confidence set
+chr6	57	28319282	28319355	Thr	AGT	0	0	81.2	60.00	21.20	Inf	Thr	100.2	cytosolic	high confidence set
+chr6	58	28362830	28362901	Ile	TAT	0	0	49.2	22.60	26.60	Inf	iMet	123.1	cytosolic	IPD:-83.20,secondary filtered
+chr6	59	28809645	28809726	Ser	GCT	0	0	88.4	61.60	26.80	Inf	Ser	127.3	cytosolic	high confidence set
+chr6	60	29098849	29098921	Met	CAT	0	0	21.3	27.70	-6.40	Inf	Met	40.0	cytosolic	pseudo
+chr6	61	29157424	29157517	Ile	TAT	29157462	29157481	72.1	44.00	28.10	Inf	Ile	104.7	cytosolic	high confidence set
+chr6	62	29209455	29209526	Gln	TTG	0	0	67.8	40.60	27.20	Inf	Gln	107.7	cytosolic	high confidence set
+chr6	63	29227560	29227631	Ala	AGC	0	0	80.3	57.00	23.30	Inf	Ala	112.9	cytosolic	high confidence set
+chr6	64	29275038	29275109	Ala	TGC	0	0	79.7	55.30	24.40	Inf	Ala	113.7	cytosolic	high confidence set
+chr6	65	29342189	29342260	Ala	AGC	0	0	84.2	60.20	24.00	Inf	Ala	112.2	cytosolic	high confidence set
+chr6	66	29351381	29351452	Ala	AGC	0	0	84.7	61.10	23.60	Inf	Ala	112.0	cytosolic	high confidence set
+chr6	67	29357695	29357768	Thr	AGT	0	0	81.0	60.10	20.90	Inf	Thr	103.4	cytosolic	high confidence set
+chr6	68	29360973	29361044	Ala	CGC	0	0	76.1	56.20	19.90	Inf	Ala	105.8	cytosolic	high confidence set
+chr6	69	29380465	29380537	Lys	TTT	0	0	78.2	64.70	13.50	Inf	Lys	96.2	cytosolic	high confidence set
+chr6	70	29392862	29392926	Undet	NNN	0	0	40.7	34.40	6.30	Inf	Phe	74.9	cytosolic	secondary filtered
+chr6	71	29512542	29512614	Arg	CCG	0	0	67.0	49.40	17.60	Inf	Arg	100.7	cytosolic	high confidence set
+chr6	72	29574119	29574223	Leu	CAA	29574157	29574178	77.2	53.10	24.10	Inf	Leu	128.5	cytosolic	high confidence set
+chr6	73	29577655	29577727	Met	CAT	0	0	77.4	55.00	22.40	Inf	Met	115.9	cytosolic	high confidence set
+chr6	74	29584139	29584211	Lys	TTT	0	0	87.8	67.30	20.50	Inf	Lys	113.5	cytosolic	high confidence set
+chr6	75	29615001	29615072	Glu	CTC	0	0	73.2	49.00	24.20	Inf	Glu	113.6	cytosolic	high confidence set
+chr6	76	29621763	29621844	Leu	AAG	0	0	74.8	55.10	19.70	Inf	Leu	116.5	cytosolic	high confidence set
+chr6	77	71117821	71117903	Leu	TAA	0	0	31.0	38.70	-7.70	Inf	Leu	42.5	cytosolic	pseudo
+chr6	78	91279635	91279705	His	GTG	0	0	20.5	11.70	8.80	Inf	Cys	1.9	cytosolic	IPD:-1.40,secondary filtered
+chr6	79	144903409	144903479	Gly	GCC	0	0	48.7	34.80	13.90	Inf	Gly	67.8	cytosolic	secondary filtered
+chr6	80	146909455	146909537	Leu	TAA	0	0	88.7	58.10	30.60	Inf	Leu	117.1	cytosolic	high confidence set
+chr6	81	146970624	146970706	Leu	TAA	0	0	88.7	58.10	30.60	Inf	Leu	117.1	cytosolic	high confidence set
+chr6	82	147935746	147935817	Gln	TTG	0	0	56.1	37.10	19.00	Inf	Gln	96.9	cytosolic	high confidence set
+chr6	83	161232308	161232236	Val	AAC	0	0	39.5	24.10	15.40	Inf	Val	78.0	cytosolic	secondary filtered
+chr6	85	128165467	128165396	Glu	CTC	0	0	73.2	49.00	24.20	Inf	Glu	113.6	cytosolic	high confidence set
+chr6	86	81087279	81087207	Phe	GAA	0	0	45.5	45.40	0.10	Inf	Phe	86.7	cytosolic	pseudo
+chr6	87	59319892	59319820	Ala	AGC	0	0	58.7	34.70	24.00	Inf	Ala	92.8	cytosolic	high confidence set
+chr6	88	59305763	59305691	Met	CAT	0	0	67.1	50.80	16.30	Inf	Met	100.5	cytosolic	high confidence set
+chr6	89	29614549	29614477	Phe	GAA	0	0	88.9	68.40	20.50	Inf	Phe	124.5	cytosolic	high confidence set
+chr6	90	29586492	29586420	Met	CAT	0	0	77.4	55.00	22.40	Inf	Met	115.9	cytosolic	high confidence set
+chr6	91	29576783	29576702	Leu	AAG	0	0	74.8	55.10	19.70	Inf	Leu	116.5	cytosolic	high confidence set
+chr6	92	29574737	29574666	Gln	CTG	0	0	71.5	44.00	27.50	Inf	Gln	112.1	cytosolic	high confidence set
+chr6	93	29529909	29529804	Leu	CAA	29529871	29529849	77.2	53.10	24.10	Inf	Leu	128.5	cytosolic	high confidence set
+chr6	94	29527624	29527519	Leu	CAA	29527586	29527564	77.2	53.10	24.10	Inf	Leu	128.5	cytosolic	high confidence set
+chr6	95	29494676	29494605	Ala	AGC	0	0	84.7	61.10	23.60	Inf	Ala	112.0	cytosolic	high confidence set
+chr6	96	29468463	29468392	Ala	AGC	0	0	84.7	61.10	23.60	Inf	Ala	112.0	cytosolic	high confidence set
+chr6	97	29457570	29457499	Asp	ATC	0	0	44.3	24.90	19.40	Inf	Ala	70.9	cytosolic	IPD:-59.00,secondary filtered
+chr6	98	29453456	29453384	Phe	GAA	0	0	85.4	66.50	18.90	Inf	Phe	122.1	cytosolic	high confidence set
+chr6	99	29447305	29447234	Ala	TGC	0	0	72.8	44.70	28.10	Inf	Ala	103.9	cytosolic	high confidence set
+chr6	100	29442150	29442079	Ala	AGC	0	0	81.4	57.10	24.30	Inf	Ala	107.9	cytosolic	high confidence set
+chr6	101	29437884	29437812	Phe	GAA	0	0	82.5	62.00	20.50	Inf	Phe	118.1	cytosolic	high confidence set
+chr6	102	29432116	29432045	Ala	TGC	0	0	75.3	47.10	28.20	Inf	Ala	108.2	cytosolic	high confidence set
+chr6	103	29425207	29425136	Ala	AGC	0	0	78.7	58.70	20.00	Inf	Ala	106.5	cytosolic	high confidence set
+chr6	104	29419953	29419893	Phe	GAA	0	0	33.8	0.00	33.80	Inf	Phe	80.6	cytosolic	pseudo,trunc_end:16
+chr6	105	29419021	29418950	Ala	TGC	0	0	80.5	56.50	24.00	Inf	Ala	111.9	cytosolic	high confidence set
+chr6	106	29407263	29407192	Ala	AGC	0	0	31.6	28.20	3.40	Inf	Ala	56.3	cytosolic	pseudo
+chr6	107	29392145	29392072	Phe	GAA	0	0	44.9	32.30	12.60	Inf	Phe	72.6	cytosolic	secondary filtered
+chr6	108	29391232	29391162	Undet	NNN	0	0	53.0	43.70	9.30	Inf	Ala	82.8	cytosolic	secondary filtered
+chr6	109	29375671	29375599	Arg	CCG	0	0	64.8	49.30	15.50	Inf	Arg	95.5	cytosolic	high confidence set
+chr6	110	29367116	29367045	Ala	AGC	0	0	82.5	60.10	22.40	Inf	Ala	108.5	cytosolic	high confidence set
+chr6	111	29358836	29358764	Phe	GAA	0	0	27.8	47.20	-19.40	Inf	Phe	29.1	cytosolic	pseudo
+chr6	112	29327462	29327391	Ala	GGC	0	0	63.3	46.50	16.80	Inf	Ala	93.0	cytosolic	unexpected anticodon
+chr6	113	29324772	29324699	Lys	TTT	0	0	33.8	37.90	-4.10	Inf	Lys	48.9	cytosolic	pseudo
+chr6	114	29305290	29305219	Ala	CGC	0	0	79.7	55.30	24.40	Inf	Ala	111.9	cytosolic	high confidence set
+chr6	115	29289898	29289827	Ala	AGC	0	0	76.1	58.70	17.40	Inf	Ala	107.8	cytosolic	high confidence set
+chr6	116	29279844	29279771	Thr	CGT	0	0	77.1	58.30	18.80	Inf	Thr	101.8	cytosolic	high confidence set
+chr6	117	29265945	29265873	Ala	TGC	0	0	40.3	39.00	1.30	Inf	Ala	48.0	cytosolic	pseudo
+chr6	118	29217816	29217735	Ser	GCT	0	0	88.4	61.60	26.80	Inf	Ser	127.3	cytosolic	high confidence set
+chr6	119	29163011	29162939	Arg	TCG	0	0	65.5	44.80	20.70	Inf	Arg	97.2	cytosolic	high confidence set
+chr6	120	29112379	29112306	Thr	CGT	0	0	78.4	59.30	19.10	Inf	Thr	101.5	cytosolic	high confidence set
+chr6	121	29096822	29096741	Leu	AAG	0	0	71.7	54.20	17.50	Inf	Leu	111.8	cytosolic	high confidence set
+chr6	122	29092748	29092675	Thr	TGT	0	0	83.3	59.90	23.40	Inf	Thr	104.3	cytosolic	high confidence set
+chr6	123	28482080	28482010	Gly	GCC	0	0	81.0	59.90	21.10	Inf	Gly	111.7	cytosolic	high confidence set
+chr6	124	28481663	28481592	iMet	CAT	0	0	60.4	30.80	29.60	Inf	iMet	130.6	cytosolic	high confidence set
+chr6	125	28381276	28381205	Gln	TTG	0	0	66.9	47.20	19.70	Inf	Gln	106.5	cytosolic	high confidence set
+chr6	126	28376763	28376692	Gln	CTG	0	0	51.5	31.70	19.80	Inf	Gln	90.0	cytosolic	high confidence set
+chr6	127	28333001	28332928	Val	AAC	0	0	44.3	31.00	13.30	Inf	Val	80.7	cytosolic	secondary filtered
+chr6	128	28322153	28322081	Val	CAC	0	0	64.6	41.70	22.90	Inf	Val	99.4	cytosolic	high confidence set
+chr6	129	28313798	28313716	Leu	TAA	0	0	90.8	62.10	28.70	Inf	Leu	104.9	cytosolic	high confidence set
+chr6	130	28275981	28275908	Thr	AGT	0	0	81.4	60.50	20.90	Inf	Thr	102.0	cytosolic	high confidence set
+chr6	131	28272385	28272313	Val	AAC	0	0	53.6	40.70	12.90	Inf	Val	73.4	cytosolic	high confidence set
+chr6	132	28263579	28263497	Ser	CGA	0	0	85.9	55.40	30.50	Inf	Ser	112.7	cytosolic	high confidence set
+chr6	133	28261683	28261611	Arg	ACG	0	0	64.2	45.60	18.60	Inf	Arg	98.9	cytosolic	high confidence set
+chr6	134	28239261	28239189	Val	AAC	0	0	79.3	49.20	30.10	Inf	Val	112.6	cytosolic	high confidence set
+chr6	135	28190404	28190297	Leu	CAA	28190366	28190343	78.0	51.40	26.60	Inf	Leu	133.2	cytosolic	high confidence set
+chr6	136	28187343	28187237	Leu	CAA	28187305	28187283	77.6	51.30	26.30	Inf	Leu	131.1	cytosolic	high confidence set
+chr6	137	28177564	28177493	iMet	CAT	0	0	60.4	30.80	29.60	Inf	iMet	130.6	cytosolic	high confidence set
+chr6	138	28176557	28176485	Lys	TTT	0	0	86.8	65.70	21.10	Inf	Lys	112.4	cytosolic	high confidence set
+chr6	139	28167973	28167902	Asp	GTC	0	0	66.7	36.00	30.70	Inf	Asp	108.9	cytosolic	high confidence set
+chr6	140	28137918	28137837	Ser	AGA	0	0	86.8	57.30	29.50	Inf	Ser	130.4	cytosolic	high confidence set
+chr6	141	28132267	28132196	Gln	CTG	0	0	62.6	35.50	27.10	Inf	Gln	105.0	cytosolic	high confidence set
+chr6	142	28126240	28126159	Ser	AGA	0	0	83.9	56.00	27.90	Inf	Ser	126.9	cytosolic	high confidence set
+chr6	143	28085095	28085014	Ser	TGA	0	0	87.5	58.00	29.50	Inf	Ser	130.8	cytosolic	high confidence set
+chr6	144	27902294	27902223	iMet	CAT	0	0	60.4	30.80	29.60	Inf	iMet	130.6	cytosolic	high confidence set
+chr6	145	27872536	27872465	iMet	CAT	0	0	39.8	21.00	18.80	Inf	iMet	96.9	cytosolic	secondary filtered
+chr6	146	27848903	27848831	Val	CAC	0	0	70.6	46.30	24.30	Inf	Val	103.4	cytosolic	high confidence set
+chr6	147	27843781	27843708	Ile	AAT	0	0	86.3	64.40	21.90	Inf	Ile	114.6	cytosolic	high confidence set
+chr6	148	27804002	27803929	Ile	AAT	0	0	81.2	64.80	16.40	Inf	Ile	114.0	cytosolic	high confidence set
+chr6	149	27797336	27797253	Leu	TAA	0	0	67.5	43.00	24.50	Inf	Leu	79.4	cytosolic	high confidence set
+chr6	150	27781706	27781634	Arg	ACG	0	0	61.1	45.50	15.60	Inf	Arg	95.8	cytosolic	high confidence set
+chr6	151	27773881	27773809	Val	CAC	0	0	61.6	37.80	23.80	Inf	Val	95.8	cytosolic	high confidence set
+chr6	152	27422579	27422507	Ala	AGC	0	0	60.0	36.00	24.00	Inf	Ala	94.9	cytosolic	high confidence set
+chr6	153	27414793	27414721	Ala	AGC	0	0	25.0	14.10	10.90	Inf	Ala	57.6	cytosolic	secondary filtered
+chr6	154	27400789	27400717	Ala	AGC	0	0	37.6	20.80	16.80	Inf	Ala	68.7	cytosolic	secondary filtered
+chr6	155	27398301	27398229	Ala	AGC	0	0	58.5	34.40	24.10	Inf	Ala	89.3	cytosolic	high confidence set
+chr6	156	27379688	27379616	Met	CAT	0	0	82.7	58.80	23.90	Inf	Met	110.6	cytosolic	high confidence set
+chr6	157	27341053	27340980	Ile	AAT	0	0	80.2	62.70	17.50	Inf	Ile	107.3	cytosolic	high confidence set
+chr6	158	27178705	27178633	Ala	AGC	0	0	56.1	32.10	24.00	Inf	Ala	88.9	cytosolic	high confidence set
+chr6	159	27137939	27137866	Thr	AGT	0	0	81.4	60.50	20.90	Inf	Thr	102.0	cytosolic	high confidence set
+chr6	160	26928747	26928676	Trp	CCA	0	0	73.3	50.60	22.70	Inf	Trp	106.9	cytosolic	high confidence set
+chr6	161	26927605	26927534	iMet	CAT	0	0	60.4	30.80	29.60	Inf	iMet	130.6	cytosolic	high confidence set
+chr6	162	26915932	26915861	Trp	CCA	0	0	73.3	50.60	22.70	Inf	Trp	106.9	cytosolic	high confidence set
+chr6	163	26909950	26909879	iMet	CAT	0	0	60.4	30.80	29.60	Inf	iMet	130.6	cytosolic	high confidence set
+chr6	164	26909432	26909351	Ser	TGA	0	0	89.7	56.90	32.80	Inf	Ser	133.1	cytosolic	high confidence set
+chr6	165	26908574	26908503	Gln	TTG	0	0	66.9	47.20	19.70	Inf	Gln	106.5	cytosolic	high confidence set
+chr6	166	26902830	26902749	Ser	GCT	0	0	84.4	59.50	24.90	Inf	Ser	121.7	cytosolic	high confidence set
+chr6	167	3966669	3966602	Phe	GAA	0	0	27.2	27.80	-0.60	Inf	Cys	27.5	cytosolic	pseudo,IPD:-34.10
+chr7	1	12541421	12541504	Lys	CTT	0	0	33.0	29.40	3.60	Inf	Lys	52.7	cytosolic	pseudo,trunc_start:9
+chr7	4	80975591	80975663	Lys	CTT	0	0	34.0	32.70	1.30	Inf	Lys	59.0	cytosolic	pseudo,trunc_start:4
+chr7	5	128140206	128140277	Pro	AGG	0	0	70.2	43.80	26.40	Inf	Pro	121.0	cytosolic	high confidence set
+chr7	6	138846006	138846078	Arg	CCT	0	0	65.6	51.50	14.10	Inf	Arg	98.1	cytosolic	high confidence set
+chr7	9	143545179	143545251	Ala	AGC	0	0	58.7	34.60	24.10	Inf	Ala	92.8	cytosolic	high confidence set
+chr7	10	148906463	148906534	Cys	GCA	0	0	81.8	61.50	20.30	Inf	Cys	118.4	cytosolic	high confidence set
+chr7	11	148927784	148927855	Cys	GCA	0	0	77.2	56.90	20.30	Inf	Cys	117.0	cytosolic	high confidence set
+chr7	12	149137907	149137978	Cys	GCA	0	0	67.8	48.30	19.50	Inf	Cys	102.8	cytosolic	high confidence set
+chr7	13	149145582	149145653	Cys	GCA	0	0	49.8	48.30	1.50	Inf	Cys	93.1	cytosolic	pseudo
+chr7	14	149146917	149146989	Tyr	GTA	0	0	38.9	36.80	2.10	Inf	Cys	60.2	cytosolic	pseudo,IPD:-48.90
+chr7	15	149173821	149173892	Cys	GCA	0	0	56.0	43.30	12.70	Inf	Cys	95.7	cytosolic	high confidence set
+chr7	16	149193185	149193249	Cys	GCA	0	0	50.2	32.40	17.80	Inf	Cys	89.5	cytosolic	trunc_start:4,trunc_end:3,high confidence set
+chr7	17	149203621	149203692	Ser	AGA	0	0	49.4	48.60	0.80	Inf	Cys	90.3	cytosolic	pseudo,IPD:-98.50
+chr7	18	149223413	149223496	Cys	GCA	0	0	26.8	16.10	10.70	Inf	Cys	28.1	cytosolic	secondary filtered
+chr7	19	149231014	149231085	Cys	GCA	0	0	77.2	56.90	20.30	Inf	Cys	117.0	cytosolic	high confidence set
+chr7	20	149260157	149260228	Cys	GCA	0	0	74.0	50.60	23.40	Inf	Cys	114.7	cytosolic	high confidence set
+chr7	21	149307955	149308026	Cys	GCA	0	0	76.3	56.90	19.40	Inf	Cys	111.0	cytosolic	high confidence set
+chr7	22	149297921	149297850	Cys	GCA	0	0	74.7	57.50	17.20	Inf	Cys	114.6	cytosolic	high confidence set
+chr7	23	149242362	149242291	Cys	GCA	0	0	65.3	48.00	17.30	Inf	Cys	102.1	cytosolic	high confidence set
+chr7	24	149208359	149208288	Cys	GCA	0	0	69.2	49.40	19.80	Inf	Cys	110.7	cytosolic	high confidence set
+chr7	25	149190515	149190444	Cys	GCA	0	0	61.5	45.30	16.20	Inf	Cys	95.5	cytosolic	high confidence set
+chr7	26	149178249	149178178	Cys	GCA	0	0	77.2	56.90	20.30	Inf	Cys	117.0	cytosolic	high confidence set
+chr7	27	149007003	149006932	Cys	GCA	0	0	75.0	54.70	20.30	Inf	Cys	112.9	cytosolic	high confidence set
+chr7	28	148997945	148997874	Cys	ACA	0	0	46.9	37.10	9.80	Inf	Cys	79.6	cytosolic	secondary filtered
+chr7	29	148969796	148969725	Cys	GCA	0	0	77.2	56.90	20.30	Inf	Cys	117.0	cytosolic	high confidence set
+chr7	30	148968029	148967958	Cys	GCA	0	0	65.9	56.30	9.60	Inf	Cys	97.3	cytosolic	secondary filtered
+chr7	31	148952390	148952332	Tyr	GTA	0	0	26.0	10.70	15.30	Inf	Cys	45.6	cytosolic	IPD:-23.00,trunc_start:6,trunc_end:7,secondary filtered
+chr7	32	148951413	148951342	Cys	GCA	0	0	74.0	50.60	23.40	Inf	Cys	114.7	cytosolic	high confidence set
+chr7	33	78640004	78639933	Trp	CCA	0	0	67.5	44.80	22.70	Inf	Trp	98.2	cytosolic	high confidence set
+chr7	34	66301514	66301443	Trp	CCA	0	0	30.6	34.40	-3.80	Inf	Trp	53.9	cytosolic	pseudo
+chr8	1	11117960	11118031	Glu	CTC	0	0	35.1	22.60	12.50	Inf	Glu	69.1	cytosolic	secondary filtered
+chr8	2	11139965	11140036	Sup	TCA	0	0	23.4	23.00	0.40	Inf	Glu	38.8	cytosolic	pseudo,IPD:-38.80
+chr8	3	49381568	49381640	Arg	ACG	0	0	24.8	8.50	16.30	Inf	Arg	37.7	cytosolic	pseudo
+chr8	4	49834380	49834467	Tyr	GTA	49834417	49834432	50.8	43.40	7.40	Inf	Tyr	78.2	cytosolic	secondary filtered
+chr8	5	98955757	98955825	Undet	NNN	0	0	26.7	11.30	15.40	Inf	Gly	27.7	cytosolic	secondary filtered
+chr8	6	124639535	124639460	Undet	NNN	0	0	24.9	23.10	1.80	Inf	Phe	37.6	cytosolic	pseudo
+chr8	7	124529107	124529035	Met	CAT	0	0	82.3	60.90	21.40	Inf	Met	116.4	cytosolic	high confidence set
+chr8	8	95983501	95983420	Ser	AGA	0	0	89.6	56.90	32.70	Inf	Ser	133.1	cytosolic	high confidence set
+chr8	9	57146194	57146124	Glu	CTC	0	0	24.5	17.70	6.80	Inf	Glu	46.8	cytosolic	secondary filtered
+chr8	10	49381214	49381122	Tyr	GTA	49381177	49381158	75.3	47.50	27.80	Inf	Tyr	118.0	cytosolic	high confidence set
+chr8	11	49380593	49380505	Tyr	GTA	49380556	49380541	75.5	47.60	27.90	Inf	Tyr	118.0	cytosolic	high confidence set
+chr8	12	49380400	49380328	Ala	AGC	0	0	59.7	36.10	23.60	Inf	Ala	92.8	cytosolic	high confidence set
+chr8	13	46707539	46707466	Lys	TTT	0	0	48.1	35.90	12.20	Inf	Glu	77.7	cytosolic	IPD:-84.10,secondary filtered
+chr8	14	9234865	9234794	Cys	GCA	0	0	41.5	26.60	14.90	Inf	Cys	83.6	cytosolic	secondary filtered
+chr8	15	6836642	6836570	Glu	TTC	0	0	21.6	23.30	-1.70	Inf	Glu	56.5	cytosolic	pseudo
+chr9	1	35363386	35363457	His	GTG	0	0	60.1	29.80	30.30	Inf	His	104.9	cytosolic	high confidence set
+chr9	3	92630863	92630935	Arg	TCG	0	0	74.8	55.10	19.70	Inf	Arg	107.1	cytosolic	high confidence set
+chr9	4	111808060	111807970	Arg	TCT	111808023	111808006	66.5	48.00	18.50	Inf	Arg	102.4	cytosolic	high confidence set
+chr9	5	103160522	103160440	Leu	CAG	0	0	24.2	27.00	-2.80	Inf	Leu	59.6	cytosolic	pseudo
+chr9	6	30261013	30260939	iMet	CAT	0	0	34.2	10.00	24.20	Inf	iMet	81.3	cytosolic	secondary filtered
+chrX	1	897114	897207	Val	TAC	897152	897171	60.3	42.40	17.90	Inf	Ile	96.6	cytosolic	IPD:-51.90,isotype mismatch
+chrX	2	119450568	119450636	Pro	GGG	0	0	29.2	24.20	5.00	Inf	Met	31.2	cytosolic	IPD:-48.60,secondary filtered
+chrX	3	25434060	25433989	Ser	AGA	0	0	21.5	13.60	7.90	Inf	His	10.3	cytosolic	IPD:-10.30,secondary filtered
+chrX	4	18555342	18555270	Val	TAC	0	0	82.9	54.70	28.20	Inf	Val	111.9	cytosolic	high confidence set
+chrX	5	3494907	3494834	Ile	GAT	0	0	24.6	33.50	-8.90	Inf	Ile	39.3	cytosolic	pseudo
+chrX	6	3494494	3494421	Ile	GAT	0	0	63.8	48.40	15.40	Inf	Ile	87.7	cytosolic	high confidence set
+chrX	7	3456630	3456557	Ile	GAT	0	0	24.6	33.50	-8.90	Inf	Ile	39.3	cytosolic	pseudo
+chrX	8	3456217	3456144	Ile	GAT	0	0	59.8	44.80	15.00	Inf	Ile	85.0	cytosolic	high confidence set
+chrUn_CABD030159948v1	1	3749	3821	Gln	CTG	0	0	34.4	28.10	6.30	Inf	Gln	68.2	cytosolic	secondary filtered
+chrUn_CABD030151705v1	1	740	812	Lys	TTT	0	0	87.8	67.30	20.50	Inf	Lys	113.5	cytosolic	high confidence set
+chrUn_CABD030151705v1	2	1313	1241	Lys	TTT	0	0	87.8	67.30	20.50	Inf	Lys	113.5	cytosolic	high confidence set
+chrUn_CABD030131197v1	1	3427	3500	Asn	GTT	0	0	34.8	27.80	7.00	Inf	Asn	74.3	cytosolic	secondary filtered
+chrUn_CABD030131213v1	1	7838	7908	Gly	CCC	0	0	63.7	42.70	21.00	Inf	Gly	92.9	cytosolic	high confidence set
+chrUn_CABD030152056v1	1	1338	1267	Pro	AGG	0	0	35.3	29.20	6.10	Inf	Pro	80.4	cytosolic	secondary filtered
+chrUn_CABD030155657v1	1	3397	3324	Ile	AAT	0	0	81.2	64.80	16.40	Inf	Ile	114.0	cytosolic	high confidence set
+chrUn_CABD030131215v1	1	1835	1907	Val	CAC	0	0	24.9	18.80	6.10	Inf	Val	50.2	cytosolic	secondary filtered
+chrUn_CABD030131215v1	2	3547	3617	Gly	CCC	0	0	78.3	56.60	21.70	Inf	Gly	109.7	cytosolic	high confidence set
+chrUn_CABD030152235v1	1	128	36	Ile	TAT	90	72	73.2	45.00	28.20	Inf	Ile	105.7	cytosolic	high confidence set
+chrUn_CABD030131216v1	1	1575	1647	Val	CAC	0	0	34.3	29.00	5.30	Inf	Val	64.5	cytosolic	secondary filtered
+chrUn_CABD030131216v1	2	3290	3360	Gly	CCC	0	0	78.3	56.60	21.70	Inf	Gly	109.7	cytosolic	high confidence set
+chrUn_CABD030131216v1	3	14169	14240	Glu	TTC	0	0	42.9	34.70	8.20	Inf	Glu	87.1	cytosolic	secondary filtered
+chrUn_CABD030131216v1	4	17042	17115	Asn	GTT	0	0	50.5	39.10	11.40	Inf	Asn	81.5	cytosolic	high confidence set
+chrUn_CABD030155660v1	1	26	107	Ser	AGA	0	0	89.6	56.90	32.70	Inf	Ser	133.1	cytosolic	high confidence set
+Sequence		tRNA   	Bounds 	tRNA	Anti	Intron Bounds	Inf	HMM	2'Str	Isotype	Isotype	      
+Name    	tRNA #	Begin  	End    	Type	Codon	Begin	End	Score	Score	Score	CM	Score	Note
+--------	------	-----  	------ 	----	-----	-----	----	------	-----	-----	-------	-------	------
+chr     	1	225381 	225457 	Ile	GAT	0	0	75.8	47.60	28.20	Ile	110.9	
+chr     	2	225500 	225575 	Ala	TGC	0	0	78.1	53.10	25.00	Ala	115.6	
+chr     	3	228928 	229004 	Asp	GTC	0	0	85.5	71.10	14.40	Asp	128.1	
+chr     	4	236931 	237007 	Asp	GTC	0	0	85.5	71.10	14.40	Asp	128.1	
+chr     	5	262871 	262946 	Thr	CGT	0	0	85.1	63.80	21.30	Thr	105.6	
+chr     	6	297184 	297254 	Thr	CGT	0	0	44.2	27.80	16.40	Thr	49.5	trunc_start:6
+chr     	7	564723 	564799 	Arg	TCT	0	0	86.6	61.20	25.40	Arg	103.5	
+chr     	8	586007 	586101 	Undet	NNN	0	0	31.7	35.00	-3.30	Arg	36.2	pseudo,trunc_start:8
+chr     	9	780554 	780629 	Lys	TTT	0	0	94.9	70.50	24.40	Lys	113.3	
+chr     	10	780765 	780840 	Val	TAC	0	0	84.6	59.00	25.60	Val	110.9	
+chr     	11	780843 	780918 	Lys	TTT	0	0	94.9	70.50	24.40	Lys	113.3	
+chr     	12	781068 	781143 	Val	TAC	0	0	84.6	59.00	25.60	Val	110.9	
+chr     	13	781147 	781222 	Lys	TTT	0	0	94.9	70.50	24.40	Lys	113.3	
+chr     	14	781369 	781444 	Lys	TTT	0	0	94.9	70.50	24.40	Lys	113.3	
+chr     	15	781577 	781652 	Lys	TTT	0	0	94.9	70.50	24.40	Lys	113.3	
+chr     	16	1746435	1746511	Val	GAC	0	0	82.5	53.40	29.10	Val	101.9	
+chr     	17	1746516	1746592	Val	GAC	0	0	85.9	59.60	26.30	Val	104.4	
+chr     	18	2044549	2044624	Asn	GTT	0	0	79.7	48.60	31.10	Asn	115.2	
+chr     	19	2059851	2059926	Asn	GTT	0	0	79.7	48.60	31.10	Asn	115.2	
+chr     	20	2062260	2062335	Asn	GTT	0	0	79.7	48.60	31.10	Asn	115.2	
+chr     	21	2286211	2286287	Pro	GGG	0	0	67.3	40.60	26.70	Pro	110.3	
+chr     	22	2466309	2466383	Arg	CCT	0	0	62.5	30.50	32.00	Arg	77.7	
+chr     	23	2520931	2521006	Val	TAC	0	0	84.6	59.00	25.60	Val	110.9	
+chr     	24	2521051	2521126	Val	TAC	0	0	84.6	59.00	25.60	Val	110.9	
+chr     	25	2521173	2521248	Val	TAC	0	0	84.6	59.00	25.60	Val	110.9	
+chr     	26	2521253	2521328	Lys	TTT	0	0	94.9	70.50	24.40	Lys	113.3	
+chr     	27	2755859	2755955	Undet	NNN	0	0	29.6	22.30	7.30	Ile2	28.4	trunc_start:6
+chr     	28	2947387	2947463	fMet	CAT	0	0	77.5	50.60	26.90	fMet	129.5	
+chr     	29	2947497	2947573	fMet	CAT	0	0	77.5	50.60	26.90	fMet	129.5	
+chr     	30	2947607	2947683	fMet	CAT	0	0	77.5	50.60	26.90	fMet	129.5	
+chr     	31	3110366	3110441	Phe	GAA	0	0	75.3	45.80	29.50	Phe	104.8	
+chr     	32	3215598	3215673	Ile2	CAT	0	0	85.1	56.20	28.90	Ile2	111.7	
+chr     	33	3836222	3836316	SeC	TCA	0	0	142.5	0.00	0.00	SeC	142.5	
+chr     	34	3943435	3943510	Glu	TTC	0	0	66.6	35.80	30.80	Glu	105.4	
+chr     	35	3946872	3946948	Asp	GTC	0	0	85.5	71.10	14.40	Asp	128.1	
+chr     	36	3946957	3947032	Trp	CCA	0	0	79.9	61.00	18.90	Trp	98.7	
+chr     	37	3982375	3982451	Arg	CCG	0	0	82.2	62.70	19.50	Arg	104.0	
+chr     	38	3982510	3982585	His	GTG	0	0	78.7	53.40	25.30	His	106.7	
+chr     	39	3982606	3982692	Leu	CAG	0	0	67.1	42.20	24.90	Leu	109.1	
+chr     	40	3982735	3982811	Pro	TGG	0	0	82.4	54.50	27.90	Pro	115.0	
+chr     	41	4037141	4037217	Ile	GAT	0	0	75.8	47.60	28.20	Ile	110.9	
+chr     	42	4037260	4037335	Ala	TGC	0	0	78.1	53.10	25.00	Ala	115.6	
+chr     	43	4168372	4168447	Glu	TTC	0	0	66.6	35.80	30.80	Glu	105.4	
+chr     	44	4175388	4175463	Thr	TGT	0	0	81.3	59.30	22.00	Thr	106.1	
+chr     	45	4175472	4175556	Tyr	GTA	0	0	73.0	42.20	30.80	Tyr	118.5	
+chr     	46	4175673	4175747	Gly	TCC	0	0	70.6	42.90	27.70	Gly	86.6	
+chr     	47	4175754	4175829	Thr	GGT	0	0	84.7	50.10	34.60	Thr	103.0	
+chr     	48	4209774	4209849	Glu	TTC	0	0	66.6	35.80	30.80	Glu	105.4	
+chr     	49	4392360	4392435	Gly	GCC	0	0	88.4	61.80	26.60	Gly	113.7	
+chr     	50	4392472	4392547	Gly	GCC	0	0	88.4	61.80	26.60	Gly	113.7	
+chr     	51	4392583	4392658	Gly	GCC	0	0	88.4	61.80	26.60	Gly	113.7	
+chr     	52	4496405	4496489	Leu	CAA	0	0	79.3	46.00	33.30	Leu	110.3	
+chr     	53	4606401	4606315	Leu	CAG	0	0	67.1	42.20	24.90	Leu	109.1	
+chr     	54	4606286	4606200	Leu	CAG	0	0	65.0	42.50	22.50	Leu	106.8	
+chr     	55	4606165	4606079	Leu	CAG	0	0	67.1	42.20	24.90	Leu	109.1	
+chr     	56	4362626	4362551	Phe	GAA	0	0	75.3	45.80	29.50	Phe	104.8	
+chr     	57	3708692	3708616	Pro	CGG	0	0	76.0	43.90	32.10	Pro	109.5	
+chr     	58	3427152	3427076	Ile	GAT	0	0	75.8	47.60	28.20	Ile	110.9	
+chr     	59	3427033	3426958	Ala	TGC	0	0	78.1	53.10	25.00	Ala	115.6	
+chr     	60	3423655	3423580	Thr	GGT	0	0	79.8	42.80	37.00	Thr	99.7	
+chr     	61	3322158	3322072	Leu	GAG	0	0	64.5	38.70	25.80	Leu	103.6	
+chr     	62	3318289	3318213	fMet	CAT	0	0	75.5	48.60	26.90	fMet	125.8	
+chr     	63	2999057	2998984	Gly	CCC	0	0	81.1	54.70	26.40	Gly	100.5	
+chr     	64	2818645	2818553	Ser	GCT	0	0	83.4	46.30	37.10	Ser	109.5	
+chr     	65	2818549	2818473	Arg	ACG	0	0	85.1	59.80	25.30	Arg	100.6	
+chr     	66	2818274	2818198	Arg	ACG	0	0	85.1	59.80	25.30	Arg	100.6	
+chr     	67	2818135	2818059	Arg	ACG	0	0	85.1	59.80	25.30	Arg	100.6	
+chr     	68	2817860	2817784	Arg	ACG	0	0	85.1	59.80	25.30	Arg	100.6	
+chr     	69	2785837	2785762	Ile2	CAT	0	0	84.7	55.50	29.20	Ile2	112.8	
+chr     	70	2729444	2729369	Glu	TTC	0	0	66.6	35.80	30.80	Glu	105.4	
+chr     	71	2518231	2518156	Ala	GGC	0	0	75.0	52.50	22.50	Ala	114.0	
+chr     	72	2518116	2518041	Ala	GGC	0	0	75.0	52.50	22.50	Ala	114.0	
+chr     	73	2058102	2058027	Asn	GTT	0	0	79.7	48.60	31.10	Asn	115.2	
+chr     	74	2043557	2043468	Ser	CGA	0	0	90.4	54.50	35.90	Ser	122.4	
+chr     	75	1992117	1992042	Gly	GCC	0	0	88.4	61.80	26.60	Gly	113.7	
+chr     	76	1991987	1991914	Cys	GCA	0	0	63.0	27.10	35.90	Cys	86.2	
+chr     	77	1991901	1991815	Leu	TAA	0	0	71.7	41.40	30.30	Leu	101.8	
+chr     	78	1287622	1287538	Tyr	GTA	0	0	72.2	43.00	29.20	Tyr	119.1	
+chr     	79	1287328	1287244	Tyr	GTA	0	0	72.2	43.00	29.20	Tyr	119.1	
+chr     	80	1097652	1097565	Ser	GGA	0	0	76.9	38.30	38.60	Ser	117.0	
+chr     	81	1031712	1031625	Ser	TGA	0	0	83.5	47.20	36.30	Ser	103.3	
+chr     	82	925971 	925884 	Ser	GGA	0	0	76.9	38.30	38.60	Ser	117.0	
+chr     	83	697133 	697057 	Met	CAT	0	0	84.4	63.20	21.20	Met	111.6	
+chr     	84	697047 	696963 	Leu	TAG	0	0	74.1	46.80	27.30	Leu	115.3	
+chr     	85	696939 	696865 	Gln	TTG	0	0	70.4	38.40	32.00	Gln	101.4	
+chr     	86	696830 	696756 	Gln	TTG	0	0	70.4	38.40	32.00	Gln	101.4	
+chr     	87	696740 	696664 	Met	CAT	0	0	84.4	63.20	21.20	Met	111.6	
+chr     	88	696616 	696542 	Gln	CTG	0	0	70.8	39.90	30.90	Gln	100.0	
+chr     	89	696504 	696430 	Gln	CTG	0	0	70.8	39.90	30.90	Gln	100.0	

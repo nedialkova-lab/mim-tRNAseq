@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: mimseq
+Version: 1.0
+Summary: Custom high-throughput tRNA sequencing alignment and quantification pipeline based on modification induced misincorporation cDNA synthesis.
+Home-page: https://github.com/nedialkova-lab/mim-tRNAseq
+Author: Drew Behrens
+Author-email: abehrens@biochem.mpg.de
+License: GPLv3
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics

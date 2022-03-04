@@ -215,7 +215,7 @@ def main():
 	inputs = parser.add_argument_group("Input files")
 	inputs.add_argument('-s','--species', metavar='species', required = not ('-t' in sys.argv), dest = 'species', help = \
 		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap38, Mmus, Rnor, Scer, ScerMut, Spom, Dmel, Drer, Ecol', \
-		choices = ['Hsap','Hsap19','Ggor','Mmus','Rnor','Scer', 'ScerMut', 'Spom','Dmel', 'Drer', 'Ecol'])
+		choices = ['Hsap','Hsap19','Ggor','Mmus','Rnor','Scer', 'ScerMut', 'Spom','Dmel', 'Drer', 'Ecol', 'Atha'])
 	inputs.add_argument('-t', '--trnas', metavar='genomic tRNAs', required = False, dest = 'trnas', help = \
 		'Genomic tRNA fasta file, e.g. from gtRNAdb or tRNAscan-SE. Already avalable in data folder for a few model organisms.')
 	inputs.add_argument('-o', '--trnaout', metavar = 'tRNA out file', required = (not '--species' or '-s' in sys.argv) or ('-t' in sys.argv), 
@@ -379,6 +379,10 @@ def main():
 				if args.species == 'Ecol':
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi-K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi-K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.out"
+					args.mito = ''
+				if args.species == 'Atha':
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-tRNAs.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-tRNAs-detailed.out"
 					args.mito = ''
 			else:
 				args.species = args.trnas.split("/")[-1].split(".")[0]

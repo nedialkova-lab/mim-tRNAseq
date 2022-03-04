@@ -206,16 +206,17 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
         for pos, members in data.items():
             for member in members:
                 member_seq = tRNA_dict[member]['sequence']
-                # find number of inserts before mismatch in question to ensure that the correct identity in the member is sliced by subtracting from the mismatch pos in the parent
+                # find number of insertions before mismatch in question to ensure that the correct identity in the member is sliced by subtracting from the mismatch pos in the parent
                 ins_num = len(set([ins for ins in insert_dict[cluster] if member in insert_dict[cluster][ins] and ins < pos]))
                 # find number of deletions before mismatch in question to ensure that the correct identity in the member is sliced by subtracting from the mismatch pos in the parent
-                del_num = len(set([deletion for deletion in del_dict[cluster] if member in del_dict[cluster][deletion] and deletion < pos]))
+                # note that deletions cause member sequence shortening and so deletions can occur at the "same position" as a mismatch (for e.g. when a deletion is proceeded directly by a mismatch)
+                # use "<=" here to account for this 
+                del_num = len(set([deletion for deletion in del_dict[cluster] if member in del_dict[cluster][deletion] and deletion <= pos]))
                 identity = member_seq[pos-ins_num+del_num]
 
                 isodecoder = "-".join(member.split("-")[:-1]) if not "chr" in member else member
                 posIdentity = str(pos) + identity
                 cluster_MemberMismatchPos[cluster][isodecoder].add(posIdentity)
-    
     # Reformat insert_dict similarly as above, and update cluster_MemberMismatchPos
     cluster_MemberInsertPos = defaultdict(dd_set)
     cluster_MemberInsertPos = reformatInDelDict(insert_dict, cluster_MemberInsertPos, "Ins")
@@ -394,7 +395,7 @@ def unsplitClustersCov(coverageData, coverageBed, unique_isodecoderMMs, splitBoo
 def getDeconvSizes(splitBool, tRNA_dict, cluster_dict, unique_isodecoderMMs):
     # get isodecoder sizes in the case of deconvolution
     # this will be a mix of unique transcripts (and their numbers) and unsplit clusters with naming convention: tRNA-AA-Anti-IsoX/Y and their sizes
-    
+
     isodecoder_sizes = defaultdict(int)
 
     unsplitIsos = [x for k in splitBool.values() for x in k]

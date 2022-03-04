@@ -574,7 +574,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 							mod_lists[cluster_name] = list(set(mod_lists[cluster_name] + member_mods))
 							Inosine_lists[cluster_name] = list(set(Inosine_lists[cluster_name] + member_Inosines))
 							cluster_dict[cluster_name].append(member_name)
-
+							
 		clusterbed.close()
 
 		# Write cluster information to tsv and get number of unique sequences per cluster (i.e. isodecoders) for read count splitting

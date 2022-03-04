@@ -30,6 +30,15 @@ mimseq/data/additionalMods_original.txt
 mimseq/data/modomics
 mimseq/data/modomics_orig
 mimseq/data/tRNAmatureseq.cm
+mimseq/data/araTha1-eColitK/araTha1-filtered-tRNAs.fa
+mimseq/data/araTha1-eColitK/araTha1-mature-tRNAs.fa
+mimseq/data/araTha1-eColitK/araTha1-tRNAs-confidence-set.out
+mimseq/data/araTha1-eColitK/araTha1-tRNAs-confidence-set.ss
+mimseq/data/araTha1-eColitK/araTha1-tRNAs-detailed.out
+mimseq/data/araTha1-eColitK/araTha1-tRNAs-detailed.ss
+mimseq/data/araTha1-eColitK/araTha1-tRNAs.bed
+mimseq/data/araTha1-eColitK/araTha1-tRNAs.fa
+mimseq/data/araTha1-eColitK/araTha1-tRNAs_name_map.txt
 mimseq/data/ce11-tRNAs/ce11-mitotRNAs.fa
 mimseq/data/ce11-tRNAs/ce11-tRNAs-detailed.out
 mimseq/data/ce11-tRNAs/ce11-tRNAs.bed

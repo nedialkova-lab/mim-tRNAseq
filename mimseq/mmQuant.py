@@ -120,7 +120,7 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 	stopTable = defaultdict(lambda: defaultdict(int))
 	counts = defaultdict(lambda: defaultdict(int))
 	cov = defaultdict(lambda: defaultdict(int))
-	readRef_match_dict = defaultdict(lambda: defaultdict(int)) # boolean counts of reads assigned to parent by defualt that match (True) or do not match (False) parent and contain strnage mismatches
+	readRef_match_dict = defaultdict(lambda: defaultdict(int)) # boolean counts of reads assigned to parent by default that match (True) or do not match (False) parent sequence
 	geneCov = defaultdict(int)
 	condition = info[inputs][0]
 
@@ -311,7 +311,6 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		modTable_prop_melt['condition'] = condition
 		modTable_prop_melt['bam'] = inputs
 		modTable_prop_melt.pos = pd.to_numeric(modTable_prop_melt.pos)
-		#modTable_prop_melt.to_csv("premismatchTable.csv", sep = "\t", index = False, na_rep = 'NA')
 
 		# split and parallelize addNA
 		names, dfs = splitTable(modTable_prop_melt)

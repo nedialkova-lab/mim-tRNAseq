@@ -36,7 +36,7 @@ Once installed, mim-tRNAseq should be executable and help displayed, by running
 ::
 	mimseq --help
 
-The package also comes with a `data/` folder which has the required tRNAscan-SE input files (and mitochondrial tRNA inputs where available) for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not affect the results. Therefore, default inputs when using the `--species` are the references including E. coli Lys-TTT sequence.
+The package also comes with a `data/` folder which has the required tRNAscan-SE input files (and mitochondrial/plastid tRNA inputs where available) for a few species. Note that data folders containing "eColitK" in the name contain the E. coli Lys-TTT reference used as a spike-in in the paper. Using this reference in an experiment without this spike-in should not affect the results. Therefore, default inputs when using the `--species` are the references including E. coli Lys-TTT sequence.
 
 
 Dependencies
@@ -183,7 +183,7 @@ Input files include:
 * Genomic tRNA sequences: DNA sequences of tRNA loci in genome of interest in fasta format, including introns but excluding trailer and leader sequences.
 * tRNA ".out" file: contains important info about tRNA introns.
 * Experiment sample file: User-generated tab-delimited file with 2 columns. The first is the absolute path to trimmed tRNAseq reads. The second is the condition name, used to group replicates (e.g. WT or knock-out etc)
-* OPTIONAL mitochondrial tRNA sequences: Can be obtained from the mitotRNAdb_ if available. First, find the organism of interest in the "Search Database" tab, select all sequences for organism, choose "Send FASTA" in the drop-down at the bottom of the results, and click "Submit".
+* OPTIONAL mitochondrial/plastid (in case of plant species) tRNA sequences: Can be obtained from the mitotRNAdb_ if available. First, find the organism of interest in the "Search Database" tab, select all sequences for organism, choose "Send FASTA" in the drop-down at the bottom of the results, and click "Submit". Or, for plant species, obtain sequences from PtRNAdb_ by going to "Search", choosing "Plastid" in "Search by Genome", enabling "Search by Plant Name:" and searching for your species of interest. Download the results, and then reformat them to the correct format using the example `convertPtRNAdbSearch.py` script in the *Arabidopsis thaliana* data_ folder, making sure to change the file names in the script before running.
 
 `additionalMods.txt` is automatically read in by mim-tRNAseq to add additional modifications to the modification index that may not be in Modomics yet. Some important modifications have already been added for certain species, mainly based on Clark et al. tRNA base methylation identification and quantification via high-throughput sequencing (2016), and Rafels-Ybern et al. Codon adaptation to tRNAs with Inosine modification at position 34 is widespread among Eukaryotes and present in two Bacterial phyla (2018).
 
@@ -191,3 +191,5 @@ Input files include:
 .. _gtRNAdb: http://gtrnadb.ucsc.edu/
 .. _tRNAscanSE: http://trna.ucsc.edu/tRNAscan-SE/
 .. _mitotRNAdb: http://mttrna.bioinf.uni-leipzig.de/mtDataOutput/
+.. _PtRNAdb: http://14.139.61.8/PtRNAdb/index.php
+.. _data: https://github.com/nedialkova-lab/mim-tRNAseq/blob/master/mimseq/data/araTha1-eColitK/convertPtRNAdbSearch.py

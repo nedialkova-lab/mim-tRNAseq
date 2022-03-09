@@ -217,6 +217,7 @@ def splitIsodecoder(cluster_perPos_mismatchMembers, insert_dict, del_dict, tRNA_
                 isodecoder = "-".join(member.split("-")[:-1]) if not "chr" in member else member
                 posIdentity = str(pos) + identity
                 cluster_MemberMismatchPos[cluster][isodecoder].add(posIdentity)
+                
     # Reformat insert_dict similarly as above, and update cluster_MemberMismatchPos
     cluster_MemberInsertPos = defaultdict(dd_set)
     cluster_MemberInsertPos = reformatInDelDict(insert_dict, cluster_MemberInsertPos, "Ins")

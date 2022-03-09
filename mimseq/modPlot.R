@@ -46,6 +46,7 @@ mods = read.table(paste(out, "mods/mismatchTable.csv", sep = ''), header=T, sep 
 mods$proportion[is.na(mods$proportion)] = 0
 mods$proportion[is.infinite(mods$proportion)] = 0
 mods$isodecoder = sub(".*_mito_tRNA-", "mito", mods$isodecoder)
+mods$isodecoder = sub(".*_plastid_tRNA-", "plastid", mods$isodecoder)
 mods$isodecoder = sub(".*_nmt_tRNA-", "nmt", mods$isodecoder)
 mods$isodecoder = sub(".*_tRNA-", "", mods$isodecoder)
 mods$isodecoder = sub(".*_tRX-", "tRX-", mods$isodecoder)
@@ -70,6 +71,7 @@ stops = read.table(paste(out, "mods/RTstopTable.csv", sep = ""),
 stops$proportion[is.na(stops$proportion)] = 0
 stops$proportion[is.infinite(stops$proportion)] = 0
 stops$isodecoder = sub(".*_mito_tRNA-", "mito", stops$isodecoder)
+stops$isodecoder = sub(".*_plastid_tRNA-", "plastid", stops$isodecoder)
 stops$isodecoder = sub(".*_nmt_tRNA-", "nmt", stops$isodecoder)
 stops$isodecoder = sub(".*_tRNA-","", stops$isodecoder)
 stops$isodecoder = sub(".*_tRX-", "tRX-", stops$isodecoder)
@@ -88,6 +90,7 @@ context_info = read.table(paste(out, "mods/modContext.txt", sep = ''),
                           header = TRUE)
 colnames(context_info) = c("isodecoder", "canon_pos", "identity", "upstream", "downstream")
 context_info$isodecoder = sub(".*_mito_tRNA-", "mito", context_info$isodecoder)
+context_info$isodecoder = sub(".*_plastid_tRNA-", "plastid", context_info$isodecoder)
 context_info$isodecoder = sub(".*_nmt_tRNA-", "nmt", context_info$isodecoder)
 context_info$isodecoder = sub(".*_tRNA-", "", context_info$isodecoder)
 context_info$isodecoder = sub(".*_tRX-", "tRX-", context_info$isodecoder)
@@ -104,6 +107,7 @@ for (i in unique(mods_agg$condition)) {
   # cyto mods
   sub_mods_agg = mods_agg[mods_agg$condition == i &
                             !grepl("mito", mods_agg$isodecoder) &
+                            !grepl("plastid", mods_agg$isodecoder) &
                             !grepl("nmt", mods_agg$isodecoder), ]
   sub_mods_wide = dcast(sub_mods_agg[,c('isodecoder','canon_pos', 'x')],
                         list(.(isodecoder), .(canon_pos)), value.var = 'x', 
@@ -148,6 +152,7 @@ for (i in unique(mods_agg$condition)) {
   # cyto stops
   sub_stops_agg = stops_agg[stops_agg$condition == i &
                               !grepl("mito", stops_agg$isodecoder) &
+                              !grepl("plastid", stops_agg$isodecoder) &
                               !grepl("nmt", stops_agg$isodecoder), ]
   sub_stops_wide = dcast(sub_stops_agg[,c('isodecoder','canon_pos', 'x')], 
                          list(.(isodecoder), .(canon_pos)), value.var = 'x', 
@@ -193,13 +198,14 @@ for (i in unique(mods_agg$condition)) {
             sep = ''), 
       width = 18, height = 16)
   draw(heatmap_list, ht_gap = unit(10, "mm"),
-       column_title = "Cytoplasmic clusters")
+       column_title = "Cytoplasmic transcripts")
   
   if (!is.na(mito_trnas)) {
     # mito mods
     sub_mods_agg = mods_agg[mods_agg$condition == i &
                               (grepl("mito", mods_agg$isodecoder) |
-                                 grepl("nmt", mods_agg$isodecoder)), ]
+                                grepl("plastid", mods_agg$isodecoder) |
+                                grepl("nmt", mods_agg$isodecoder)), ]
     
     if (nrow(sub_mods_agg) != 0) {
       sub_mods_wide = dcast(sub_mods_agg[,c('isodecoder','canon_pos', 'x')],
@@ -244,7 +250,8 @@ for (i in unique(mods_agg$condition)) {
       # mito stops
       sub_stops_agg = stops_agg[stops_agg$condition == i &
                                   (grepl("mito", stops_agg$isodecoder) |
-                                     grepl("nmt", stops_agg$isodecoder)), ]
+                                    grepl("plastid", stops_agg$isodecoder) |
+                                    grepl("nmt", stops_agg$isodecoder)), ]
       sub_stops_wide = dcast(sub_stops_agg[,c('isodecoder','canon_pos', 'x')],
                              list(.(isodecoder), .(canon_pos)), value.var = 'x',
                              fun.aggregate = mean)
@@ -286,7 +293,7 @@ for (i in unique(mods_agg$condition)) {
       heatmap_list = mito_stops_hm %v% mito_mods_hm
       draw(heatmap_list,
            ht_gap = unit(10, "mm"),
-           column_title = "Mitochondrial (and nuclear-encoded mito) clusters")
+           column_title = "Organellar transcripts")
       dev.off()
     }
   }
@@ -320,7 +327,8 @@ for (i in unique(mods_agg$condition)) {
                                   levels = c('9','20', '20a', '26', '32','34','37','58'))
   
   mods_scatter = ggplot(sub_mods_pos[!grepl("mito", sub_mods_pos$isodecoder) &
-                                       !grepl("nmt", sub_mods_pos$isodecoder), ],
+                                      !grepl("plastid", sub_mods_pos$isodecoder) &
+                                      !grepl("nmt", sub_mods_pos$isodecoder), ],
                         aes(x=as.character(canon_pos),
                             y = Proportion,
                             color = Proportion)) +
@@ -341,7 +349,8 @@ for (i in unique(mods_agg$condition)) {
   
   if (!is.na(mito_trnas)) {
     sub_mods_pos_mito = sub_mods_pos[grepl("mito", sub_mods_pos$isodecoder) |
-                                       grepl("nmt", sub_mods_pos$isodecoder), ]
+                                      grepl("plastid", sub_mods_pos$isodecoder) |
+                                      grepl("nmt", sub_mods_pos$isodecoder), ]
     
     if (nrow(sub_mods_pos_mito) != 0) {
       mito_mods_scatter = ggplot(sub_mods_pos_mito, 
@@ -356,7 +365,7 @@ for (i in unique(mods_agg$condition)) {
           axis.title.x = element_blank(),
           axis.ticks.x=element_blank()
         )
-      ggsave(paste(out, "mods/", paste('mito', i, 'misincProps.pdf', sep = '_'),
+      ggsave(paste(out, "mods/", paste('organelle', i, 'misincProps.pdf', sep = '_'),
                    sep = ''),
              mito_mods_scatter, height=10, width=14)
     }
@@ -377,7 +386,8 @@ for (i in unique(mods_agg$condition)) {
                            by = c("isodecoder", "canon_pos"))
   sub_mods_aggtype$bam = sub(out, "", sub_mods_aggtype$bam)
   sub_mods_aggtype_cyt = sub_mods_aggtype[!grepl("mito", sub_mods_aggtype$isodecoder) &
-                                            !grepl("nmt", sub_mods_aggtype$isodecoder), ]
+                                          !grepl("plastid", sub_mods_aggtype$isodecoder) &
+                                          !grepl("nmt", sub_mods_aggtype$isodecoder), ]
   # renormalise by sum of misinc at each site for each isodecoder in each bam file
   # this makes sum all misinc types = 1
   # additionally filter all clusters at each pos where misinc of highest nucl > 0.95
@@ -432,7 +442,9 @@ for (i in unique(mods_agg$condition)) {
   ggsave(paste(out, "mods/", paste(i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), signature_plot_downstream, height=10, width=14, useDingbats=FALSE)
   
   if (!is.na(mito_trnas)){
-    sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$isodecoder) | grepl("nmt", sub_mods_aggtype$isodecoder), ]
+    sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$isodecoder) |
+                                              grepl("plastid", sub_mods_aggtype$isodecoder) |
+                                              grepl("nmt", sub_mods_aggtype$isodecoder), ]
     sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, canon_pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
     
     if(nrow(sub_mods_aggtype_mito) != 0) {
@@ -461,7 +473,7 @@ for (i in unique(mods_agg$condition)) {
         scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
         guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
       
-      ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_upstream, height=10, width=14)
+      ggsave(paste(out, "mods/", paste("organelle", i, 'misincSignatures_upstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_upstream, height=10, width=14)
       
       mito_signature_plot_downstream = ggplot(sub_mods_aggtype_mito, aes(x = type, y = new_prop, fill = type)) + 
         geom_jitter(aes(color = bam), alpha = 0.6, size = 0.7) +
@@ -478,7 +490,7 @@ for (i in unique(mods_agg$condition)) {
         scale_fill_manual(values = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098")) +
         guides(color = "none", fill = guide_legend(override.aes = list(color = c("#739FC2", "#7DB0A9", "#9F8FA9", "#C1B098"))))
       
-      ggsave(paste(out, "mods/", paste("mito", i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_downstream, height=10, width=14)
+      ggsave(paste(out, "mods/", paste("organelle", i, 'misincSignatures_downstreamContext.pdf', sep = '_'), sep = ''), mito_signature_plot_downstream, height=10, width=14)
     }
   }
 }
@@ -496,6 +508,7 @@ if (length(unique(mods$condition)) > 1) {
   allmods = read.table(paste(out, "mods/allModsTable.csv", sep = ''), sep = "\t", header=T)
   allmods = allmods[,c('isodecoder', 'canon_pos')]
   allmods = allmods[!grepl("mito", allmods$isodecoder),]
+    allmods = allmods[!grepl("plastid", allmods$isodecoder),]
   allmods$isodecoder = sub(".*_tRNA-", "", allmods$isodecoder)
   allmods$isodecoder = sub(".*_tRX-", "tRX-", allmods$isodecoder)
   allmods$isodecoder = gsub("/[0-9].*", "-multi", allmods$isodecoder)
@@ -503,6 +516,7 @@ if (length(unique(mods$condition)) > 1) {
   predictedmods = read.table(paste(out, "mods/predictedMods.csv", sep = ''), sep = "\t", header=T)
   predictedmods = predictedmods[,c('isodecoder','canon_pos')]
   predictedmods = predictedmods[!grepl("mito", predictedmods$isodecoder),]
+  predictedmods = predictedmods[!grepl("plastid", predictedmods$isodecoder),]
   predictedmods$isodecoder = sub(".*_tRNA-", "", predictedmods$isodecoder)
   predictedmods$isodecoder = sub(".*_tRX-", "tRX-", predictedmods$isodecoder)
   predictedmods$isodecoder = gsub("/[0-9].*", "-multi", predictedmods$isodecoder)
@@ -513,7 +527,7 @@ if (length(unique(mods$condition)) > 1) {
   mods$cov[is.na(mods$cov)] = 0
   mods = mods[!grepl("eColiLys", mods$isodecoder), ]
   # exclude mito clusters from diff mods analysis
-  mods = mods[!grepl("mito", mods$isodecoder),]
+  mods = mods[!grepl("mito", mods$isodecoder) & !grepl("plastid", mods$isodecoder),]
   mods$bam = sub(".*/","",mods$bam)
   mods_agg = aggregate(mods$proportion, by = list(isodecoder = mods$isodecoder,
                                                   pos = mods$pos,

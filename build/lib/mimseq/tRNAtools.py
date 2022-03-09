@@ -28,7 +28,7 @@ def dd():
 def dd_list():
 	return(defaultdict(list))
 
-def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod):
+def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod):
 # tRNA sequence files parser and dictionary building
 
 	# Generate modification reference table
@@ -72,7 +72,10 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 			anticodon = seq_parts[4]
 			amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
 			mito_count[anticodon] += 1
-			new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
+			if not plantSpecies:
+				new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
+			else:
+				new_seq = seq_parts[1] + "_plastid_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
 			tRNAseq = str(temp_dict[seq].seq) + "CCA" if not double_cca else str(temp_dict[seq].seq) + "CCACCA"
 			tRNA_dict[new_seq]['sequence'] = tRNAseq
 			tRNA_dict[new_seq]['type'] = 'mitochondrial'
@@ -81,7 +84,10 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans
 		num_cytosilic = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "cytosolic"])
 		num_mito = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "mitochondrial"])
 
-		log.info("{} cytosolic and {} mitochondrial tRNA sequences imported".format(num_cytosilic, num_mito))
+		if not plantSpecies:
+			log.info("{} cytosolic and {} mitochondrial tRNA sequences imported".format(num_cytosilic, num_mito))
+		else:
+			log.info("{} cytosolic and {} plastid tRNA sequences imported".format(num_cytosilic, num_mito))
 
 	# Read in and parse modomics file to contain similar headers to tRNA_dict
 	# Save in new dict
@@ -226,7 +232,7 @@ def getModomics(local_mod):
 
 	return modomics, fetch
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False):
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0
@@ -238,7 +244,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experi
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
-	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod)
+	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod)
 	temp_dir = out_dir + "/tmp/"
 
 	try:
@@ -760,9 +766,9 @@ def additionalModsParser(input_species, out_dir):
 	# for each additional modification in dictionary, define mod site based on conserved location relative to structural features
 	for isodecoder, data in additionalMods.items():
 		if data['type'] == "mitochondrial":
-			clusters = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key and "mito" in key]
+			clusters = [key for key in tRNA_struct_nogap.keys() if isodecoder in key and 'nmt' not in key and "mito" in key]
 		else:
-			clusters = [key for key, value in tRNA_struct_nogap.items() if isodecoder in key and 'nmt' not in key and "mito" not in key]
+			clusters = [key for key in tRNA_struct_nogap.keys() if isodecoder in key and 'nmt' not in key and "mito" not in key]
 		for cluster in clusters:
 			no_gap_struct = [value for key, value in tRNA_struct_nogap.items() if key == cluster and 'nmt' not in key]
 			if not no_gap_struct: # test if struct is empty, i.e. if isodecoder from additional mods does not exist in tRNA dictionary

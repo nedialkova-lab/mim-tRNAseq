@@ -48,17 +48,17 @@ setwd(file.path(outdir))
 
 # Import data from counts and sampleData
 # Filter out mito counts
-# Import data from counts and sampleData
-# Filter out mito counts
 anticodon_countdata = read.table("Anticodon_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
 anticodon_countdata$size = NULL
 anticodon_countdata = anticodon_countdata[!grepl("mito", rownames(anticodon_countdata)), ,drop = FALSE]
+anticodon_countdata = anticodon_countdata[!grepl("plastid", rownames(anticodon_countdata)), ,drop = FALSE]
 isodecoder_countdata = read.table("Isodecoder_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
 #isodecoder_countdata = isodecoder_countdata[grepl("True", isodecoder_countdata$Single_isodecoder),]
 isodecoder_countdata$Single_isodecoder = NULL
 isodecoder_countdata$size = NULL
 isodecoder_countdata$parent = NULL
 isodecoder_countdata = isodecoder_countdata[!grepl("mito", rownames(isodecoder_countdata)), ,drop = FALSE]
+isodecoder_countdata = isodecoder_countdata[!grepl("plastid", rownames(isodecoder_countdata)), ,drop = FALSE]
 coldata = read.table(paste(sampleData, sep=""), header=FALSE, sep = "\t", row.names=1)
 
 coldata = data.frame(row.names=rownames(coldata), condition = coldata[,1])
@@ -335,7 +335,7 @@ if (nrow(coldata) == 1) {
           geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
           scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#f28f3b", "TRUE1"="#4daf4a")) + 
           scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"=19, "TRUE-1"=17, "TRUE1"=17)) + 
-          scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
+          scale_size_manual(values = c(1,2), guide = "none") + theme_bw() +
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", anticodon_cor), parse = TRUE)
         
@@ -346,7 +346,7 @@ if (nrow(coldata) == 1) {
           geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
           scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#f28f3b", "TRUE1"="#4daf4a")) + 
           scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"=19, "TRUE-1"=17, "TRUE1"=17)) + 
-          scale_size_manual(values = c(1,2), guide = FALSE) + theme_bw() +
+          scale_size_manual(values = c(1,2), guide = "none") + theme_bw() +
           labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
           annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", isodecoder_cor), parse = TRUE)
         

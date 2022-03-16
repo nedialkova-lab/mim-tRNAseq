@@ -118,16 +118,21 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		dinuc_dict = defaultdict(int)
 		dinuc_prop = open(inputs + "_dinuc.csv", "w")
 		CCAvsCC_counts = open(inputs + "_CCAcounts.csv", "w")
-		if not remap:
-			# Open files for single read analysis
-			sample_name = inputs.split("/")[-1].split(".")[0]
+
+	# Open files for single read analysis
+	if not remap:
+		sample_name = inputs.split("/")[-1].split(".")[0]
+		if not os.path.exists(out_dir + "single_read_data/" + sample_name):
 			os.mkdir(out_dir + "single_read_data/" + sample_name)
-			srfiles = dict()
-			for r in isodecoder_sizes.keys():
-				shortname = "-".join(r.split("-")[:-1]) if not "chr" in r else r
-				srfiles[r] = gzip.open(out_dir + "single_read_data/" + sample_name +"/"+ r +".tsv.gz", "wt")
+		srfiles = dict()
+		for r in isodecoder_sizes.keys():
+			shortname = "-".join(r.split("-")[:-1]) if not "chr" in r else r
+			srfiles[r] = gzip.open(out_dir + "single_read_data/" + sample_name +"/"+ r +".tsv.gz", "wt")
+			if cca:
 				cols = ["READ"]+[str(s) for s in  tRNA_struct.loc[shortname].index]+["Charged"]
-				srfiles[r].write("\t".join(cols)+"\n")
+			else:
+				cols = ["READ"]+[str(s) for s in  tRNA_struct.loc[shortname].index]
+			srfiles[r].write("\t".join(cols)+"\n")
 
 	# process mods by looping through alignments in bam file
 	bam_file = pysam.AlignmentFile(inputs, "rb")
@@ -237,26 +242,26 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 				dinuc = "Absent"
 				cca_dict[reference][dinuc] += 1
 			
-			############################
-			# Single-read mods and CCA #
-			############################
+		############################
+		# Single-read mods and CCA #
+		############################
 			
-			if not remap:
-				# Modifications
-				shortname = "-".join(reference.split("-")[:-1]) if not "chr" in reference else reference
-				seqtemp = []
-				for n in tRNA_struct.loc[shortname].index:
-					if (n<(offset+1)) or (n>(aln_end)):
-						seqtemp.append("NA")
-					elif n not in temp.keys():
-						seqtemp.append("0")
+		if not remap:
+			# Modifications
+			shortname = "-".join(reference.split("-")[:-1]) if not "chr" in reference else reference
+			seqtemp = []
+			for n in tRNA_struct.loc[shortname].index:
+				if (n<(offset+1)) or (n>(aln_end)):
+					seqtemp.append("NA")
+				elif n not in temp.keys():
+					seqtemp.append("0")
+				else:
+					b = temp[n]
+					if b!="N":
+						seqtemp.append(b)
 					else:
-						b = temp[n]
-						if b!="N":
-							seqtemp.append(b)
-						else:
-							seqtemp.append("NA")
-
+						seqtemp.append("NA")
+			if cca:
 				# Record charging status
 				if aln_end==ref_length:
 					chrg = "1"
@@ -264,10 +269,12 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 					chrg = "0"
 				else:
 					chrg = "NA"
-                
-				# Add line
 				add = [read.query_name]+seqtemp+[chrg]
-				srfiles[reference].write("\t".join(add)+"\n")
+			else:
+				add = [read.query_name]+seqtemp
+			
+			# Add line
+			srfiles[reference].write("\t".join(add)+"\n")
 
 
 	## Edit misincorportation and stop data before writing
@@ -429,8 +436,10 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 
 			dinuc_prop.close()
 			CCAvsCC_counts.close()
-			for r in srfiles.keys():
-				srfiles[r].close()
+		
+		# Close single-read analysis files
+		for r in srfiles.keys():
+			srfiles[r].close()
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
@@ -606,6 +615,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 
 		try:
 			os.mkdir(out_dir + "mods")
+			os.mkdir(out_dir + "single_read_data")
 		except FileExistsError:
 			log.warning("Rewriting over old mods files...")
 

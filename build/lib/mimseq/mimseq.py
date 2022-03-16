@@ -18,6 +18,7 @@ from .tRNAtools import modsToSNPIndex, generateGSNAPIndices, newModsParser, tidy
 from .tRNAmap import mainAlign
 from .getCoverage import getCoverage, plotCoverage
 from .mmQuant import generateModsTable, plotCCA
+from .crosstalks import crosstalks_wrapper
 from .ssAlign import structureParser, modContext 
 from .splitClusters import splitIsodecoder, unsplitClusters, getIsodecoderSizes, writeIsodecoderTranscripts
 import sys, os, subprocess, logging, datetime, copy
@@ -135,7 +136,8 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 			new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs, newSplitBool, isodecoder_sizes, cluster)
 		else:
 			new_mods, new_Inosines, filtered_cov, filter_warning = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, newSplitBool, isodecoder_sizes, cluster)
-
+		# Crosstalks analysis
+		crosstalks_wrapper(out + "single_read_data", 0.05, threads)
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 

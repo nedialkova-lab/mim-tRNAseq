@@ -135,8 +135,8 @@ if (nrow(coldata) == 1) {
       names(anticodon_counts)[names(anticodon_counts) == 'a'] = a
       names(isodecoder_counts)[names(isodecoder_counts) == 'a'] = a
       # remove these samples from the countdata
-      isodecoder_countdata = isodecoder_countdata[,-grepl(a, colnames(isodecoder_countdata)), drop = FALSE]
-      anticodon_countdata = anticodon_countdata[,-grepl(a, colnames(anticodon_countdata)), drop = FALSE]
+      isodecoder_countdata = isodecoder_countdata[,!colnames(isodecoder_countdata) == a, drop = FALSE]
+      anticodon_countdata = anticodon_countdata[,!colnames(anticodon_countdata) == a, drop = FALSE]
       coldata = coldata[!rownames(coldata) == a, , drop = FALSE]
       
     }

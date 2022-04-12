@@ -663,9 +663,9 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 					iso_set.add("-".join(member.split("-")[0:4]))
 			splitBool[cluster].update(set(filtMembers))
 			
-			# generate new unsplit cluster names and add to the lookup dictionary
-			member_IsoNums = tuple(int(iso.split("-")[-2]) for iso in filtMembers)
-			member_IsoNums = sorted(member_IsoNums)
+			# generate new unsplit cluster names and add to the lookup dictionary (keep tRX naming for these isodecoders)
+			member_IsoNums = tuple(int(iso.split("-")[-2]) if "tRNA" in iso else "tRX" + iso.split("-")[-2] for iso in filtMembers)
+			member_IsoNums = sorted(tuple(x for x in member_IsoNums if isinstance(x, int))) + [x for x in member_IsoNums if isinstance(x, str)]
 			member_IsoString = "/" + "/".join([str(iso) for iso in member_IsoNums])
 			newClusterName = "-".join(cluster.split("-")[:-1]) + member_IsoString
 			readRef_unsplit_newNames.append(newClusterName)

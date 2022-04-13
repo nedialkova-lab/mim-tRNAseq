@@ -106,6 +106,15 @@ mimseq/data/hg38-eColitK/hg38-tRNAs-filtered.fa
 mimseq/data/hg38-eColitK/hg38-tRNAs.bed
 mimseq/data/hg38-eColitK/hg38-tRNAs.fa
 mimseq/data/hg38-eColitK/hg38-tRNAs_name_map.txt
+mimseq/data/hg38-eColitK_GlyTCCmutant/FastaHeadersforMimseq.py
+mimseq/data/hg38-eColitK_GlyTCCmutant/README.txt
+mimseq/data/hg38-eColitK_GlyTCCmutant/hg38-mitotRNAs.fa
+mimseq/data/hg38-eColitK_GlyTCCmutant/hg38-tRNAs-all.fa
+mimseq/data/hg38-eColitK_GlyTCCmutant/hg38-tRNAs-detailed.out
+mimseq/data/hg38-eColitK_GlyTCCmutant/hg38-tRNAs-filtered.fa
+mimseq/data/hg38-eColitK_GlyTCCmutant/hg38-tRNAs.bed
+mimseq/data/hg38-eColitK_GlyTCCmutant/hg38-tRNAs.fa
+mimseq/data/hg38-eColitK_GlyTCCmutant/hg38-tRNAs_name_map.txt
 mimseq/data/mm10-eColitK/mm10-mitotRNAs.fa
 mimseq/data/mm10-eColitK/mm10_eColitK-tRNAs.fa
 mimseq/data/mm10-eColitK/mm10_eschColi-tRNAs.out

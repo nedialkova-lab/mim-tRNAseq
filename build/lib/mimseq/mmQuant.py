@@ -89,7 +89,7 @@ def unknownMods(inputs, knownTable, cluster_dict, modTable, misinc_thresh, cov_t
 					if (tRNA_dict[isodecoder]['sequence'][pos-1] == 'A' and list(modTable[isodecoder][pos].keys())[list(modTable[isodecoder][pos].values()).index(max(modTable[isodecoder][pos].values()))] == 'G' and pos-1 == min(anticodon)):
 						new_inosines_cluster[cluster].append(pos-1)
 						new_inosines_isodecoder[isodecoder].append(pos-1)
-				elif (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) <= 0.95 and not (pos-1 == min(anticodon) or tRNA_dict[isodecoder]['sequence'][pos-1] == 'A')):
+				elif (max(modTable[isodecoder][pos].values()) / sum(modTable[isodecoder][pos].values()) <= 0.95 and not (pos-1 == min(anticodon))):
 					new_mods_cluster[cluster].append(pos-1) #modTable has 1 based values - convert back to 0 based for mod_lists
 					new_mods_isodecoder[isodecoder].append(pos-1)
 
@@ -663,9 +663,9 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 					iso_set.add("-".join(member.split("-")[0:4]))
 			splitBool[cluster].update(set(filtMembers))
 			
-			# generate new unsplit cluster names and add to the lookup dictionary
-			member_IsoNums = tuple(int(iso.split("-")[-2]) for iso in filtMembers)
-			member_IsoNums = sorted(member_IsoNums)
+			# generate new unsplit cluster names and add to the lookup dictionary (keep tRX naming for these isodecoders)
+			member_IsoNums = tuple(int(iso.split("-")[-2]) if "tRNA" in iso else "tRX" + iso.split("-")[-2] for iso in filtMembers)
+			member_IsoNums = sorted(tuple(x for x in member_IsoNums if isinstance(x, int))) + [x for x in member_IsoNums if isinstance(x, str)]
 			member_IsoString = "/" + "/".join([str(iso) for iso in member_IsoNums])
 			newClusterName = "-".join(cluster.split("-")[:-1]) + member_IsoString
 			readRef_unsplit_newNames.append(newClusterName)

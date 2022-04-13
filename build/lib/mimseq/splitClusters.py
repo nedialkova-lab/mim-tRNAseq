@@ -466,8 +466,12 @@ def writeIsodecoderInfo(out_dir, experiment_name, isodecoder_sizes, readRef_unsp
         count = 0
         for num in name.split("-")[-1].split("/"):
             count += 1
-            iso = base + "-" + num
-            isodecoder_list = [x for x in tRNA_dict.keys() if iso in x and not "chr" in x]
+            if not "tRX" in num:
+                iso = base + "-" + num
+            else:
+                num = num.replace("tRX", "")
+                iso = base.replace("tRNA", "tRX") + "-" + num
+            isodecoder_list = [x for x in tRNA_dict.keys() if iso == "-".join(x.split("-")[:-1]) and not "chr" in x]
             iso_min = min([x.split("-")[-1] for x in isodecoder_list])
             gene = iso + "-" + str(iso_min)
             del isodecoder_sizes[gene]

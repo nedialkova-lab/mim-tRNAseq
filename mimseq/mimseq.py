@@ -226,7 +226,7 @@ def main():
 
 	inputs = parser.add_argument_group("Input files")
 	inputs.add_argument('-s','--species', metavar='species', required = not ('-t' in sys.argv), dest = 'species', help = \
-		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap19, Mmus, Rnor, Scer, ScerMut, Spom, Dmel, Drer, Ecol', \
+		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap19, Mmus, Rnor, Scer, Spom, Dmel, Drer, Ecol, Atha', \
 		choices = ['Hsap', 'Hsap19','Ggor','Mmus','Rnor','Scer', 'Spom','Dmel', 'Drer', 'Ecol', 'Atha', 'HsapTCC', 'ScerMut'])
 	inputs.add_argument('-t', '--trnas', metavar='genomic tRNAs', required = False, dest = 'trnas', help = \
 		'Genomic tRNA fasta file, e.g. from gtRNAdb or tRNAscan-SE. Already avalable in data folder for a few model organisms.')

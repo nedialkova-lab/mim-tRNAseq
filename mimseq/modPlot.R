@@ -124,7 +124,9 @@ for (i in unique(mods_agg$condition)) {
   col_anno_data = aggregate(sub_mods_agg$x,
                             by = list(pos = sub_mods_agg$canon_pos),
                             FUN = mean)
-  col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+  if (length(missing) != 0) {
+    col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+  }
   col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
   col_anno_data = col_anno_data$x
   col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
@@ -169,7 +171,9 @@ for (i in unique(mods_agg$condition)) {
   col_anno_data = aggregate(sub_stops_agg$x,
                             by = list(pos = sub_stops_agg$canon_pos),
                             FUN = mean)
-  col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+  if (length(missing) != 0) {
+    col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+  }
   col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
   col_anno_data = col_anno_data$x
   col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
@@ -223,7 +227,9 @@ for (i in unique(mods_agg$condition)) {
       col_anno_data = aggregate(sub_mods_agg$x,
                                 by = list(pos = sub_mods_agg$canon_pos),
                                 FUN = mean)
-      col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+      if (length(missing) != 0) {
+    col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+      }
       col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
       col_anno_data = col_anno_data$x
       col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,
@@ -267,7 +273,9 @@ for (i in unique(mods_agg$condition)) {
       col_anno_data = aggregate(sub_stops_agg$x,
                                 by = list(pos = sub_stops_agg$canon_pos),
                                 FUN = mean)
-      col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+      if (length(missing) != 0) {
+    col_anno_data = rbind(col_anno_data, data.frame(pos = missing, x = 0))
+      }
       col_anno_data = col_anno_data[match(cons_pos, col_anno_data$pos),]
       col_anno_data = col_anno_data$x
       col_anno = HeatmapAnnotation(Mean = anno_barplot(col_anno_data,

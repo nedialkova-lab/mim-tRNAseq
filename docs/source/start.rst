@@ -176,7 +176,7 @@ Input files
 
 Note: mim-tRNAseq does not require an input from Modomics_ for modification indexing, but automatically connects to the Modomics server and retrieves this information. Therefore an **internet connection is required** to run mim-tRNAseq. However, there is an offline copy of Modomics so that mim-tRNAseq can still run without connection, or if the Modomics database is offline.
 
-mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the `data/` folder and can be specified easily with the `--species` parameter. If not here, you may be able to obtain the required files from the GtRNAdb_, or request new predictions from the maintainers if your species of interest is not there. Failing this, the input files can be generated using tRNAscanSE_ on a genome reference file, but the annotation and naming of tRNAs becomes crucial for mim-tRNAseq functioning. Information on the tRNAscan-SE ID given in parantheses in the fasta file must match entries in the ".out" file for proper processing. This kind of manual prediction, annotation, and input into mim-tRNAseq can conceivably create many issues, as mim-tRNAseq expects files and annotations as thos formatted in GtRNADB files. This functionality has also not been extensively tested. 
+mim-tRNAseq requires a few input files depending on the species of interest. Data for some of these species is already present in the `data/` folder and can be specified easily with the `--species` parameter (see :ref:`Pre-built references` below for available references). If not here, you may be able to obtain the required files from the GtRNAdb_, or request new predictions from the maintainers if your species of interest is not there. Failing this, the input files can be generated using tRNAscanSE_ on a genome reference file, but the annotation and naming of tRNAs becomes crucial for mim-tRNAseq functioning. Information on the tRNAscan-SE ID given in parantheses in the fasta file must match entries in the ".out" file for proper processing. This kind of manual prediction, annotation, and input into mim-tRNAseq can conceivably create many issues, as mim-tRNAseq expects files and annotations as thos formatted in GtRNADB files. This functionality has also not been extensively tested. 
 
 Input files include:
 
@@ -186,6 +186,23 @@ Input files include:
 * OPTIONAL mitochondrial/plastid (in case of plant species) tRNA sequences: Can be obtained from the mitotRNAdb_ if available. First, find the organism of interest in the "Search Database" tab, select all sequences for organism, choose "Send FASTA" in the drop-down at the bottom of the results, and click "Submit". Or, for plant species, obtain sequences from PtRNAdb_ by going to "Search", choosing "Plastid" in "Search by Genome", enabling "Search by Plant Name:" and searching for your species of interest. Download the results, and then reformat them to the correct format using the example `convertPtRNAdbSearch.py` script in the *Arabidopsis thaliana* data_ folder, making sure to change the file names in the script before running.
 
 `additionalMods.txt` is automatically read in by mim-tRNAseq to add additional modifications to the modification index that may not be in Modomics yet. Some important modifications have already been added for certain species, mainly based on Clark et al. tRNA base methylation identification and quantification via high-throughput sequencing (2016), and Rafels-Ybern et al. Codon adaptation to tRNAs with Inosine modification at position 34 is widespread among Eukaryotes and present in two Bacterial phyla (2018).
+
+
+Pre-built references
+^^^^^^^^^^^^^^^^^^^^
+
+The following options are available to specify to mimseq with `--species`. Information on the genome reference versions and links to GtRNAdb are also given:
+
+* Hsap: *H. sapiens* hg38 (GRCh38) `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi38/>`_.  
+* Hsap19: *H. sapiens* hg19 (GRCh37) `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi19/>`_.
+* Mmus: *M. musculus* mm10 (GRCm38) `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Mmusc10/>`_.
+* Rnor: *R. norvegicus* rn7 (mRatBN7.2) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Rnorv7/>`_.
+* Scer: *S. cerevisiae* S228C sacCer3 `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Scere3/>`_.
+* Spom: *S. pombe* 972h- ASM294v2 `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Schi_pomb_972h/>`_.
+* Dmel: *D. melanogaster* dm6 (Aug. 2014 BDGP Release 6) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Dmela6/>`_.
+* Drer: *D. rerio* danRer11 (GRCz11) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Dreri11/>`_.
+* Ecol: *E. coli* str. K-12 substr. MG1655 ASM584v2 `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/bacteria/Esch_coli_K_12_MG1655/>`_.
+* Atha: *A. thaliana* TAIR10 (Feb 2011) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Athal10/>`_.
 
 .. _Modomics: http://modomics.genesilico.pl/
 .. _gtRNAdb: http://gtrnadb.ucsc.edu/

@@ -373,9 +373,9 @@ def main():
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-tRNAs_mutant/sacCer3_eschColi-tRNAs.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-tRNAs_mutant/sacCer3-mitotRNAs.fa"
 				if args.species == 'Mmus':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10_eColitK-tRNAs.fa"
-					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10_eschColi-tRNAs.out"
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10-mitotRNAs.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/mm39-eColitK/mm39-tRNAs-all.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/mm39-eColitK/mm39-tRNAs-detailed.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/mm39-eColitK/mm39-mitotRNAs.fa"
 				if args.species == 'Rnor':
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/rn7-eColitK/rn7-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/rn7-eColitK/rn7_eColitK-tRNAs-confidence-set.out"

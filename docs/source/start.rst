@@ -191,11 +191,11 @@ Input files include:
 Pre-built references
 ^^^^^^^^^^^^^^^^^^^^
 
-The following options are available to specify to mimseq with `--species`. Information on the genome reference versions and links to GtRNAdb are also given:
+The following options are available to specify to mimseq with `--species`. Links to GtRNAdb are also given:
 
 * Hsap: *H. sapiens* hg38 (GRCh38) `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi38/>`_.  
 * Hsap19: *H. sapiens* hg19 (GRCh37) `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi19/>`_.
-* Mmus: *M. musculus* mm10 (GRCm38) `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Mmusc10/>`_.
+* Mmus: *M. musculus* mm39 (GRCm39) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Mmusc39/>`_.
 * Rnor: *R. norvegicus* rn7 (mRatBN7.2) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Rnorv7/>`_.
 * Scer: *S. cerevisiae* S228C sacCer3 `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Scere3/>`_.
 * Spom: *S. pombe* 972h- ASM294v2 `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Schi_pomb_972h/>`_.
@@ -203,6 +203,11 @@ The following options are available to specify to mimseq with `--species`. Infor
 * Drer: *D. rerio* danRer11 (GRCz11) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Dreri11/>`_.
 * Ecol: *E. coli* str. K-12 substr. MG1655 ASM584v2 `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/bacteria/Esch_coli_K_12_MG1655/>`_.
 * Atha: *A. thaliana* TAIR10 (Feb 2011) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Athal10/>`_.
+
+**Note**
+The Hsap, Hsap19, and Mmus references were built using the bed file supplied in the GtRNAdb downloads, which can be obtained from "Download tRNAscan-SE Results" on a species page. This bed file represents the "High Confidence Set and Top 30 Hits in Each Isotype of Filtered Sets" according to GtRNAdb (for hg38 example see `here <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Hsapi19/Hsapi19-displayed-gene-list.html>`_). These predictions are reached by simply clicking "tRNA Predictions" on the left panel on a species page. We opted for this set of sequences to represent a less stringent set of tRNAs that might show expression despite filtering by tRNAScan-SE, thus allowing mimseq to filter unexpressed genes instead (using *--min-cov*). 
+
+To create these references (since the fasta file is not directly supplied by GtRNAdb for this set of tRNAs), we extracted the sequence from the genome using bedtools, and subsequently renamed and reformatted the sequence headers with a custom script, *FastaHeadersforMimseq.py*. This analysis can be recreated for another species or genome by following the `README <https://github.com/nedialkova-lab/mim-tRNAseq/blob/master/mimseq/data/mm39-eColitK/README.txt>`_ for mouse mm39 as an example. Be sure to edit *FastaHeadersforMimseq.py* to suite your needs.
 
 .. _Modomics: http://modomics.genesilico.pl/
 .. _gtRNAdb: http://gtrnadb.ucsc.edu/

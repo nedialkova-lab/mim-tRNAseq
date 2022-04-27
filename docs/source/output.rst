@@ -67,13 +67,14 @@ Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
 **mods_logOR**
 
 Differential modification analysis. Only generated if mods analysis is performed (see above) and if there are more than 1 condition in the experiment
+Separate analyses for organellar and cytosolic tRNAs.
 
 * `ConditionAvsConditionB_logOR.pdf`: Heatmaps of filtered, significant log10 odds ratios (logOR) for each tRNA at each position between condition A and B. Performed for all pairwise condition comparisons. Values are FDR adjusted chi-squared p-values <= 0.01, and filtered for known and newly detected modified sites in mimseq.
 * 'ConditionAvsConditionB_logOR.csv': Data table for heatmap plotting.
 
 **DESeq2**
 
-Differential tRNA expression analyses using DESeq2. Split into two separate analyses performed on counts at the isoacceptor and isodecoder level, respectively. Both folders contain the same outputs.
+Differential tRNA expression analyses using DESeq2. Cytosolic and organellar tRNA counts analyzed separately. Each analysis is split into two separate analyses performed on counts at the anticodon and isodecoder level, respectively. Both folders contain the same outputs.
 
 * `qc-dispersions.png`: Diagnostic dispersion plot of isoacceptor/isodecoder expression dispersion before and after shrinkage of estimates towards the fitted estimates. See the DESeq2 analysis vignette here_ for details
 * `qc-sampledists.png`: Sample distance heatmap based on variance stabilizing transformed counts. Hierarchical clustering used for clustering samples. Scale indicates sample distances.

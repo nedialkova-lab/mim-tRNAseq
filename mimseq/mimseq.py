@@ -172,7 +172,6 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 		log.info("Plotting modification and RT stop data...")
 		try:
 			modplot_cmd = ["Rscript", script_path + "/modPlot.R", out, str(mod_sites), str(cons_pos_list), str(misinc_thresh), str(mito_trnas), control_cond]
-			print(modplot_cmd)
 			process = subprocess.Popen(modplot_cmd, stdout = subprocess.PIPE)
 			while True:
 				line = process.stdout.readline()
@@ -358,7 +357,7 @@ def main():
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19_eschColi-tRNAs.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19-mitotRNAs.fa"
 				if args.species == 'Hsap':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-all.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-filtered.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-mitotRNAs.fa"
 				if args.species == 'HsapTCC':

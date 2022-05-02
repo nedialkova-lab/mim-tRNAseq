@@ -191,7 +191,7 @@ Input files include:
 Pre-built references
 ^^^^^^^^^^^^^^^^^^^^
 
-The following options are available to specify to mimseq with `--species`. Links to GtRNAdb are also given:
+`mimseq` contains a few pre-built references which available to specify at runtime with `--species`. All of these references include the *E. coli* `tRNA-Lys-TTT <http://gtrnadb.ucsc.edu/genomes/bacteria/Esch_coli_K_12_MG1655/genes/tRNA-Lys-TTT-1-1.html>`_ spike-in sequence as detailed in the original method (`Behrens <https://doi.org/10.1016/j.molcel.2021.01.028>`_ et al., 2021). Details on these references are given below:
 
 * Hsap: *H. sapiens* hg38 (GRCh38) `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi38/>`_.  
 * Hsap19: *H. sapiens* hg19 (GRCh37) `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi19/>`_.

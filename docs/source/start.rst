@@ -204,7 +204,8 @@ Pre-built references
 * Ecol: *E. coli* str. K-12 substr. MG1655 ASM584v2 `tRNA predictions <http://gtrnadb.ucsc.edu/genomes/bacteria/Esch_coli_K_12_MG1655/>`_.
 * Atha: *A. thaliana* TAIR10 (Feb 2011) `tRNA predictions <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Athal10/>`_.
 
-**Note**
+**Note:**
+
 The Hsap, Hsap19, and Mmus references were built using the bed file supplied in the GtRNAdb downloads, which can be obtained from "Download tRNAscan-SE Results" on a species page. This bed file represents the "High Confidence Set and Top 30 Hits in Each Isotype of Filtered Sets" according to GtRNAdb (for hg38 example see `here <http://gtrnadb.ucsc.edu/GtRNAdb2/genomes/eukaryota/Hsapi19/Hsapi19-displayed-gene-list.html>`_). These predictions are reached by simply clicking "tRNA Predictions" on the left panel on a species page. We opted for this set of sequences to represent a less stringent set of tRNAs that might show expression despite filtering by tRNAScan-SE, thus allowing mimseq to filter unexpressed genes instead (using *--min-cov*). 
 
 To create these references (since the fasta file is not directly supplied by GtRNAdb for this set of tRNAs), we extracted the sequence from the genome using bedtools, and subsequently renamed and reformatted the sequence headers with a custom script, *FastaHeadersforMimseq.py*. This analysis can be recreated for another species or genome by following the `README <https://github.com/nedialkova-lab/mim-tRNAseq/blob/master/mimseq/data/mm39-eColitK/README.txt>`_ for mouse mm39 as an example. Be sure to edit *FastaHeadersforMimseq.py* to suite your needs.

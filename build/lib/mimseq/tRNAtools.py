@@ -56,8 +56,9 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_ta
 		if not (re.search('Und', seq) or re.search('nmt', seq)):
 			if not pretrnas:
 				tRNAseq = intronRemover(Intron_dict, temp_dict, seq, posttrans_mod_off, double_cca)
+				tRNAseq = tRNAseq.upper()
 			else:
-				tRNAseq = str(temp_dict[seq].seq)
+				tRNAseq = str(temp_dict[seq].seq).upper()
 			tRNA_dict[seq]['sequence'] = tRNAseq
 			tRNA_dict[seq]['species'] = ' '.join(seq.split('_')[0:2])
 			tRNA_dict[seq]['type'] = "cytosolic"
@@ -77,7 +78,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_ta
 			else:
 				new_seq = seq_parts[1] + "_plastid_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
 			tRNAseq = str(temp_dict[seq].seq) + "CCA" if not double_cca else str(temp_dict[seq].seq) + "CCACCA"
-			tRNA_dict[new_seq]['sequence'] = tRNAseq
+			tRNA_dict[new_seq]['sequence'] = tRNAseq.upper()
 			tRNA_dict[new_seq]['type'] = 'mitochondrial'
 			tRNA_dict[new_seq]['species'] = ' '.join(seq.split('_')[0:2])
 

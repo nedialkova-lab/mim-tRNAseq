@@ -199,7 +199,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	\n| Differential expression analysis with DESeq2 |\
 	\n+----------------------------------------------+")
 
-	deseq_cmd = ["Rscript", script_path + "/deseq.R", out, sample_data, control_cond, str(cluster_id), str(p_adj)]
+	deseq_cmd = ["Rscript", script_path + "/deseq.R", out, sample_data, control_cond, str(cluster_id), str(p_adj), str(mito_trnas)]
 	#subprocess.check_call(deseq_cmd)
 	process = subprocess.Popen(deseq_cmd, stdout = subprocess.PIPE)
 	while True:
@@ -353,11 +353,11 @@ def main():
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-mitotRNAs.fa"
 				if args.species == 'Hsap19':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19_eColitK.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19-tRNAs-all.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19_eschColi-tRNAs.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19-mitotRNAs.fa"
 				if args.species == 'Hsap':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-all.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-filtered.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-mitotRNAs.fa"
 				if args.species == 'HsapTCC':
@@ -373,9 +373,9 @@ def main():
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-tRNAs_mutant/sacCer3_eschColi-tRNAs.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/sacCer3-tRNAs_mutant/sacCer3-mitotRNAs.fa"
 				if args.species == 'Mmus':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10_eColitK-tRNAs.fa"
-					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10_eschColi-tRNAs.out"
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/mm10-eColitK/mm10-mitotRNAs.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/mm39-eColitK/mm39-tRNAs-all.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/mm39-eColitK/mm39-tRNAs-detailed.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/mm39-eColitK/mm39-mitotRNAs.fa"
 				if args.species == 'Rnor':
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/rn7-eColitK/rn7-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/rn7-eColitK/rn7_eColitK-tRNAs-confidence-set.out"

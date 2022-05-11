@@ -396,8 +396,8 @@ for (type in c("cyto", "mito")) {
         count_df_anticodon_out = count_df_anticodon_out[, c(col_idx, (seq_len(ncol(count_df_anticodon_out)))[-col_idx])]
         col_idx = grep("isodecoder", names(count_df_isodecoder_out))
         count_df_isodecoder_out = count_df_isodecoder_out[, c(col_idx, (seq_len(ncol(count_df_isodecoder_out)))[-col_idx])]
-        write.table(count_df_isodecoder_out, file = "Isodecoder_counts_DESEqNormalized.csv", sep = "\t", quote = FALSE, row.names = FALSE)
-        write.table(count_df_anticodon_out, file = "Anticodon_counts_DESEqNormalized.csv", sep = "\t", quote = FALSE, row.names = FALSE)
+        write.table(count_df_isodecoder_out, file = paste0(type, "_Isodecoder_counts_DESEqNormalized.csv"), sep = "\t", quote = FALSE, row.names = FALSE)
+        write.table(count_df_anticodon_out, file = paste0(type, "_Anticodon_counts_DESEqNormalized.csv"), sep = "\t", quote = FALSE, row.names = FALSE)
         print("DESeq2 normalized counts saved to counts/*_normalized.txt")
         
         # Build combined filtered tables for DE heatmaps and scale counts

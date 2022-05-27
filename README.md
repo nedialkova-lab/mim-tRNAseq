@@ -46,7 +46,7 @@ usearch needs to be acquired and installed. Please do the following:
 	mv usearch10.0.240_i86linux32 usearch
 	cp usearch /usr/local/bin
 ```
-For this last cp command, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH:
+For this last cp command, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH (replace `full/path/to/usearch` with location of your usearch binary from above:
 ```bash
 export PATH=$PATH:full/path/to/usearch
 ```

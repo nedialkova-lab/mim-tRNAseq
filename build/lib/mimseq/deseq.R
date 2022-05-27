@@ -416,6 +416,8 @@ for (type in c("cyto", "mito")) {
         basemean_anticodon = as.data.frame(res_anticodon) %>% dplyr::select(baseMean) %>% tibble::rownames_to_column(var = "Anticodon")
         normcounts_anticodon = subset(count_df_anticodon_out, select = -c(size))
         comb_anticodon = list(comb_anticodon, basemean_anticodon, normcounts_anticodon) %>% Reduce(function(dtf1,dtf2) left_join(dtf1,dtf2,by="Anticodon"), .)
+        comb_anticodon$Anticodon = sub(".*_mito_tRNA-", "mito",comb_anticodon$Anticodon)
+        comb_anticodon$Anticodon = sub(".*_plastid_tRNA-", "plastid",comb_anticodon$Anticodon)
         comb_anticodon$Anticodon = sub(".*?_.*?_tRNA-","",comb_anticodon$Anticodon)
         comb_anticodon = comb_anticodon[!grepl("tRX", comb_anticodon$Anticodon),]
         

@@ -31,9 +31,11 @@ mimseq/data/modomics
 mimseq/data/modomics_orig
 mimseq/data/tRNAmatureseq.cm
 mimseq/data/araTha1-eColitK/README.txt
-mimseq/data/araTha1-eColitK/araTha1-PtRNAdb-searchResults.txt
+mimseq/data/araTha1-eColitK/araTha1-PtRNAdb-mito-searchResults.txt
+mimseq/data/araTha1-eColitK/araTha1-PtRNAdb-plastid-searchResults.txt
 mimseq/data/araTha1-eColitK/araTha1-filtered-tRNAs.fa
 mimseq/data/araTha1-eColitK/araTha1-mature-tRNAs.fa
+mimseq/data/araTha1-eColitK/araTha1-mitotRNAs.fa
 mimseq/data/araTha1-eColitK/araTha1-plastidtRNAs.fa
 mimseq/data/araTha1-eColitK/araTha1-tRNAs-confidence-set.out
 mimseq/data/araTha1-eColitK/araTha1-tRNAs-confidence-set.ss

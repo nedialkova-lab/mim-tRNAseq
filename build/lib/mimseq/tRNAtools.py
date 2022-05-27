@@ -28,7 +28,7 @@ def dd():
 def dd_list():
 	return(defaultdict(list))
 
-def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod):
+def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod):
 # tRNA sequence files parser and dictionary building
 
 	# Generate modification reference table
@@ -65,30 +65,33 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_ta
 
 	# add mitochondrial tRNAs if given
 	if mitotRNAs:
-		temp_dict = SeqIO.to_dict(SeqIO.parse(mitotRNAs,"fasta"))
-		mito_count = defaultdict(int)
-		# read each mito tRNA, edit sequence header to match nuclear genes as above and add to tRNA_dict
-		for seq in temp_dict:
-			seq_parts = seq.split("|")
-			anticodon = seq_parts[4]
-			amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
-			mito_count[anticodon] += 1
-			if not plantSpecies:
-				new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
-			else:
-				new_seq = seq_parts[1] + "_plastid_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
-			tRNAseq = str(temp_dict[seq].seq) + "CCA" if not double_cca else str(temp_dict[seq].seq) + "CCACCA"
-			tRNA_dict[new_seq]['sequence'] = tRNAseq.upper()
-			tRNA_dict[new_seq]['type'] = 'mitochondrial'
-			tRNA_dict[new_seq]['species'] = ' '.join(seq.split('_')[0:2])
+		mitotRNAs = mitotRNAs.split(" ")
+
+		for fn in mitotRNAs:
+			org = "mito" if re.search("mito", fn) else "plastid"
+			temp_dict = SeqIO.to_dict(SeqIO.parse(fn,"fasta"))
+			mito_count = defaultdict(int)
+			org_count = 0
+			# read each mito tRNA, edit sequence header to match nuclear genes as above and add to tRNA_dict
+			for seq in temp_dict:
+				org_count += 1
+				seq_parts = seq.split("|")
+				anticodon = seq_parts[4]
+				amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
+				mito_count[anticodon] += 1
+				if org == "mito":
+					new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
+				else:
+					new_seq = seq_parts[1] + "_plastid_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(mito_count[anticodon]) + "-1"
+				tRNAseq = str(temp_dict[seq].seq) + "CCA" if not double_cca else str(temp_dict[seq].seq) + "CCACCA"
+				tRNA_dict[new_seq]['sequence'] = tRNAseq.upper()
+				tRNA_dict[new_seq]['type'] = 'mitochondrial'
+				tRNA_dict[new_seq]['species'] = ' '.join(seq.split('_')[0:2])
+
+			log.info("{} ".format(org_count) + org + " tRNA sequences imported")
 
 		num_cytosilic = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "cytosolic"])
-		num_mito = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "mitochondrial"])
-
-		if not plantSpecies:
-			log.info("{} cytosolic and {} mitochondrial tRNA sequences imported".format(num_cytosilic, num_mito))
-		else:
-			log.info("{} cytosolic and {} plastid tRNA sequences imported".format(num_cytosilic, num_mito))
+		log.info("{} cytosolic tRNA sequences imported".format(num_cytosilic))
 
 	# Read in and parse modomics file to contain similar headers to tRNA_dict
 	# Save in new dict
@@ -233,7 +236,7 @@ def getModomics(local_mod):
 
 	return modomics, fetch
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False):
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0
@@ -245,7 +248,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
-	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, plantSpecies, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod)
+	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod)
 	temp_dir = out_dir + "/tmp/"
 
 	try:

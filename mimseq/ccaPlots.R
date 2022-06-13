@@ -49,6 +49,7 @@ if (length(args) == 0) {
   cca_counts$gene = sub(".*_plastid_tRNA-","plastid",cca_counts$gene)
   cca_counts$gene = sub(".*_nmt_tRNA-","nmt",cca_counts$gene)
   cca_counts$gene = sub(".*_tRNA-","",cca_counts$gene)
+  cca_counts$gene = sub(".*_tRX-", "tRX-", cca_counts$gene)
   cca_counts$gene = ifelse(cca_counts$gene == "eColiLys-TTT-1-1", "eColiLys", cca_counts$gene)
   cca_counts$gene = gsub("/[0-9].*", "-multi", cca_counts$gene)
 

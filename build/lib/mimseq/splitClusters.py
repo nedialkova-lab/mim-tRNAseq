@@ -404,9 +404,13 @@ def getDeconvSizes(splitBool, tRNA_dict, cluster_dict, unique_isodecoderMMs):
 
     # add single seq cluster sizes
     for cluster, members in cluster_dict.items():
-        child_iso_set = {tRNA_dict[member]['sequence'].upper() for member in members}
-        if len(child_iso_set) == 1:
-            isodecoder_sizes[cluster] = 1
+        child_iso_list = [tRNA_dict[member]['sequence'].upper() for member in members]
+        if len(set(child_iso_list)) == 1:
+            isodecoder_sizes[cluster] = len(child_iso_list)
+        if "Ala-AGC-1" in cluster:
+            print(cluster)
+            print(len(set(child_iso_list)))
+            print(len(child_iso_list))
 
     # generate new names for unsplit clusters (tRNA-AA-Anti-IsoX/Y) - write to lookup for later
     unsplitCluster_lookup = defaultdict()

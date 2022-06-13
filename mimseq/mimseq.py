@@ -73,7 +73,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 			logging.FileHandler(out + "mim-tRNAseq_{}.log".format(now.strftime("%H-%M-%S"))),
 			logging.StreamHandler()
 		])
-	log.info("mim-tRNAseq v{} run with command:".format(version.__version__))
+	log.info("mim-tRNAseq {} run with command:".format(version.__version__))
 	log.info(" ".join(sys.argv))
 
 	# Sample data integrity check...

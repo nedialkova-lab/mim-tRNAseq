@@ -270,8 +270,9 @@ for (type in c("cyto", "mito")) {
           geom_point(size=3) +
           xlab(paste0("PC1: ",percentVar[1],"% variance")) +
           ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
-          coord_fixed()
-        ggsave(paste(subdir_anticodon, "qc-pca.png", sep="/"), height = 7, width = 8)
+          coord_fixed() +
+          theme_bw()
+        ggsave(paste(subdir_anticodon, "qc-pca.pdf", sep="/"), height = 7, width = 8)
         
         pcaData_isodecoder <- plotPCA(vsd_isodecoder, intgroup="condition", returnData=TRUE)
         percentVar <- round(100 * attr(pcaData_isodecoder, "percentVar"))
@@ -279,8 +280,9 @@ for (type in c("cyto", "mito")) {
           geom_point(size=3) +
           xlab(paste0("PC1: ",percentVar[1],"% variance")) +
           ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
-          coord_fixed()
-        ggsave(paste(subdir_isodecoder, "qc-pca.png", sep="/"), height = 7, width = 8)
+          coord_fixed() +
+          theme_bw()
+        ggsave(paste(subdir_isodecoder, "qc-pca.pdf", sep="/"), height = 7, width = 8)
         
         # Get combinations of coditions for various DE contrasts
         ordered_levels = levels(lastlevel(unique(dds_anticodon$condition), control_cond))
@@ -345,7 +347,7 @@ for (type in c("cyto", "mito")) {
             scale_x_log10() + scale_y_log10() + 
             #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
             geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
-            scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#f28f3b", "TRUE1"="#4daf4a")) + 
+            scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#9970ab", "TRUE1"="#55ae61")) + 
             scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"=19, "TRUE-1"=17, "TRUE1"=17)) + 
             scale_size_manual(values = c(1,2), guide = "none") + theme_bw() +
             labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
@@ -356,7 +358,7 @@ for (type in c("cyto", "mito")) {
             scale_x_log10() + scale_y_log10() + 
             #geom_smooth(method = 'lm', se = TRUE, alpha = 0.5, color = '#3182bd', fill = 'grey') +
             geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = '#3182bd', alpha = 0.8) + 
-            scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#f28f3b", "TRUE1"="#4daf4a")) + 
+            scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#9970ab", "TRUE1"="#55ae61")) + 
             scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"=19, "TRUE-1"=17, "TRUE1"=17)) + 
             scale_size_manual(values = c(1,2), guide = "none") + theme_bw() +
             labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
@@ -427,7 +429,7 @@ for (type in c("cyto", "mito")) {
         
         # Heatmaps
         # note that all tables and plots only built if DE tables are not empty
-        col_fun = colorRamp2(c(-3, 0, 3), c("#CC5803", "#f7f7f7", "#36682B"))
+        col_fun = colorRamp2(c(-3, 0, 3), c("#762a83", "#f7f7f7", "#1b7837"))
         
         # Annotation for baseMean counts
         if (nrow(comb_isodecoder) != 0) {

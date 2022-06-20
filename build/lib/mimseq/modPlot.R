@@ -689,7 +689,7 @@ if (length(unique(mods$condition)) > 1) {
       # only draw if temp consists of something other than 0s
       if (length(temp[which(temp != 0)]) > 0) {
         # create new variable for adding info about mito to plot names
-        col_fun = colorRamp2(c(max(abs(temp)), 0, -max(abs(temp))), c("#36682B", "#f7f7f7","#CC5803"))
+        col_fun = colorRamp2(c(max(abs(temp)), 0, -max(abs(temp))), c("#1b7837", "#f7f7f7","#762a83"))
         if (type == "mito") {
           write.csv(temp, file=paste(out, "mods_logOR/", paste("organelle", comp,"logOR.csv",sep="_"), sep=""))
           pdf(paste(out, 'mods_logOR/', paste("organelle", comp, "logOR.pdf", sep = "_"), sep = ''), width = 14, height = 12)

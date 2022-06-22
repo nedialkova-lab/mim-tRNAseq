@@ -22,12 +22,12 @@ def filterCoverage (cov_table, min_cov):
 	# if min_cov is a fraction
 	if min_cov < 1:
 		cov_table_new = cov_table.div(cov_table.sum(axis=0), axis=1)
-		filtered_list = list(cov_table_new[(cov_table_new.values < min_cov).any(1) & (~cov_table_new.index.str.contains('mito')) & (~cov_table_new.index.str.contains('plastid')) & (~cov_table_new.index.str.contains('eColi'))].index)
+		filtered_list = list(cov_table_new[(cov_table_new.values < min_cov).all(1) & (~cov_table_new.index.str.contains('mito')) & (~cov_table_new.index.str.contains('plastid')) & (~cov_table_new.index.str.contains('eColi'))].index)
 		log.info("{} clusters filtered out according to minimum coverage threshold: {:.2%} of total tRNA coverage.".format(len(filtered_list), min_cov))
 	else:
 		if min_cov == 1:
 			log.warning("--min-cov set to 1: treating as integer of absolute coverage, not a fraction of mapped reads!")
-		filtered_list = list(cov_table[(cov_table.values < min_cov).any(1) & (~cov_table.index.str.contains('mito')) & (~cov_table.index.str.contains('plastid')) & (~cov_table.index.str.contains('eColi'))].index)
+		filtered_list = list(cov_table[(cov_table.values < min_cov).all(1) & (~cov_table.index.str.contains('mito')) & (~cov_table.index.str.contains('plastid')) & (~cov_table.index.str.contains('eColi'))].index)
 		log.info("{} clusters filtered out according to minimum coverage threshold: {} total read coverage per isodecoder.".format(len(filtered_list), min_cov))
 
 	# warn user about many filtered clusters

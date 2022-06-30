@@ -5,6 +5,7 @@
 # mim-tRNAseq
 [![Documentation Status](https://readthedocs.org/projects/mim-trnaseq/badge/?version=latest)](https://mim-trnaseq.readthedocs.io/en/latest/?badge=latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6782628.svg)](https://doi.org/10.5281/zenodo.6782628)
 ### Modification-induced misincorporation tRNA sequencing.
 
 This package is an automated analysis pipeline for the quantitation and analysis of tRNA expression and modifications. Given trimmed sequencing reads in fastq format, this pipeline will:

@@ -62,7 +62,7 @@ Once installed, mim-tRNAseq should be executable and help displayed, by running
 ```
 An example command to run mim-tRNAseq may look as follows. This will run an analysis between HEK293T and K562 cells on an example dataset included in the package:
 ```bash
-	mimseq --species Hsap --cluster-id 0.95 --threads 15 --min-cov 0.0005 --max-mismatches 0.1 --control-condition HEK293T -n hg38_test --out-dir hg38_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.075 sampleData_HEKvsK562.txt
+	mimseq --species Hsap --cluster-id 0.97 --threads 15 --min-cov 0.0005 --max-mismatches 0.075 --control-condition HEK293T -n hg38_test --out-dir hg38_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.05 sampleData_HEKvsK562.txt
 ```
 The run should take around 15 minutes on a server using 15 processors (`--threads 15`: please update according to your server capabilities).
 

@@ -53,16 +53,17 @@ Only generated if --cca-analysis flag is present. Contains data and plots for 3'
 
 Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
 
-* `\*comb_heatmap.pdf`: Combined RT stop and misincorporation heatmaps for all tRNAs/clusters passing --min-cov threshold and successfully deconvoluted (see *mim-tRNAseq introduction*). Shows proportion of stops and misincorporations at canonical tRNA positions for all conditions. Available for mitochondrial/plastid tRNAs if -m is specified.
-* `\*misincProps.pdf`: Misincorporation proportions for each tRNA/cluster at selected conserved modified sites by identity of modified nucleotide. Available for mitochondrial/plastid tRNAs if -m is specified.
-* `\*misincSignatures_upstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucloetide and upstream nucleotide relative to RT direction. Available for mitochondrial/plastid tRNAs if -m is specified.
-* `\*misincSignatures_downstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucleotide and downstream nucleotide relative to RT direction. Available for mitochondrial/plastid tRNAs if -m is specified.
+* `*comb_heatmap.pdf`: Combined RT stop and misincorporation heatmaps for all tRNAs/clusters passing --min-cov threshold and successfully deconvoluted (see *mim-tRNAseq introduction*). Shows proportion of stops and misincorporations at canonical tRNA positions for all conditions. Available for mitochondrial/plastid tRNAs if -m is specified.
+* `*misincProps.pdf`: Misincorporation proportions for each tRNA/cluster at selected conserved modified sites by identity of modified nucleotide. Available for mitochondrial/plastid tRNAs if -m is specified.
+* `*misincSignatures_upstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucloetide and upstream nucleotide relative to RT direction. Available for mitochondrial/plastid tRNAs if -m is specified.
+* `*misincSignatures_downstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucleotide and downstream nucleotide relative to RT direction. Available for mitochondrial/plastid tRNAs if -m is specified.
 * `mismatchTable.csv`: Data table for all misincorporation analyses. Includes tRNA/cluster, misincorporation type, proportion of misincorporations, coverage at each position and canonical tRNA position information, among other useful information.
 * `RTstopTable.csv`: Data table for RT stop analyses. Includes tRNA/cluster, canonical tRNA position and proportion of reads that stop at each position (normalized to total coverage of the reference sequence). This gives the relative frequency of reads stopping at all positions for a reference, the sum of which should equal 1.
 * `readthroughTable.csv`: Data table similar to `RTstopTable.csv` except the proportion here represents the proportion of reads that stop at a site normalized to the total read coverage at that site only. 1 - this value will therefore give the reads that contain readthrough at each position.
 * `modContext.txt`: Nucleotide context information for selected modified positions. Note, `pos` here is not canonical position information but ungapped alignment positions for each tRNA/cluster.
 * `allModsTable.csv`: All known modifications from Modomics and `additionalMods.txt` and newly detected mim-tRNAseq modifications for each cluster. 1-based numbering of position of modified base in mature transctipt sequence and canonical numbering. Used in new mods discovery.
 * `predictedMods.csv`: Newly predicted modified sites per isodeocoder based on misinc-thresh.
+* `modPos_totalMisincProp.csv`: Total misincrporation with coverage and nucleotide identity per conserved modified position for all transcripts.
 
 **mods_logOR**
 

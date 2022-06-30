@@ -60,6 +60,14 @@ mods_agg = aggregate(mods$proportion, by = list(isodecoder = mods$isodecoder,
                                                 condition = mods$condition,
                                                 canon_pos = mods$canon_pos),
                      FUN = sum)
+# new mods table for output
+mods_out = aggregate(mods$proportion, by = list(isodecoder = mods$isodecoder,
+                                                bam = mods$bam,
+                                                condition = mods$condition,
+                                                canon_pos = mods$canon_pos,
+                                                cov = mods$cov),
+                     FUN = sum)
+
 mods_agg = aggregate(mods_agg$x, by = list(isodecoder = mods_agg$isodecoder,
                                            pos = mods_agg$pos, 
                                            condition = mods_agg$condition,
@@ -99,6 +107,11 @@ context_info$isodecoder = ifelse(context_info$isodecoder == "eColiLys-TTT-1-1",
                                  "eColiLys",
                                  context_info$isodecoder)
 context_info$isodecoder = gsub("/[0-9].*", "-multi", context_info$isodecoder)
+
+# merge context info with mods_out and save
+mods_out = merge(mods_out, context_info[, c("isodecoder", "canon_pos", "identity")], by = c("isodecoder", "canon_pos"))
+names(mods_out)[names(mods_out) == "x"] = "misinc_proportion"
+write.table(mods_out, paste0(out, "/mods/modPos_totalMisincProp.csv"), sep = "\t", row.names = FALSE, quote = FALSE)
 
 ### for each condition make a misincorporation and stops heatmap as a combined figure using ComplexHeatmap
 ###... make a scatter plot of misincorporation rates faceted by positions in cons_mods

@@ -474,7 +474,15 @@ def writeIsodecoderInfo(out_dir, experiment_name, isodecoder_sizes, readRef_unsp
             isodecoder_list = [x for x in tRNA_dict.keys() if iso == "-".join(x.split("-")[:-1]) and not "chr" in x]
             iso_min = min([x.split("-")[-1] for x in isodecoder_list])
             gene = iso + "-" + str(iso_min)
-            del isodecoder_sizes[gene]
+            try:
+                del isodecoder_sizes[gene]
+            except KeyError:
+                # if gene not in isodecoder_sizes, this is probably due to the parent not having the minimum gene number
+                # i.e. parent is not tRNA-AA-Anti-Iso-1 but maybe -2 or -3; usually results from unordered genes in input fasta reference
+                while not gene in isodecoder_sizes:
+                    iso_min = int(iso_min) + 1
+                    gene = iso + "-" + str(iso_min)
+                del isodecoder_sizes[gene]
         isodecoder_sizes[name] = count
 
     # save isodecoder info

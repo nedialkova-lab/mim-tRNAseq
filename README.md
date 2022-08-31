@@ -8,6 +8,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6782628.svg)](https://doi.org/10.5281/zenodo.6782628)
 
 **Original paper** - https://doi.org/10.1016/j.molcel.2021.01.028
+**Protocol paper** - https://doi.org/10.1016/j.xpro.2022.101579
 
 ### Modification-induced misincorporation tRNA sequencing.
 
@@ -84,3 +85,5 @@ Nedialkova laboratory: https://www.biochem.mpg.de/nedialkova
 ## Cite
 
 Behrens et al., 2021, High-resolution quantitative profiling of tRNA abundance and modification status in eukaryotes by mim-tRNaseq. Molecular Cell 81, 1–14 (https://doi.org/10.1016/j.molcel.2021.01.028)
+
+Behrens and Nedialkova, 2022, Experimental and computational workflow for the analysis of tRNA pools from eukaryotic cells by mim-tRNAseq. STAR Protocols. 3, 101579 (https://doi.org/10.1016/j.xpro.2022.101579)

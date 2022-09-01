@@ -433,29 +433,31 @@ for (type in c("cyto", "mito")) {
         
         # Annotation for baseMean counts
         if (nrow(comb_isodecoder) != 0) {
-          baseMeanAnno_iso = rowAnnotation(base_mean = anno_lines(comb_isodecoder$baseMean, 
-                                                                  gp = gpar(lwd = 1.5, col = "#084081")), 
-                                          annotation_name_rot = 90,
-                                          width = unit("0.8", "cm"),
-                                          height = unit(20, "cm"))
+          anno_type = ifelse(nrow(comb_isodecoder) > 1, anno_lines, anno_barplot)
+          baseMeanAnno_iso = rowAnnotation(base_mean = anno_type(comb_isodecoder$baseMean,
+                                                                  gp = gpar(lwd = 1.5, col = "#084081", fill = "#084081")), 
+                                           annotation_name_rot = 90,
+                                           width = unit("0.8", "cm"),
+                                           height = unit(20, "cm"))
           
           hm_iso = Heatmap(scaled_counts_isodecoder,
-                          col = col_fun,
-                          row_title = paste('n = ', nrow(scaled_counts_isodecoder), sep = ""),
-                          show_row_names = FALSE,
-                          width = unit((length(ordered_levels)*0.7) + 2, "cm"),
-                          height = unit(20, "cm"),
-                          border = "gray20",
-                          cluster_columns = TRUE,
-                          heatmap_legend_param = list(
-                              title = paste("Scaled expression\nlog2 fold-change (adj-p <= ", p_adj,")", sep = "")
-                            )
+                           col = col_fun,
+                           row_title = paste('n = ', nrow(scaled_counts_isodecoder), sep = ""),
+                           show_row_names = FALSE,
+                           width = unit((length(ordered_levels)*0.7) + 2, "cm"),
+                           height = unit(20, "cm"),
+                           border = "gray20",
+                           cluster_columns = TRUE,
+                           heatmap_legend_param = list(
+                             title = paste("Scaled expression\nlog2 fold-change (adj-p <= ", p_adj,")", sep = "")
+                           )
           )
         }
         
         if (nrow(comb_anticodon) != 0) {
-          baseMeanAnno_anti = rowAnnotation(base_mean = anno_lines(comb_anticodon$baseMean, 
-                                                                  gp = gpar(lwd = 1.5, col = "#084081")), 
+          anno_type = ifelse(nrow(comb_isodecoder) > 1, anno_lines, anno_barplot)
+          baseMeanAnno_anti = rowAnnotation(base_mean = anno_type(comb_anticodon$baseMean, 
+                                                                   gp = gpar(lwd = 1.5, col = "#084081", fill = "#084081")), 
                                             annotation_name_rot = 90,
                                             width = unit("0.8", "cm"),
                                             height = unit(20, "cm"))
@@ -490,17 +492,17 @@ for (type in c("cyto", "mito")) {
             }
             if (nrow(comb_anticodon) != 0) {
               lfc_anti = Heatmap(comb_anticodon[lfc],
-                                col = col_fun,
-                                width = unit(0.5, "cm"), 
-                                height = unit(20, "cm"),
-                                na_col = "white",
-                                border = "gray20",
-                                show_heatmap_legend = FALSE)
-            hm_anti = hm_anti + lfc_anti
+                                 col = col_fun,
+                                 width = unit(0.5, "cm"), 
+                                 height = unit(20, "cm"),
+                                 na_col = "white",
+                                 border = "gray20",
+                                 show_heatmap_legend = FALSE)
+              hm_anti = hm_anti + lfc_anti
             }
           }
         }
-
+        
         # calculate plot width based on sample numbers
         plot_width = (length(ordered_levels)*0.8 + 4) + (length(ordered_levels)-1)*1.3 + 0.8
         plot_width = plot_width/2.54

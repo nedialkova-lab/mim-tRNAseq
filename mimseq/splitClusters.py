@@ -411,8 +411,11 @@ def getDeconvSizes(splitBool, tRNA_dict, cluster_dict, unique_isodecoderMMs):
     # generate new names for unsplit clusters (tRNA-AA-Anti-IsoX/Y) - write to lookup for later
     unsplitCluster_lookup = defaultdict()
     for cluster, isos in splitBool.items():
-        member_IsoNums = tuple(int(iso.split("-")[-2]) for iso in isos)
-        member_IsoNums = sorted(member_IsoNums)
+        if "tRNA" in cluster:
+            member_IsoNums = tuple(int(iso.split("-")[-2]) if "tRNA" in iso else "tRX" + iso.split("-")[-2] for iso in isos)
+        elif "tRX" in cluster:
+            member_IsoNums = tuple(int(iso.split("-")[-2]) if "tRX" in iso else "tRNA" + iso.split("-")[-2] for iso in isos)
+        member_IsoNums = sorted(tuple(x for x in member_IsoNums if isinstance(x, int))) + [x for x in member_IsoNums if isinstance(x, str)]
         member_IsoString = "/" + "/".join([str(iso) for iso in member_IsoNums])
         newClusterName = "-".join(cluster.split("-")[:-1]) + member_IsoString
         shortClusterName = "-".join(cluster.split("-")[:-1])
@@ -466,11 +469,18 @@ def writeIsodecoderInfo(out_dir, experiment_name, isodecoder_sizes, readRef_unsp
         count = 0
         for num in name.split("-")[-1].split("/"):
             count += 1
-            if not "tRX" in num:
-                iso = base + "-" + num
-            else:
-                num = num.replace("tRX", "")
-                iso = base.replace("tRNA", "tRX") + "-" + num
+            if "tRNA" in base:
+                if not "tRX" in num:
+                    iso = base + "-" + num
+                else:
+                    num = num.replace("tRX", "")
+                    iso = base.replace("tRNA", "tRX") + "-" + num
+            elif "tRX" in base:
+                if not "tRNA" in num:
+                    iso = base + "-" + num
+                else:
+                    num = num.replace("tRX", "")
+                    iso = base.replace("tRNA", "tRX") + "-" + num
             isodecoder_list = [x for x in tRNA_dict.keys() if iso == "-".join(x.split("-")[:-1]) and not "chr" in x]
             iso_min = min([x.split("-")[-1] for x in isodecoder_list])
             gene = iso + "-" + str(iso_min)

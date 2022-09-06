@@ -235,7 +235,8 @@ def main():
 	inputs.add_argument('-m', '--mito-trnas', metavar = 'mitochondrial/plastid tRNAs', required = False, dest = 'mito', \
 		help = 'Mitochondrial tRNA fasta file(s). Should be downloaded from mitotRNAdb for species of interest. Already available in data folder for a few model organisms.')
 	inputs.add_argument('-p', '--plastid-trnas', metavar = 'mitochondrial/plastid tRNAs', required = False, dest = 'plastid', \
-		help = 'Plastid tRNA fasta file(s). Should be downloaded from PtRNAdb for species of interest. Already available in data folder for a few model organisms.')	options = parser.add_argument_group("Program options")
+		help = 'Plastid tRNA fasta file(s). Should be downloaded from PtRNAdb for species of interest. Already available in data folder for a few model organisms.')
+	options = parser.add_argument_group("Program options")
 	options.add_argument('--pretRNAs', required = False, dest = 'pretrnas', action = 'store_true',\
 		help = "Input reference sequences are pretRNAs. Enabling this option will disable the removal of intron sequences and addition of 3'-CCA to generate \
 		mature tRNA sequences. Useful for mapping and discovering pretRNA sequence reads.")

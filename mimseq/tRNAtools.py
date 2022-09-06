@@ -73,7 +73,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_ta
 				seq_parts = seq.split("|")
 				anticodon = seq_parts[4]
 				amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
-				mito_count[anticodon] += 1
+				non_nuc_trna_count[anticodon] += 1
 				if type == 'mitochondrial':
 					new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(non_nuc_trna_count[anticodon]) + "-1"
 				else:

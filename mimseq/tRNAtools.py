@@ -89,7 +89,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_ta
 		if mitotRNAs:
 			tRNA_dict = addExtraNucleartRNAs(mitotRNAs, 'mitochondrial', tRNA_dict, double_cca)
 		if plastidtRNAs:
-				tRNA_dict = addExtraNucleartRNAs(plastidtRNAs, 'plastid', tRNA_dict, double_cca):
+			tRNA_dict = addExtraNucleartRNAs(plastidtRNAs, 'plastid', tRNA_dict, double_cca)
 
 	if mitotRNAs or plastidtRNAs:
 		num_cytosilic = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "cytosolic"])

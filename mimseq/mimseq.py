@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
 
 #   +-------------+
-#   | mim-tRNAseq | 
+#   | mim-tRNAseq |
 #   +-------------+
 
 ####################################
 # Main backbone and wrapper script #
 ####################################
-# 
+#
 # author: Drew Behrens
 # contact: aberens@biochem.mpg.de
 # github: https://github.com/nedialkova-lab/mim-tRNAseq
@@ -18,7 +18,7 @@ from .tRNAtools import modsToSNPIndex, generateGSNAPIndices, newModsParser, tidy
 from .tRNAmap import mainAlign
 from .getCoverage import getCoverage, plotCoverage
 from .mmQuant import generateModsTable, plotCCA
-from .ssAlign import structureParser, modContext 
+from .ssAlign import structureParser, modContext
 from .splitClusters import splitIsodecoder, unsplitClustersCov, getIsodecoderSizes, getDeconvSizes, writeDeconvTranscripts, writeIsodecoderTranscripts, writeSplitInfo, writeIsodecoderInfo
 import sys, os, subprocess, logging, datetime, copy
 import argparse
@@ -49,8 +49,8 @@ def restrictedFloat2(x):
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
 def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, pretrnas, local_mod, p_adj, sample_data):
-	
+	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, plastid_trnas, pretrnas, local_mod, p_adj, sample_data):
+
 # Main wrapper
 	# Integrity check for output folder argument...
 	try:
@@ -98,7 +98,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	modifications = os.path.dirname(os.path.realpath(__file__))
 	modifications += "/modifications"
 	coverage_bed, snp_tolerance, mismatch_dict, insert_dict, del_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
-	= modsToSNPIndex(trnas, trnaout, mito_trnas, modifications, name, out, double_cca, threads, snp_tolerance, cluster, cluster_id, posttrans, pretrnas, local_mod)
+	= modsToSNPIndex(trnas, trnaout, mito_trnas, plastid_trnas, modifications, name, out, double_cca, threads, snp_tolerance, cluster, cluster_id, posttrans, pretrnas, local_mod)
 	structureParser()
 	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
@@ -139,7 +139,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	#else:
 	#	log.info("\n*** New modifications not discovered as remap is not enabled ***\n")
 
-	# redo checks for unsplit isodecoders based on coverage 
+	# redo checks for unsplit isodecoders based on coverage
 	# use original splitBool and unique_isodecoderMMs in case coverage changes in 2nd alignment round, regenerate splitBool_new and unique_isodecoderMMs_new
 	# rewrite deconv transcripts
 	if map_round == 2 and cluster and cluster_id != 1:
@@ -166,7 +166,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	mod_sites, cons_pos_list = modContext(out, unsplitCluster_lookup)
 
 	script_path = os.path.dirname(os.path.realpath(__file__))
-	
+
 	if snp_tolerance or not mismatches == 0.0:
 					# plot mods and stops, catch exception with command call and print log error if many clusters are filtered (known to cause issues with R code handling mods table)
 		log.info("Plotting modification and RT stop data...")
@@ -217,25 +217,25 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 
 def main():
 
-	################### 
+	###################
 	# Parse arguments #
-	################### 
-	
+	###################
+
 	parser = argparse.ArgumentParser(description = 'Custom high-throughput tRNA sequencing alignment and quantification pipeline\
 		based on modification induced misincorporation cDNA synthesis.', add_help = True, usage = "%(prog)s [options] sample data")
 
 	inputs = parser.add_argument_group("Input files")
-	inputs.add_argument('-s','--species', metavar='species', required = not ('-t' in sys.argv), dest = 'species', help = \
+	inputs.add_argument('-s','--species', metavar='species', required = not ('-t' in sys.argv or '--trnas' in sys.argv), dest = 'species', help = \
 		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap19, Mmus, Rnor, Scer, Spom, Dmel, Drer, Ecol, Atha', \
 		choices = ['Hsap', 'Hsap19','Ggor','Mmus','Rnor','Scer', 'Spom','Dmel', 'Drer', 'Ecol', 'Atha', 'HsapTCC', 'ScerMut'])
 	inputs.add_argument('-t', '--trnas', metavar='genomic tRNAs', required = False, dest = 'trnas', help = \
 		'Genomic tRNA fasta file, e.g. from gtRNAdb or tRNAscan-SE. Already avalable in data folder for a few model organisms.')
-	inputs.add_argument('-o', '--trnaout', metavar = 'tRNA out file', required = (not '--species' or '-s' in sys.argv) or ('-t' in sys.argv), 
+	inputs.add_argument('-o', '--trnaout', metavar = 'tRNA out file', required = (not '--species' or '-s' in sys.argv) or ('-t' in sys.argv),
 		dest = 'trnaout', help = 'tRNA.out file generated by tRNAscan-SE (also may be available on gtRNAdb). Contains information about tRNA features, including introns.')
-	inputs.add_argument('-m', '--mito-trnas', metavar = 'mitochondrial/plastid tRNAs', required = False, nargs = "*", dest = 'mito', \
-		help = 'Mitochondrial/plastid tRNA fasta file(s). Can be multiple space-separated file names to specify both mitochondrial and plastid seqences.\
-			Ensure "plastid" and "mito" are in the file names in this case. Should be downloaded from mitotRNAdb or PtRNAdb for species of interest. Already available in data folder for a few model organisms.')
-	
+	inputs.add_argument('-m', '--mito-trnas', metavar = 'mitochondrial/plastid tRNAs', required = False, dest = 'mito', \
+		help = 'Mitochondrial tRNA fasta file(s). Should be downloaded from mitotRNAdb for species of interest. Already available in data folder for a few model organisms.')
+	inputs.add_argument('-p', '--plastid-trnas', metavar = 'mitochondrial/plastid tRNAs', required = False, dest = 'plastid', \
+		help = 'Plastid tRNA fasta file(s). Should be downloaded from PtRNAdb for species of interest. Already available in data folder for a few model organisms.')
 	options = parser.add_argument_group("Program options")
 	options.add_argument('--pretRNAs', required = False, dest = 'pretrnas', action = 'store_true',\
 		help = "Input reference sequences are pretRNAs. Enabling this option will disable the removal of intron sequences and addition of 3'-CCA to generate \
@@ -308,7 +308,7 @@ def main():
 
 	parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version.__version__), help = 'Show version number and exit')
 	parser.add_argument('sampledata', help = 'Sample data sheet in text format, tab-separated. Column 1: full path to fastq (or fastq.gz). Column 2: condition/group.')
-	
+
 	parser.set_defaults(threads=1, out="./", max_multi = 3, mito = '', cov_diff = 0.5)
 
 	#########################################
@@ -346,7 +346,7 @@ def main():
 		if args.control_cond not in conditions:
 			raise argparse.ArgumentTypeError('{} not a valid condition in {}'.format(args.control_cond, args.sampledata))
 		if not args.species and not (args.trnas or args.trnaout):
-			parser.error('Must specify valid --species argument or supply -t (tRNA sequences) and -o (tRNAscan out file)!')						
+			parser.error('Must specify valid --species argument or supply -t (tRNA sequences) and -o (tRNAscan out file)!')
 		else:
 			if args.species:
 				if args.species == 'Ggor':
@@ -380,7 +380,7 @@ def main():
 				if args.species == 'Rnor':
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/rn7-eColitK/rn7-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/rn7-eColitK/rn7_eColitK-tRNAs-confidence-set.out"
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/rn7-eColitK/rn7-mitotRNAs.fa"				
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/rn7-eColitK/rn7-mitotRNAs.fa"
 				if args.species == 'Spom':
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/schiPomb-eColitK/schiPomb_972H-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/schiPomb-eColitK/schiPomb_eschColi-tRNAs.out"
@@ -400,15 +400,15 @@ def main():
 				if args.species == 'Atha':
 					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-tRNAs.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-tRNAs-detailed.out"
-					# two mito files here for plastid and mito references
-					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-plastidtRNAs.fa " + os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-mitotRNAs.fa"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-mitotRNAs.fa"
+					# plastid reference needed for A.thaliana
+					args.plastid = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-plastidtRNAs.fa "
 			else:
 				args.species = args.trnas.split("/")[-1].split(".")[0]
 			mimseq(args.trnas, args.trnaout, args.name, args.species, args.out, args.cluster, args.cluster_id, args.cov_diff, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
 				args.keep_temp, args.cca, args.double_cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
-				args.misinc_thresh, args.mito, args.pretrnas, args.local_mod, args.p_adj, args.sampledata)
+				args.misinc_thresh, args.mito, args.plastid, args.pretrnas, args.local_mod, args.p_adj, args.sampledata)
 
 if __name__ == '__main__':
 	main()
-	

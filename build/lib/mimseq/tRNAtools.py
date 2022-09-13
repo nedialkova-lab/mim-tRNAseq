@@ -63,33 +63,33 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_ta
 			tRNA_dict[seq]['species'] = ' '.join(seq.split('_')[0:2])
 			tRNA_dict[seq]['type'] = "cytosolic"
 
-		def addExtraNucleartRNAs(trna_fasta, type, tRNA_dict, double_cca):
-			temp_dict = SeqIO.to_dict(SeqIO.parse(trna_fasta,"fasta"))
-			non_nuc_trna_count = defaultdict(int)
-			org_count = 0
-			# read each tRNA, edit sequence header to match nuclear genes as above and add to tRNA_dict
-			for seq in temp_dict:
-				org_count += 1
-				seq_parts = seq.split("|")
-				anticodon = seq_parts[4]
-				amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
-				non_nuc_trna_count[anticodon] += 1
-				if type == 'mitochondrial':
-					new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(non_nuc_trna_count[anticodon]) + "-1"
-				else:
-					new_seq = seq_parts[1] + "_plastid_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(non_nuc_trna_count[anticodon]) + "-1"
-				tRNAseq = str(temp_dict[seq].seq) + "CCA" if not double_cca else str(temp_dict[seq].seq) + "CCACCA"
-				tRNA_dict[new_seq]['sequence'] = tRNAseq.upper()
-				tRNA_dict[new_seq]['type'] = type
-				tRNA_dict[new_seq]['species'] = ' '.join(seq.split('_')[0:2])
+	def addExtraNucleartRNAs(trna_fasta, type, tRNA_dict, double_cca):
+		temp_dict = SeqIO.to_dict(SeqIO.parse(trna_fasta,"fasta"))
+		non_nuc_trna_count = defaultdict(int)
+		org_count = 0
+		# read each tRNA, edit sequence header to match nuclear genes as above and add to tRNA_dict
+		for seq in temp_dict:
+			org_count += 1
+			seq_parts = seq.split("|")
+			anticodon = seq_parts[4]
+			amino = re.search("[a-zA-z]+", seq_parts[3]).group(0)
+			non_nuc_trna_count[anticodon] += 1
+			if type == 'mitochondrial':
+				new_seq = seq_parts[1] + "_mito_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(non_nuc_trna_count[anticodon]) + "-1"
+			else:
+				new_seq = seq_parts[1] + "_plastid_tRNA-" + amino + "-" + seq_parts[4] + "-" + str(non_nuc_trna_count[anticodon]) + "-1"
+			tRNAseq = str(temp_dict[seq].seq) + "CCA" if not double_cca else str(temp_dict[seq].seq) + "CCACCA"
+			tRNA_dict[new_seq]['sequence'] = tRNAseq.upper()
+			tRNA_dict[new_seq]['type'] = type
+			tRNA_dict[new_seq]['species'] = ' '.join(seq.split('_')[0:2])
 
-			log.info("{} ".format(org_count) + type  + " tRNA sequences imported")
-			return(tRNA_dict)
+		log.info("{} ".format(org_count) + type  + " tRNA sequences imported")
+		return(tRNA_dict)
 
-		if mitotRNAs:
-			tRNA_dict = addExtraNucleartRNAs(mitotRNAs, 'mitochondrial', tRNA_dict, double_cca)
-		if plastidtRNAs:
-			tRNA_dict = addExtraNucleartRNAs(plastidtRNAs, 'plastid', tRNA_dict, double_cca)
+	if mitotRNAs:
+		tRNA_dict = addExtraNucleartRNAs(mitotRNAs, 'mitochondrial', tRNA_dict, double_cca)
+	if plastidtRNAs:
+		tRNA_dict = addExtraNucleartRNAs(plastidtRNAs, 'plastid', tRNA_dict, double_cca)
 
 	if mitotRNAs or plastidtRNAs:
 		num_cytosilic = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "cytosolic"])

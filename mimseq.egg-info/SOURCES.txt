@@ -127,6 +127,7 @@ mimseq/data/mm39-eColitK/README.txt
 mimseq/data/mm39-eColitK/mm39-mitotRNAs.fa
 mimseq/data/mm39-eColitK/mm39-tRNAs-all.fa
 mimseq/data/mm39-eColitK/mm39-tRNAs-detailed.out
+mimseq/data/mm39-eColitK/mm39-tRNAs-noeColi.fa
 mimseq/data/mm39-eColitK/mm39-tRNAs.bed
 mimseq/data/mm39-eColitK/mm39-tRNAs_name_map.txt
 mimseq/data/rn7-eColitK/README.txt

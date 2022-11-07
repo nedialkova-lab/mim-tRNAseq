@@ -57,6 +57,7 @@ if (length(args) == 0) {
     mutate(countT = sum(count)) %>% 
     group_by(end, .add = TRUE) %>% 
     mutate(per = round(100*count/countT,2))
+  cca_prop$per = ifelse(is.na(cca_prop$per), 0, cca_prop$per)
 
   cca_summary = aggregate(cca_prop$per, by=list(gene = cca_prop$gene,
                                                end = cca_prop$end,

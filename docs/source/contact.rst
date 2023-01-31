@@ -20,7 +20,7 @@ https://github.com/nedialkova-lab/mim-tRNAseq/issues
 Cite
 ^^^^
 
-`Behrens <https://doi.org/10.1016/j.molcel.2021.01.028>`_ et al., 2021, High-resolution quantitative profiling of tRNA
-abundance and modification status in eukaryotes by
-mim-tRNaseq. Molecular Cell 81, 1–14
+Behrens et al., 2021, High-resolution quantitative profiling of tRNA abundance and modification status in eukaryotes by mim-tRNaseq. Molecular Cell 81, 1–14 (https://doi.org/10.1016/j.molcel.2021.01.028)
+
+Behrens and Nedialkova, 2022, Experimental and computational workflow for the analysis of tRNA pools from eukaryotic cells by mim-tRNAseq. STAR Protocols. 3, 101579 (https://doi.org/10.1016/j.xpro.2022.101579)
 

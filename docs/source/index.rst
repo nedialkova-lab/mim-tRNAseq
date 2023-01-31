@@ -2,8 +2,9 @@
 mim-tRNAseq
 ***********
 
-`Behrens <https://doi.org/10.1016/j.molcel.2021.01.028>`_ et al., 2021, Molecular Cell 81, 1–14
+**Original paper**: `Behrens <https://doi.org/10.1016/j.molcel.2021.01.028>`_ et al., 2021, Molecular Cell 81, 1–14
 
+**Protocols paper** : `Behrens <https://doi.org/10.1016/j.xpro.2022.101579>`_ and Nedialkova, 2022, Experimental and computational workflow for the analysis of tRNA pools from eukaryotic cells by mim-tRNAseq. STAR Protocols. 3, 101579
 
 .. image:: ../img/globular_multi.png
    :align: center
@@ -11,7 +12,7 @@ mim-tRNAseq
 
 :Author: Drew Behrens
 
-:Version: 0.3.4
+:Version: 1.2
 
 Modification-induced misincorporation tRNA sequencing.
 

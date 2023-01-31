@@ -10,12 +10,20 @@ from operator import itemgetter
 
 stkname = ''
 
-def aligntRNA(tRNAseqs, out):
+def aligntRNA(tRNAseqs, out, threads=1):
 # run cmalign to generate Stockholm file for tRNA sequences
 	global stkname
 	stkname = tRNAseqs.split(".fa")[0] + '_align.stk'
 	cmfile = os.path.dirname(os.path.realpath(__file__)) + '/data/tRNAmatureseq.cm'
-	cmcommand = ['cmalign', '-o', stkname, '--nonbanded', '-g', cmfile, tRNAseqs]
+
+	if threads > 1:
+		cpus = threads
+	else:
+		# For single thread, set --cpu=0
+		# http://eddylab.org/infernal/Userguide.pdf
+		cpus = 0
+
+	cmcommand = ['cmalign', '-o', stkname, '--nonbanded', '--cpu', str(cpus), '-g', cmfile, tRNAseqs]
 	subprocess.check_call(cmcommand, stdout = open(out + 'cm.log', 'w'))
 
 def extraCCA():
@@ -64,7 +72,7 @@ def tRNAclassifier(ungapped = False):
 					cons_pos_list.append('17a')
 					cons_pos += 1
 
-				elif cons_pos == 20: 
+				elif cons_pos == 20:
 					if not '20' in cons_pos_list:
 						cons_pos_dict[pos+1] = '20'
 						cons_pos_list.append('20')
@@ -179,20 +187,8 @@ def getAnticodon():
 	rf_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC RF")])
 	# use '*' in rf_cons from stk to delimit the anticodon positions
 	for pos, char in enumerate(rf_cons):
-	 	if char == "*":
-	 		anticodon.append(pos)
-
-	return(anticodon)
-
-def getAnticodon_1base():
-	# return anticodon position from conserved alignment in 1-based positions - specifically for modContext()
-
-	anticodon = list()
-	rf_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC RF")])
-	# use '*' in rf_cons from stk to delimit the anticodon positions
-	for pos, char in enumerate(rf_cons, 1):
-	 	if char == "*":
-	 		anticodon.append(pos)
+		if char == "*":
+			anticodon.append(pos)
 
 	return(anticodon)
 
@@ -213,7 +209,7 @@ def clusterAnticodon(cons_anticodon, cluster):
 
 	return(cluster_anticodon)
 
-def modContext(out):
+def modContext(out, unsplitCluster_lookup):
 # outputs file of defined mods of interest pos, identity and context sequence for each cluster
 
 	cons_pos_list, cons_pos_dict = tRNAclassifier()[2:4]
@@ -222,13 +218,13 @@ def modContext(out):
 	# Define positions of conserved mod sites in gapped alignment for each tRNA
 	sites_dict = defaultdict()
 	mod_sites = ['9', '20', '26', '32', '34', '37', '58']
-	
+
 	for mod in mod_sites:
 		sites_dict[mod] = list(cons_pos_dict.keys())[list(cons_pos_dict.values()).index(mod)]
 
 	upstream_dict = defaultdict(lambda: defaultdict(list))
 
-	stk = AlignIO.read(stkname, "stockholm") 
+	stk = AlignIO.read(stkname, "stockholm")
 	for record in stk:
 		gene = record.id
 		seq = record.seq
@@ -242,7 +238,7 @@ def modContext(out):
 				while seq[down].upper() not in ['A','C','G','U','T']:
 					down += 1
 				canon_pos = cons_pos_dict[pos]
-				upstream_dict[gene][canon_pos].append(identity) 
+				upstream_dict[gene][canon_pos].append(identity)
 				upstream_dict[gene][canon_pos].append(seq[up]) # upstream base
 				upstream_dict[gene][canon_pos].append(seq[down]) # downstream base
 
@@ -254,6 +250,8 @@ def modContext(out):
 	with open(out + "mods/modContext.txt", 'w') as outfile:
 		outfile.write("cluster\tcanon_pos\tidentity\tupstream\tdownstream\n")
 		for cluster, data in upstream_dict.items():
+			if cluster in unsplitCluster_lookup.keys():
+				cluster = unsplitCluster_lookup[cluster]
 			for pos, base in data.items():
 				outfile.write(cluster + "\t" + str(pos) + "\t" + base[0] + "\t" + base[1] + "\t" + base[2] + "\n")
 
@@ -266,7 +264,7 @@ def modContext(out):
 
 def structureParser():
 # read in stk file generated above and define structural regions for each tRNA input
-	
+
 	struct_dict = dict()
 	# get conserved tRNA structure from alignment
 	ss_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC SS_cons")])

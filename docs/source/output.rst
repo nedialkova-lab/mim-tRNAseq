@@ -53,27 +53,29 @@ Only generated if --cca-analysis flag is present. Contains data and plots for 3'
 
 Only generated if --snp-tolerance is specified, or --max-mismatches is not 0.
 
-* `\*comb_heatmap.pdf`: Combined RT stop and misincorporation heatmaps for all tRNAs/clusters passing --min-cov threshold and successfully deconvoluted (see *mim-tRNAseq introduction*). Shows proportion of stops and misincorporations at canonical tRNA positions for all conditions. Available for mitochondrial tRNAs if -m is specified.
-* `\*misincProps.pdf`: Misincorporation proportions for each tRNA/cluster at selected conserved modified sites by identity of modified nucleotide. Available for mitochondrial tRNAs if -m is specified.
-* `\*misincSignatures_upstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucloetide and upstream nucleotide relative to RT direction. Available for mitochondrial tRNAs if -m is specified.
-* `\*misincSignatures_downstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucleotide and downstream nucleotide relative to RT direction. Available for mitochondrial tRNAs if -m is specified.
+* `*comb_heatmap.pdf`: Combined RT stop and misincorporation heatmaps for all tRNAs/clusters passing --min-cov threshold and successfully deconvoluted (see *mim-tRNAseq introduction*). Shows proportion of stops and misincorporations at canonical tRNA positions for all conditions. Available for mitochondrial/plastid tRNAs if -m is specified.
+* `*misincProps.pdf`: Misincorporation proportions for each tRNA/cluster at selected conserved modified sites by identity of modified nucleotide. Available for mitochondrial/plastid tRNAs if -m is specified.
+* `*misincSignatures_upstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucloetide and upstream nucleotide relative to RT direction. Available for mitochondrial/plastid tRNAs if -m is specified.
+* `*misincSignatures_downstreamContext.pdf`: Signatures of misincorporated nucleotides at selected conserved modified sites, separated by identity of modified nucleotide and downstream nucleotide relative to RT direction. Available for mitochondrial/plastid tRNAs if -m is specified.
 * `mismatchTable.csv`: Data table for all misincorporation analyses. Includes tRNA/cluster, misincorporation type, proportion of misincorporations, coverage at each position and canonical tRNA position information, among other useful information.
 * `RTstopTable.csv`: Data table for RT stop analyses. Includes tRNA/cluster, canonical tRNA position and proportion of reads that stop at each position (normalized to total coverage of the reference sequence). This gives the relative frequency of reads stopping at all positions for a reference, the sum of which should equal 1.
-* `readthroughTable.csv`: Data table similar to `RTstopTable.csv` except the proportion here represents the proportion of reads that stop at a site normalized to the total read coverage at that site only. 1 - this value will therefore give the reads that contain readthrough at each position.
+* `readthroughTable.csv`: Data table similar to `RTstopTable.csv` except the proportion here represents 1 - proportion of reads that stop at a site, normalized to the total read coverage at that site only. This value will therefore estimates the proportion of reads per position that extend beyond that site
 * `modContext.txt`: Nucleotide context information for selected modified positions. Note, `pos` here is not canonical position information but ungapped alignment positions for each tRNA/cluster.
 * `allModsTable.csv`: All known modifications from Modomics and `additionalMods.txt` and newly detected mim-tRNAseq modifications for each cluster. 1-based numbering of position of modified base in mature transctipt sequence and canonical numbering. Used in new mods discovery.
 * `predictedMods.csv`: Newly predicted modified sites per isodeocoder based on misinc-thresh.
+* `modPos_totalMisincProp.csv`: Total misincrporation with coverage and nucleotide identity per conserved modified position for all transcripts.
 
 **mods_logOR**
 
 Differential modification analysis. Only generated if mods analysis is performed (see above) and if there are more than 1 condition in the experiment
+Separate analyses for organellar and cytosolic tRNAs.
 
 * `ConditionAvsConditionB_logOR.pdf`: Heatmaps of filtered, significant log10 odds ratios (logOR) for each tRNA at each position between condition A and B. Performed for all pairwise condition comparisons. Values are FDR adjusted chi-squared p-values <= 0.01, and filtered for known and newly detected modified sites in mimseq.
 * 'ConditionAvsConditionB_logOR.csv': Data table for heatmap plotting.
 
 **DESeq2**
 
-Differential tRNA expression analyses using DESeq2. Split into two separate analyses performed on counts at the isoacceptor and isodecoder level, respectively. Both folders contain the same outputs.
+Differential tRNA expression analyses using DESeq2. Cytosolic and organellar tRNA counts analyzed separately. Each analysis is split into two separate analyses performed on counts at the anticodon and isodecoder level, respectively. Both folders contain the same outputs.
 
 * `qc-dispersions.png`: Diagnostic dispersion plot of isoacceptor/isodecoder expression dispersion before and after shrinkage of estimates towards the fitted estimates. See the DESeq2 analysis vignette here_ for details
 * `qc-sampledists.png`: Sample distance heatmap based on variance stabilizing transformed counts. Hierarchical clustering used for clustering samples. Scale indicates sample distances.
@@ -96,6 +98,7 @@ Indices required for GSNAP alignment.
 
 Various files describing the tRNA trascriptome of the genome of interest.
 
+* `\*unsplitClusterInfo.txt`: details about cluster parents and members that were unable to be deconvoluted, including parent name, number of unsplit transcripts, the canonical tRNA position that prevented deconvolution, and the reason deconvolution was not possible.
 * `\*tRNATranscripts.fa`: processed, intron spliced, 3'-CCA appended, and His 5'-G appended tRNA transcript sequences in fasta format.
 * `\*modificationSNPs.txt`: SNP index information for each tRNA after matching to Modomics entries for species of interest.
 * `\*isoacceptorInfo.txt`: Information on isoacceptor groups and their size in genome of interest.

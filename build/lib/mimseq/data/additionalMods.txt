@@ -38,3 +38,11 @@ Gorilla gorilla	Pro-AGG	I34
 Gorilla gorilla	Ser-AGA	I34
 Gorilla gorilla	Thr-AGT	I34
 Gorilla gorilla	Val-AAC	I34
+Rattus norvegicus	Ala-AGC	I34
+Rattus norvegicus	Arg-ACG	I34
+Rattus norvegicus	Ile-AAT	I34
+Rattus norvegicus	Leu-AAG	I34
+Rattus norvegicus	Pro-AGG	I34
+Rattus norvegicus	Ser-AGA	I34
+Rattus norvegicus	Thr-AGT	I34
+Rattus norvegicus	Val-AAC	I34

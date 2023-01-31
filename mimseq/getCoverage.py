@@ -14,17 +14,20 @@ from multiprocessing import Pool
 log = logging.getLogger(__name__)
 
 def filterCoverage (cov_table, min_cov):
-# returns isodecoders as list from counts table with less than min_cov reads (excluding mito clusters)
+# returns isodecoders as list from counts table with less than min_cov reads (excluding mito/plastid clusters)
 
+	log.info("\n+-----------------------------------+ \
+		\n| Final deconvolution and filtering |\
+		\n+-----------------------------------+")
 	# if min_cov is a fraction
 	if min_cov < 1:
 		cov_table_new = cov_table.div(cov_table.sum(axis=0), axis=1)
-		filtered_list = list(cov_table_new[(cov_table_new.values < min_cov).any(1) & (~cov_table_new.index.str.contains('mito')) & (~cov_table_new.index.str.contains('eColi'))].index)
+		filtered_list = list(cov_table_new[(cov_table_new.values < min_cov).all(1) & (~cov_table_new.index.str.contains('mito')) & (~cov_table_new.index.str.contains('plastid')) & (~cov_table_new.index.str.contains('eColi'))].index)
 		log.info("{} clusters filtered out according to minimum coverage threshold: {:.2%} of total tRNA coverage.".format(len(filtered_list), min_cov))
 	else:
 		if min_cov == 1:
 			log.warning("--min-cov set to 1: treating as integer of absolute coverage, not a fraction of mapped reads!")
-		filtered_list = list(cov_table[(cov_table.values < min_cov).any(1) & (~cov_table.index.str.contains('mito')) & (~cov_table.index.str.contains('eColi'))].index)
+		filtered_list = list(cov_table[(cov_table.values < min_cov).all(1) & (~cov_table.index.str.contains('mito')) & (~cov_table.index.str.contains('plastid')) & (~cov_table.index.str.contains('eColi'))].index)
 		log.info("{} clusters filtered out according to minimum coverage threshold: {} total read coverage per isodecoder.".format(len(filtered_list), min_cov))
 
 	# warn user about many filtered clusters
@@ -52,7 +55,7 @@ def getBamList (sampleGroups):
 
 	return(baminfo, bamlist)
 
-def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
+def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov, unsplitCluster_lookup):
 # Uses bedtools coverage and pandas generate coverage in 5% intervals per gene and isoacceptor for plotting
 
 	log.info("\n+-----------------------------------+\
@@ -71,8 +74,9 @@ def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
 		coverage['aa'] = coverage.index.format()
 		coverage.loc[coverage.aa.str.contains('chr'), 'aa'] = coverage[coverage.aa.str.contains('chr')].aa.str.split("-").str[-4]
 		coverage.loc[coverage.aa.str.contains('mito'), 'aa'] = "mito" + coverage[coverage.aa.str.contains('mito')].aa.str.split("-").str[-3]
+		coverage.loc[coverage.aa.str.contains('plastid'), 'aa'] = "plastid" + coverage[coverage.aa.str.contains('plastid')].aa.str.split("-").str[-3]
 		coverage.loc[coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr'), 'aa'] = "nmt" + coverage[coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr')].aa.str.split("-").str[-3]
-		coverage.loc[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr'), 'aa'] = coverage[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr')].aa.str.split("-").str[-3]
+		coverage.loc[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('plastid') & ~coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr'), 'aa'] = coverage[~coverage.aa.str.contains('mito') & ~coverage.aa.str.contains('plastid') & ~coverage.aa.str.contains('nmt') & ~coverage.aa.str.contains('chr')].aa.str.split("-").str[-3]
 		coverage = coverage[['pos','cov','aa','bam']]
 		coverage['condition'] = info[0]
 		coverage['cov'] = coverage['cov'].astype(float)
@@ -88,13 +92,13 @@ def getCoverage(sampleGroups, out_dir, control_cond, filtered_cov):
 	cov_mean = pd.concat(cov_mean, axis = 0)
 	cov_mean_gene = cov_mean.copy()
 	cov_mean_gene['Cluster'] = cov_mean_gene.index.format()
-	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("mito"), "Cluster"] = "mito" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("mito")].Cluster.str.split("-").str[1:].str.join('-')
-	cov_mean_gene.loc[cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = "nmt" + cov_mean_gene[cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
-	cov_mean_gene.loc[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt"), "Cluster"] = cov_mean_gene[~cov_mean_gene.Cluster.str.contains("mito") & ~cov_mean_gene.Cluster.str.contains("nmt")].Cluster.str.split("-").str[1:].str.join('-')
 	cov_mean_gene = cov_mean_gene[['Cluster','pos','cov','aa','condition','cov_norm','bin','bam']]
 	cov_mean_gene = cov_mean_gene.groupby(['Cluster', 'bin', 'condition', 'bam']).mean()
 	cov_mean_gene = cov_mean_gene.dropna()
-	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t")
+	cov_mean_gene.reset_index(inplace = True)
+	cov_mean_gene = cov_mean_gene[['Cluster','bin','condition','bam','pos','cov','cov_norm']]
+	cov_mean_gene['Cluster'] = cov_mean_gene['Cluster'].replace(unsplitCluster_lookup)
+	cov_mean_gene.to_csv(out_dir + "coverage_bygene.txt", sep = "\t", index = False)
 
 	# coverage per amino acid
 	cov_mean_aa = cov_mean.groupby(['aa', 'condition', 'bam', 'pos']).sum() # sum coverages for all clusters for each amino acid

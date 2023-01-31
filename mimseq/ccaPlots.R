@@ -9,11 +9,12 @@ suppressMessages(library(dplyr))
 suppressMessages(library(rlang))
 suppressMessages(library(grid))
 suppressMessages(library(gtable))
+suppressMessages(library(ggpol))
 
 args = commandArgs(trailingOnly = TRUE)
 
 # source facet_share.R
-suppressMessages(source(args[5]))
+# suppressMessages(source(args[5]))
 
 if (length(args) == 0) {
   stop("At least one argument must be supplied (input file).n", call.=FALSE)
@@ -45,14 +46,18 @@ if (length(args) == 0) {
   
   cca_counts = read.table(args[2], header = TRUE, sep = "\t")
   cca_counts$gene = sub(".*_mito_tRNA-","mito",cca_counts$gene)
+  cca_counts$gene = sub(".*_plastid_tRNA-","plastid",cca_counts$gene)
   cca_counts$gene = sub(".*_nmt_tRNA-","nmt",cca_counts$gene)
   cca_counts$gene = sub(".*_tRNA-","",cca_counts$gene)
-  cca_counts$gene = ifelse(cca_counts$gene == 'eColiLys-TTT-1-1', 'eColiLys', cca_counts$gene)
+  cca_counts$gene = sub(".*_tRX-", "tRX-", cca_counts$gene)
+  cca_counts$gene = ifelse(cca_counts$gene == "eColiLys-TTT-1-1", "eColiLys", cca_counts$gene)
+  cca_counts$gene = gsub("/[0-9].*", "-multi", cca_counts$gene)
 
-  cca_prop = cca_counts %>% group_by(gene,sample) %>% 
+  cca_prop = cca_counts %>% group_by(gene,sample) %>%
     mutate(countT = sum(count)) %>% 
     group_by(end, .add = TRUE) %>% 
     mutate(per = round(100*count/countT,2))
+  cca_prop$per = ifelse(is.na(cca_prop$per), 0, cca_prop$per)
 
   cca_summary = aggregate(cca_prop$per, by=list(gene = cca_prop$gene,
                                                end = cca_prop$end,
@@ -88,25 +93,27 @@ if (length(args) == 0) {
         cca_prop_sub$per[cca_prop_sub$end == "C"]
       
       avg_cca = aggregate(cca_summary_sub$x.mean, by = list(condition = cca_summary_sub$condition, end = cca_summary_sub$end), mean)
-      cca_summary_sub$end = factor(cca_summary_sub$end, levels = c('CA', 'CC', 'C', 'Absent'))
+      cca_summary_sub$end = factor(cca_summary_sub$end, levels = c("CA", "CC", "C", "Absent"))
       
-      cca_plot = ggplot(cca_summary_sub, aes(x = gene, y = x.mean, fill = end)) + 
+      cca_plot = ggplot(cca_summary_sub, aes(x = gene, y = x.mean, fill = end)) +
         geom_bar(stat = 'identity', width = 0.8) +
-        geom_hline(data = subset(avg_cca, end == 'CA'), aes(yintercept=x), color = "white", alpha = 0.9) + 
+        geom_hline(data = subset(avg_cca, end == "CA"), aes(yintercept=x), color = "white", alpha = 0.9) + 
         geom_jitter(data = cca_prop_sub[cca_prop_sub$end == "CC",], aes(x = gene, y = bar_pos), size = 0.5, color = "#383D3B", alpha = 0.7) +
-        geom_text(data = subset(avg_cca, end == 'CA'), aes(label = paste(abs(round(x,1)), '%'), x = Inf, y = x), size = 3.3, vjust = 1, color = '#3E606F', fontface='bold') +
+        geom_text(data = subset(avg_cca, end == 'CA'), aes(label = paste(abs(round(x,1)), "%"), x = Inf, y = ifelse(sign(x) == -1 , x + 7, x - 7)), size = 3.3, vjust = 1.5, color = '#3E606F', fontface='bold') +
         facet_share(~condition, dir = "h", scales = "free", reverse_num = TRUE) +
-        coord_flip() + 
+        coord_flip() +
         scale_fill_manual(name = "", values = alpha(c(CA = "#F0F9ED", CC = "#427AA1", C = "#0D4282", Absent = "#133C55"), 0.8), labels = c("3'-CCA", "3'-CC", "3'-C", "Absent")) +
         scale_y_continuous(breaks = c(c(-100, -75, -50, -25, 0), c(0, 25, 50, 75, 100)))+
         scale_x_discrete(expand = c(0.03, 0)) +
-        theme_minimal() + 
+        theme_bw() + 
         theme(axis.title = element_blank(), 
-              strip.text = element_text(face = "bold"), 
-              axis.text.y = element_text(size = 9), 
-              axis.text.x = element_text(face = 'bold'))
+              strip.text = element_text(face = "bold"),
+              axis.text.y = element_text(size = 9),
+              axis.text.x = element_text(face = "bold"),
+              panel.border = element_blank(),
+              panel.background = element_blank())
       
-      ggsave(paste(out, paste(combinations[[i]][1], combinations[[i]][2], out_string, sep = '_'), sep = ''), cca_plot, height = 8, width = 9)
+      ggsave(paste(out, paste(combinations[[i]][1], combinations[[i]][2], out_string, sep = "_"), sep = ""), cca_plot, height = 8, width = 9)
       
     }
     
@@ -125,23 +132,25 @@ if (length(args) == 0) {
     avg_cca = aggregate(cca_summary_sub$x.mean, by = list(condition = cca_summary_sub$condition, end = cca_summary_sub$end), mean)
     cca_summary_sub$end = factor(cca_summary_sub$end, levels = c('CA', 'CC', 'C', 'Absent'))
     
-    cca_plot = ggplot(cca_summary_sub, aes(x = gene, y = x.mean, fill = end)) + 
-        geom_bar(stat = 'identity', width = 0.8) +
+    cca_plot = ggplot(cca_summary_sub, aes(x = gene, y = x.mean, fill = end)) +
+        geom_bar(stat = "identity", width = 0.8) +
         geom_hline(data = subset(avg_cca, end == 'CA'), aes(yintercept=x), color = "white", alpha = 0.9) + 
         geom_jitter(data = cca_prop[cca_prop$end == "CC",], aes(x = gene, y = bar_pos), size = 0.5, color = "#383D3B", alpha = 0.7) +
-        geom_text(data = subset(avg_cca, end == 'CA'), aes(label = paste(abs(round(x,1)), '%'), x = Inf, y = x), size = 3.3, vjust = 1, color = '#3E606F', fontface='bold') +
+        geom_text(data = subset(avg_cca, end == "CA"), aes(label = paste(abs(round(x,1)), '%'), x = Inf, y = x), size = 3.3, vjust = 1, color = '#3E606F', fontface='bold') +
         #facet_share(~condition, dir = "h", scales = "free", reverse_num = TRUE) +
         coord_flip() + 
         scale_fill_manual(name = "", values = alpha(c(CA = "#F0F9ED", CC = "#427AA1", C = "#0D4282", Absent = "#133C55"), 0.8), labels = c("3'-CCA", "3'-CC", "3'-C", "Absent")) +
         scale_y_continuous(breaks = c(c(-100, -75, -50, -25, 0), c(0, 25, 50, 75, 100)))+
         scale_x_discrete(expand = c(0.03, 0)) +
-        theme_minimal() + 
+        theme_bw() + 
         theme(axis.title = element_blank(), 
-              strip.text = element_text(face = "bold"), 
-              axis.text.y = element_text(size = 9), 
-              axis.text.x = element_text(face = 'bold'))
+              strip.text = element_text(face = "bold"),
+              axis.text.y = element_text(size = 9),
+              axis.text.x = element_text(face = "bold"),
+              panel.border = element_blank(),
+              panel.background = element_blank())
    
-    ggsave(paste(out, out_string, sep = ''), cca_plot, height = 8, width = 9)
+    ggsave(paste(out, out_string, sep = ""), cca_plot, height = 8, width = 9)
     
   }
 }

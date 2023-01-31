@@ -7,6 +7,7 @@ Created on Wed Oct 13 11:01:53 2021
 import pandas as pd
 import numpy as np
 from os import listdir
+from shutil import rmtree
 from os.path import isdir,isfile,join
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
@@ -20,8 +21,8 @@ def analyze_1sample(s,dirpath,thres):
     ref_files = [f for f in listdir(join(dirpath, s)) if isfile(join(dirpath, s, f))]
     for f in ref_files:
         # Load table
-        ref = f.split(".")[0]
-        ref = "-".join(ref.split("-")[:-1]) if not "chr" in ref else ref
+        ref = f[:-7].replace(".","/")
+        ref = "-".join(ref.split("-")[:-1]) if not "chr" in ref and not "/" in ref else ref
         readsdf = pd.read_csv(join(dirpath, s, f),sep="\t",compression="gzip",index_col="READ",dtype="category")
         pairs = []
         for v1 in readsdf.columns:
@@ -44,6 +45,8 @@ def analyze_1sample(s,dirpath,thres):
                                 oddsr, p = fisher_exact(cont_tab)
                                 outdf.loc[n] = [s,ref,v1,v2,p,oddsr,counts]
                                 n += 1
+    # Remove temporary files
+    rmtree(join(dirpath, s))
     return outdf
 
 def crosstalks_wrapper(dirpath, thres, threads):

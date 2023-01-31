@@ -5,6 +5,12 @@
 # mim-tRNAseq
 [![Documentation Status](https://readthedocs.org/projects/mim-trnaseq/badge/?version=latest)](https://mim-trnaseq.readthedocs.io/en/latest/?badge=latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6782628.svg)](https://doi.org/10.5281/zenodo.6782628)
+
+**Original paper** - https://doi.org/10.1016/j.molcel.2021.01.028
+
+**Protocol paper** - https://doi.org/10.1016/j.xpro.2022.101579
+
 ### Modification-induced misincorporation tRNA sequencing.
 
 This package is an automated analysis pipeline for the quantitation and analysis of tRNA expression and modifications. Given trimmed sequencing reads in fastq format, this pipeline will:
@@ -46,7 +52,7 @@ usearch needs to be acquired and installed. Please do the following:
 	mv usearch10.0.240_i86linux32 usearch
 	cp usearch /usr/local/bin
 ```
-For this last cp command, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH:
+For this last cp command, root access is required. However, if this is not possible, please add the path to the usearch binary to your PATH (replace `full/path/to/usearch` with location of your usearch binary from above:
 ```bash
 export PATH=$PATH:full/path/to/usearch
 ```
@@ -62,7 +68,7 @@ Once installed, mim-tRNAseq should be executable and help displayed, by running
 ```
 An example command to run mim-tRNAseq may look as follows. This will run an analysis between HEK293T and K562 cells on an example dataset included in the package:
 ```bash
-	mimseq --species Hsap --cluster-id 0.95 --threads 15 --min-cov 0.0005 --max-mismatches 0.1 --control-condition HEK293T -n hg38_test --out-dir hg38_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.075 sampleData_HEKvsK562.txt
+	mimseq --species Hsap --cluster-id 0.97 --threads 15 --min-cov 0.0005 --max-mismatches 0.075 --control-condition HEK293T -n hg38_test --out-dir hg38_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.05 sampleData_HEKvsK562.txt
 ```
 The run should take around 15 minutes on a server using 15 processors (`--threads 15`: please update according to your server capabilities).
 
@@ -80,3 +86,5 @@ Nedialkova laboratory: https://www.biochem.mpg.de/nedialkova
 ## Cite
 
 Behrens et al., 2021, High-resolution quantitative profiling of tRNA abundance and modification status in eukaryotes by mim-tRNaseq. Molecular Cell 81, 1–14 (https://doi.org/10.1016/j.molcel.2021.01.028)
+
+Behrens and Nedialkova, 2022, Experimental and computational workflow for the analysis of tRNA pools from eukaryotic cells by mim-tRNAseq. STAR Protocols. 3, 101579 (https://doi.org/10.1016/j.xpro.2022.101579)

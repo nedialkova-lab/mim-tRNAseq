@@ -6,7 +6,6 @@ setup.py
 mimseq/__init__.py
 mimseq/ccaPlots.R
 mimseq/coveragePlot.R
-mimseq/crosstalks.py
 mimseq/deseq.R
 mimseq/getCoverage.py
 mimseq/mimseq.py

@@ -8,6 +8,7 @@
 from __future__ import absolute_import
 import os, logging
 import re
+import gzip
 import pysam
 from itertools import groupby, combinations as comb
 from operator import itemgetter, le
@@ -112,9 +113,9 @@ def unknownMods(inputs, knownTable, cluster_dict, modTable, misinc_thresh, cov_t
 
 	return(new_mods_cluster, new_inosines_cluster)
 
-def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, tRNA_struct, tRNA_ungap2canon,remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, threads, inputs):
+def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, tRNA_struct, tRNA_ungap2canon,remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, crosstalks, threads, inputs):
 # modification counting and table generation, and CCA analysis
-	
+
 	# output structures
 	modTable = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 	stopTable = defaultdict(lambda: defaultdict(int))
@@ -129,6 +130,21 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 		aln_count = 0
 		cca_dict = defaultdict(lambda: defaultdict(int))
 		dinuc_dict = defaultdict(int)
+
+	# Open files for single read analysis
+	if crosstalks and not remap:
+		sample_name = inputs.split("/")[-1].split(".")[0]
+		if not os.path.exists(out_dir + "single_read_data/" + sample_name):
+			os.mkdir(out_dir + "single_read_data/" + sample_name)
+		srfiles = dict()
+		for r in isodecoder_sizes.keys():
+			shortname = r.split("/")[0] if "/" in r else "-".join(r.split("-")[:-1]) if not "chr" in r else r
+			srfiles[shortname] = gzip.open(out_dir + "single_read_data/" + sample_name +"/"+ r.replace("/",".") +".tsv.gz", "wt")
+			if cca:
+				cols = ["READ"]+[str(s) for s in  tRNA_struct.loc[shortname].index]+["Charged"]
+			else:
+				cols = ["READ"]+[str(s) for s in  tRNA_struct.loc[shortname].index]
+			srfiles[shortname].write("\t".join(cols)+"\n")
 
 	# process mods by looping through alignments in bam file
 	bam_file = pysam.AlignmentFile(inputs, "rb")
@@ -241,6 +257,41 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 			elif ref_pos <= ref_length - 3:
 				dinuc = "Absent"
 				cca_dict[reference][dinuc] += 1
+			
+		############################
+		# Single-read mods and CCA #
+		############################
+			
+		if crosstalks and not remap:
+			# Modifications
+			shortname = "-".join(reference.split("-")[:-1]) if not "chr" in reference else reference
+			seqtemp = []
+			for n in tRNA_struct.loc[shortname].index:
+				if (n<(offset+1)) or (n>(aln_end)):
+					seqtemp.append("NA")
+				elif n not in temp.keys():
+					seqtemp.append("0")
+				else:
+					b = temp[n]
+					if b!="N":
+						seqtemp.append(b)
+					else:
+						seqtemp.append("NA")
+			if cca:
+				# Record charging status
+				if aln_end==ref_length:
+					chrg = "1"
+				elif aln_end==(ref_length-1):
+					chrg = "0"
+				else:
+					chrg = "NA"
+				add = [read.query_name]+seqtemp+[chrg]
+			else:
+				add = [read.query_name]+seqtemp
+			
+			# Add line
+			srfiles[shortname].write("\t".join(add)+"\n")
+
 
 	# filter readRef_match_dict to those clusters with more than 10% false reads (i.e. do not match parent) or those with no True reads (usually low count clusters)
 	readRef_match_dict = {k:v for k, v in readRef_match_dict.items() if ((v[True]) and (v[False]/v[True] >= 0.1)) or (not v[True])}
@@ -413,6 +464,10 @@ def bamMods_mp(out_dir, min_cov, info, mismatch_dict, insert_dict, del_dict, clu
 						for dinuc, count in data.items():
 							if dinuc.upper() in ["CA", "CC", "C", "ABSENT"]:
 								CCAvsCC_counts.write(cluster + "\t" + dinuc + "\t" + inputs + "\t" + condition + "\t" + str(count) + "\n")
+		if crosstalks:
+			# Close single-read analysis files
+			for r in srfiles.keys():
+				srfiles[r].close()
 
 	log.info('Analysis complete for {}...'.format(inputs))
 
@@ -577,7 +632,7 @@ def addNA(tRNA_struct, data_type, cluster_dict, name, table):
 
 	return(table)
 
-def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, unsplitCluster_lookup, clustering):
+def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, knownTable, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs, splitBool, isodecoder_sizes, unsplitCluster_lookup, clustering, crosstalks):
 # Wrapper function to call countMods_mp with multiprocessing
 
 	if cca:
@@ -589,6 +644,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 		try:
 			os.mkdir(out_dir + "CCAanalysis")
 			os.mkdir(out_dir + "mods")
+			if crosstalks: os.mkdir(out_dir + "single_read_data")
 		except FileExistsError:
 			log.warning("Rewriting over old mods and CCA files...")
 
@@ -600,6 +656,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 
 		try:
 			os.mkdir(out_dir + "mods")
+			if crosstalks: os.mkdir(out_dir + "single_read_data")
 		except FileExistsError:
 			log.warning("Rewriting over old mods files...")
 
@@ -634,7 +691,7 @@ def generateModsTable(sampleGroups, out_dir, name, threads, min_cov, mismatch_di
 	pool = MyPool(multi)
 	# to avoid assigning too many threads, divide available threads by number of processes
 	threadsForMP = int(threads/multi)
-	func = partial(bamMods_mp, out_dir, min_cov, baminfo, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, tRNA_struct_df, tRNA_ungap2canon, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, threadsForMP)
+	func = partial(bamMods_mp, out_dir, min_cov, baminfo, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, tRNA_struct_df, tRNA_ungap2canon, remap, misinc_thresh, knownTable, tRNA_dict, unique_isodecoderMMs, splitBool, isodecoder_sizes, crosstalks, threadsForMP)
 	new_mods, new_Inosines, readRef_match_dict = zip(*pool.map(func, bamlist))
 	pool.close()
 	pool.join()

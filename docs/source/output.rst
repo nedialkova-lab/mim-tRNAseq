@@ -113,3 +113,9 @@ Various files describing the tRNA trascriptome of the genome of interest.
 	* `\*clusters.bed`: bed6 file for cluster parents. Only if clustering is enabled.
 	* `\*clusterInfo.txt`: Cluster parent-child relationship for every tRNA gene, with unique cluster number and size. Only if clustering is enabled.
 
+**single_read_data**
+
+Only generated if --crosstalks is specified. The analysis includes all modified sites based on misinc-thresh.
+
+* `*crosstalks.tsv`: Data table for all tRNA crosstalk analyses by `SLAC <https://doi.org/10.1093/nar/gkac1185>`_. Includes tRNA/cluster, pair of crosstalking positions, Fisher exact test p-value, odds ratio, contingency table with read counts, FDR-corrected p-value, and canonical tRNA position information (NAs indicate low-coverage positions). The odds ratio informs whether two modifications/charging tend to appear together in the same read (OR > 1) or tend to be exclusive of one another (OR < 1).
+

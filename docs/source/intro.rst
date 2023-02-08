@@ -33,3 +33,12 @@ Transcripts that are not deconvoluted are renamed to provide details on which tr
 
 
 .. image:: ../img/unsplitDeconv.png
+
+SingLe-read Analysis of Crosstalks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since v1.2.1, the SingLe-read Analysis of Crosstalks (SLAC; `Hernandez-Alias <https://doi.org/10.1093/nar/gkac1185>`_ et al., 2022, Nucleic Acids Research, gkac1185) has been incorporated in the mim-tRNA-seq software, which allows the detection of transcriptome-wide crosstalks between pairs of tRNA modifications and modification-aminoacylation.
+
+Because of its size, tRNA-seq produces reads that can cover the entire length of the tRNA; tRNA-seq also captures certain tRNA modifications as ‘misincorporations’ relative to the reference tRNA sequence, and the charging status by the 3'-CCA ends depending on the library construction protocol. SLAC considers all pairwise combinations modification-modification and modification-charging. For each pair, it determines the number of reads for: (i) both sites are modified/charged, (ii) site 1 is, site 2 is not modified/charged, (iii) site 1 is not, site 2 is modified/charged and (iv) both sites are not modified/charged. The analysis produces an odds ratio (OR) that informs whether the pair of modification-modification or modification-charging tend to appear together in the same read (OR > 1, stimulatory crosstalk) or tend to be exclusive of one another (OR < 1, inhibitory crosstalk), as well as calculates the significance of this interdependence using Fisher's exact test.
+
+.. image:: ../img/slac.png

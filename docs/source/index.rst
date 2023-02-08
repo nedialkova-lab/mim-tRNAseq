@@ -24,9 +24,11 @@ This package is a semi-automated analysis pipeline for the quantification and an
 * Calculate tRNA differential expression with DESeq2_.
 * Analyze functional tRNA pools and tRNA completeness via 3'-CCA analysis.
 * Comprehensive modification quantification and misincorporation signature analysis.
+* Detect coordination between pairs of modifications and modification-aminoacylation with SLAC_ (SingLe-read Analysis of Crosstalks).
 
 .. _GSNAP: http://research-pub.gene.com/gmap/
 .. _DESeq2: https://bioconductor.org/packages/release/bioc/html/DESeq2.html
+.. _SLAC: https://doi.org/10.1093/nar/gkac1185
 
 
 Index

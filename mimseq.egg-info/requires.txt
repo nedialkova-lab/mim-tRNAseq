@@ -6,3 +6,4 @@ pysam
 seaborn
 matplotlib
 pybedtools
+statsmodels

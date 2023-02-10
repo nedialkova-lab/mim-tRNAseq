@@ -18,6 +18,7 @@ from .tRNAtools import modsToSNPIndex, generateGSNAPIndices, newModsParser, tidy
 from .tRNAmap import mainAlign
 from .getCoverage import getCoverage, plotCoverage
 from .mmQuant import generateModsTable, plotCCA
+from .crosstalks import crosstalks_wrapper
 from .ssAlign import structureParser, modContext
 from .splitClusters import splitIsodecoder, unsplitClustersCov, getIsodecoderSizes, getDeconvSizes, writeDeconvTranscripts, writeIsodecoderTranscripts, writeSplitInfo, writeIsodecoderInfo
 import sys, os, subprocess, logging, datetime, copy
@@ -49,7 +50,7 @@ def restrictedFloat2(x):
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
 def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, plastid_trnas, pretrnas, local_mod, p_adj, sample_data):
+	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, plastid_trnas, pretrnas, local_mod, p_adj, crosstalks, sample_data):
 
 # Main wrapper
 	# Integrity check for output folder argument...
@@ -129,7 +130,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+		new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster, crosstalks)
 		Inosine_clusters, snp_tolerance, newtRNA_dict, new_mod_lists, new_inosine_lists = newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster, remap, snp_tolerance)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
@@ -152,9 +153,15 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	filtered_cov = list()
 	if snp_tolerance or not mismatches == 0.0:
 		if 'newtRNA_dict' in locals():
-			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster, crosstalks)
 		else:
-			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup, readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup, readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster, crosstalks)
+
+		if crosstalks:
+			# Crosstalks analysis
+			log.info("Analyzing crosstalks between pairs of modifications and modification-charging...")
+			crosstalks_wrapper(out + "single_read_data", misinc_thresh, threads)
+
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
@@ -267,6 +274,8 @@ def main():
 		help = "Adjusted p-value threshold for DESeq2 pairwise condition differential epxression dot plots. \
 			tRNAs with DESeq2 adjusted p-values equal to or below this value will be displayed as green or orange triangles for up- or down-regulated tRNAs, respectively. \
 				Default p-adj <= 0.05")
+	options.add_argument('--crosstalks', required = False, dest = 'crosstalks', action = "store_true",\
+		help = "Enable analysis of crosstalks between pairs of modifications and modification-charging. Full details of this method in: https://doi.org/10.1093/nar/gkac1185")
 
 	align = parser.add_argument_group("GSNAP alignment options")
 	align.add_argument('--max-mismatches', metavar = 'allowed mismatches', required = False, dest = 'mismatches', type = float, \
@@ -408,7 +417,7 @@ def main():
 			mimseq(args.trnas, args.trnaout, args.name, args.species, args.out, args.cluster, args.cluster_id, args.cov_diff, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
 				args.keep_temp, args.cca, args.double_cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
-				args.misinc_thresh, args.mito, args.plastid, args.pretrnas, args.local_mod, args.p_adj, args.sampledata)
+				args.misinc_thresh, args.mito, args.plastid, args.pretrnas, args.local_mod, args.p_adj, args.crosstalks, args.sampledata)
 
 if __name__ == '__main__':
 	main()

@@ -56,10 +56,11 @@ if (length(args) == 0) {
   cca_prop = cca_counts %>% group_by(gene,sample) %>%
     mutate(countT = sum(count)) %>% 
     group_by(end, .add = TRUE) %>% 
-    mutate(per = round(100*count/countT,2))
-  cca_prop$per = ifelse(is.na(cca_prop$per), 0, cca_prop$per)
+    mutate(percent = round(100*count/countT,2))
+  cca_prop$percent = ifelse(is.na(cca_prop$percent), 0, cca_prop$percent)
+  write.csv(subset(cca_prop, select=-c(countT)), paste(out, "CCAprops.csv", sep = "/"), row.names = FALSE)
 
-  cca_summary = aggregate(cca_prop$per, by=list(gene = cca_prop$gene,
+  cca_summary = aggregate(cca_prop$percent, by=list(gene = cca_prop$gene,
                                                end = cca_prop$end,
                                                condition = cca_prop$condition),
                           function(x) c(mean = mean(x), sd = sd(x)))
@@ -78,19 +79,19 @@ if (length(args) == 0) {
       
       cca_prop_sub = subset(cca_prop, condition %in% combinations[[i]])
       cca_prop_sub = cca_prop_sub %>%
-                     mutate(per = ifelse(condition == cca_summary_sub$condition[1],
-                                         per * -1,
-                                         per))
+                     mutate(percent = ifelse(condition == cca_summary_sub$condition[1],
+                                         percent * -1,
+                                         percent))
       
       cca_prop_sub$bar_pos = NA
-      cca_prop_sub$bar_pos[cca_prop_sub$end == "Absent"] = cca_prop_sub$per[cca_prop_sub$end == "Absent"]
-      cca_prop_sub$bar_pos[cca_prop_sub$end == "C"] = cca_prop_sub$per[cca_prop_sub$end == "Absent"]+ 
-        cca_prop_sub$per[cca_prop_sub$end == "C"]
-      cca_prop_sub$bar_pos[cca_prop_sub$end == "CC"] = cca_prop_sub$per[cca_prop_sub$end == "Absent"]+ 
-        cca_prop_sub$per[cca_prop_sub$end == "CC"] + cca_prop_sub$per[cca_prop_sub$end == "C"]
-      cca_prop_sub$bar_pos[cca_prop_sub$end == "CA"] = cca_prop_sub$per[cca_prop_sub$end == "Absent"] + 
-        cca_prop_sub$per[cca_prop_sub$end == "CA"] + cca_prop_sub$per[cca_prop_sub$end == "CC"] + 
-        cca_prop_sub$per[cca_prop_sub$end == "C"]
+      cca_prop_sub$bar_pos[cca_prop_sub$end == "Absent"] = cca_prop_sub$percent[cca_prop_sub$end == "Absent"]
+      cca_prop_sub$bar_pos[cca_prop_sub$end == "C"] = cca_prop_sub$percent[cca_prop_sub$end == "Absent"]+ 
+        cca_prop_sub$percent[cca_prop_sub$end == "C"]
+      cca_prop_sub$bar_pos[cca_prop_sub$end == "CC"] = cca_prop_sub$percent[cca_prop_sub$end == "Absent"]+ 
+        cca_prop_sub$percent[cca_prop_sub$end == "CC"] + cca_prop_sub$percent[cca_prop_sub$end == "C"]
+      cca_prop_sub$bar_pos[cca_prop_sub$end == "CA"] = cca_prop_sub$percent[cca_prop_sub$end == "Absent"] + 
+        cca_prop_sub$percent[cca_prop_sub$end == "CA"] + cca_prop_sub$percent[cca_prop_sub$end == "CC"] + 
+        cca_prop_sub$percent[cca_prop_sub$end == "C"]
       
       avg_cca = aggregate(cca_summary_sub$x.mean, by = list(condition = cca_summary_sub$condition, end = cca_summary_sub$end), mean)
       cca_summary_sub$end = factor(cca_summary_sub$end, levels = c("CA", "CC", "C", "Absent"))
@@ -120,14 +121,14 @@ if (length(args) == 0) {
   } else {
     cca_summary_sub = cca_summary
     cca_prop$bar_pos = NA
-      cca_prop$bar_pos[cca_prop$end == "Absent"] = cca_prop$per[cca_prop$end == "Absent"]
-      cca_prop$bar_pos[cca_prop$end == "C"] = cca_prop$per[cca_prop$end == "Absent"]+ 
-        cca_prop$per[cca_prop$end == "C"]
-      cca_prop$bar_pos[cca_prop$end == "CC"] = cca_prop$per[cca_prop$end == "Absent"]+ 
-        cca_prop$per[cca_prop$end == "CC"] + cca_prop$per[cca_prop$end == "C"]
-      cca_prop$bar_pos[cca_prop$end == "CA"] = cca_prop$per[cca_prop$end == "Absent"] + 
-        cca_prop$per[cca_prop$end == "CA"] + cca_prop$per[cca_prop$end == "CC"] + 
-        cca_prop$per[cca_prop$end == "C"]
+      cca_prop$bar_pos[cca_prop$end == "Absent"] = cca_prop$percent[cca_prop$end == "Absent"]
+      cca_prop$bar_pos[cca_prop$end == "C"] = cca_prop$percent[cca_prop$end == "Absent"]+ 
+        cca_prop$percent[cca_prop$end == "C"]
+      cca_prop$bar_pos[cca_prop$end == "CC"] = cca_prop$percent[cca_prop$end == "Absent"]+ 
+        cca_prop$percent[cca_prop$end == "CC"] + cca_prop$percent[cca_prop$end == "C"]
+      cca_prop$bar_pos[cca_prop$end == "CA"] = cca_prop$percent[cca_prop$end == "Absent"] + 
+        cca_prop$percent[cca_prop$end == "CA"] + cca_prop$percent[cca_prop$end == "CC"] + 
+        cca_prop$percent[cca_prop$end == "C"]
          
     avg_cca = aggregate(cca_summary_sub$x.mean, by = list(condition = cca_summary_sub$condition, end = cca_summary_sub$end), mean)
     cca_summary_sub$end = factor(cca_summary_sub$end, levels = c('CA', 'CC', 'C', 'Absent'))

@@ -47,6 +47,7 @@ Only generated if --cca-analysis flag is present. Contains data and plots for 3'
 * `\*ccaPlot.pdf`: Diverging bar plots indicating average proportions of 3'-CCA, 3'-CC, 3'-C and absent 3' ends for each condition. These proportions are calculated from uniquely aligned reads aligning to the 3' end of the reference transcript. If more than one condition is present in the sample file, there is one of these plots for each pairwise comparison. Otherwise, there is only one plot for the single condition. Percentages and vertical white line indicate average 3'-CCA proportions for the condition.
 * `dinuc_plot`: Proportions of dinucleotide ends for *all* aligned reads for each alignment file.
 * `CCAcounts.csv`: Data file used for plotting diverging bar plots. Counts of different 3' ends for each tRNA/cluster for each bam file.
+* `CCAprops.csv`: Data file generated from `CCAcount.csv` in plotting diverging bar plots. Proportions of each 3' end type within each tRNA/cluster for each bam file.
 * `AlignedDinucProportions.csv`: Data file for plotting dinuc_plot. Counts of dinucleotide ends for each bam file. 
 
 **mods**

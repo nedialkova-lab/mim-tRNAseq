@@ -291,7 +291,7 @@ def covCheck_mp(bedTool, unique_isodecoderMMs, tRNA_ungap2canon, splitBool, covD
     bam = pybedtools.BedTool(input)
     # generate a temporary 2 column file with the chromosome names in the bam file
     temp_chrom = input + "_chrom.txt"
-    cmd = "samtools view -H " + input + " | grep @SQ|sed 's/@SQ\tSN:\|LN://g' > " + temp_chrom
+    cmd = "samtools view -H " + input + " | grep @SQ | sed 's/@SQ\tSN:\|@sq\tSN:\|LN://g' > " + temp_chrom
     subprocess.call(cmd, shell = True)
     ### each bam file might have a reduced set of chromosomes compared to the bedTool object and so sorting on all doesn't always work
     # instead, filter bedTool to have those chromosomes present in the bam
@@ -308,7 +308,7 @@ def covCheck_mp(bedTool, unique_isodecoderMMs, tRNA_ungap2canon, splitBool, covD
     # the sorted options enables a low-memory algorithm for calculating coverage
     cov = bedTool.coverage(bam, s = True, d = True, sorted = True, g = temp_chrom)
     # remove the temporary chromosome file
-    cmd = "rm " + temp_chrom
+    #cmd = "rm " + temp_chrom
     subprocess.call(cmd, shell = True)
     cov_df = cov.to_dataframe()
 

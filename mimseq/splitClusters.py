@@ -308,7 +308,7 @@ def covCheck_mp(bedTool, unique_isodecoderMMs, tRNA_ungap2canon, splitBool, covD
     # the sorted options enables a low-memory algorithm for calculating coverage
     cov = bedTool.coverage(bam, s = True, d = True, sorted = True, g = temp_chrom)
     # remove the temporary chromosome file
-    #cmd = "rm " + temp_chrom
+    cmd = "rm " + temp_chrom
     subprocess.call(cmd, shell = True)
     cov_df = cov.to_dataframe()
 

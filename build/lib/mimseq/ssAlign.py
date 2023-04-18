@@ -47,7 +47,7 @@ def tRNAclassifier(ungapped = False):
 	# Get canonical tRNA position numbering (cons_pos_list). Useful to retain cononical numbering of tRNA positions (i.e. anticodon at 34 - 36, m1A 58 etc...)
 	# Return list of characters with pos or '-'. To be used in all plots with positional data such as heatmaps for stops or modifications.
 	# cons_pos_dict is a dictionary of 1 based positions and canonical positions to create extra column in mods tables (mismatchTable and RTstopTable) mapping ungapped positions to canonical ones
-	ss_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC SS_cons")])
+	ss_cons = stk.column_annotations['secondary_structure']
 	if ungapped:
 		ss_cons_orig = ss_cons
 		ss_cons = ss_cons.replace(".", "")
@@ -72,7 +72,7 @@ def tRNAclassifier(ungapped = False):
 					cons_pos_list.append('17a')
 					cons_pos += 1
 
-				elif cons_pos == 20:
+				elif cons_pos == 20: 
 					if not '20' in cons_pos_list:
 						cons_pos_dict[pos+1] = '20'
 						cons_pos_list.append('20')
@@ -184,12 +184,13 @@ def getAnticodon():
 	# return anticodon position from conserved alignment
 
 	anticodon = list()
-	rf_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC RF")])
+	stk = AlignIO.read(stkname, "stockholm")
+	rf_cons = stk.column_annotations['reference_annotation']
 	# use '*' in rf_cons from stk to delimit the anticodon positions
 	for pos, char in enumerate(rf_cons):
 		if char == "*":
 			anticodon.append(pos)
-
+	
 	return(anticodon)
 
 def clusterAnticodon(cons_anticodon, cluster):
@@ -218,13 +219,13 @@ def modContext(out, unsplitCluster_lookup):
 	# Define positions of conserved mod sites in gapped alignment for each tRNA
 	sites_dict = defaultdict()
 	mod_sites = ['9', '20', '26', '32', '34', '37', '58']
-
+	
 	for mod in mod_sites:
 		sites_dict[mod] = list(cons_pos_dict.keys())[list(cons_pos_dict.values()).index(mod)]
 
 	upstream_dict = defaultdict(lambda: defaultdict(list))
 
-	stk = AlignIO.read(stkname, "stockholm")
+	stk = AlignIO.read(stkname, "stockholm") 
 	for record in stk:
 		gene = record.id
 		seq = record.seq
@@ -238,7 +239,7 @@ def modContext(out, unsplitCluster_lookup):
 				while seq[down].upper() not in ['A','C','G','U','T']:
 					down += 1
 				canon_pos = cons_pos_dict[pos]
-				upstream_dict[gene][canon_pos].append(identity)
+				upstream_dict[gene][canon_pos].append(identity) 
 				upstream_dict[gene][canon_pos].append(seq[up]) # upstream base
 				upstream_dict[gene][canon_pos].append(seq[down]) # downstream base
 
@@ -264,7 +265,7 @@ def modContext(out, unsplitCluster_lookup):
 
 def structureParser():
 # read in stk file generated above and define structural regions for each tRNA input
-
+	
 	struct_dict = dict()
 	# get conserved tRNA structure from alignment
 	ss_cons = "".join([line.split()[-1] for line in open(stkname) if line.startswith("#=GC SS_cons")])

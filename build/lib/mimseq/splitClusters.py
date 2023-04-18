@@ -291,7 +291,7 @@ def covCheck_mp(bedTool, unique_isodecoderMMs, tRNA_ungap2canon, splitBool, covD
     bam = pybedtools.BedTool(input)
     # generate a temporary 2 column file with the chromosome names in the bam file
     temp_chrom = input + "_chrom.txt"
-    cmd = "samtools view -H " + input + " | grep @SQ|sed 's/@SQ\tSN:\|LN://g' > " + temp_chrom
+    cmd = "samtools view -H " + input + " | grep @SQ | sed 's/@SQ\tSN:\|@sq\tSN:\|LN://g' > " + temp_chrom
     subprocess.call(cmd, shell = True)
     ### each bam file might have a reduced set of chromosomes compared to the bedTool object and so sorting on all doesn't always work
     # instead, filter bedTool to have those chromosomes present in the bam
@@ -446,10 +446,10 @@ def writeDeconvTranscripts(out_dir, experiment_name, tRNA_dict, isodecoder_sizes
         for seq in isodecoder_sizes.keys():
             # new seq to match unsplit cluster parent to tRNA_dict
             if "/" in seq:
-                tempSeq = seq.split("/")[0]
+                tempSeq = seq.split("/")[0] + "-"
                 isodecoder_list = [x for x in tRNA_dict.keys() if tempSeq in x and not "chr" in x]
                 iso_min = min([x.split("-")[-1] for x in isodecoder_list])
-                newSeq = tempSeq + "-" + str(iso_min)
+                newSeq = tempSeq + str(iso_min)
             else:
                 newSeq = seq
             # make shortnames for fa file

@@ -446,10 +446,10 @@ def writeDeconvTranscripts(out_dir, experiment_name, tRNA_dict, isodecoder_sizes
         for seq in isodecoder_sizes.keys():
             # new seq to match unsplit cluster parent to tRNA_dict
             if "/" in seq:
-                tempSeq = seq.split("/")[0]
+                tempSeq = seq.split("/")[0] + "-"
                 isodecoder_list = [x for x in tRNA_dict.keys() if tempSeq in x and not "chr" in x]
                 iso_min = min([x.split("-")[-1] for x in isodecoder_list])
-                newSeq = tempSeq + "-" + str(iso_min)
+                newSeq = tempSeq + str(iso_min)
             else:
                 newSeq = seq
             # make shortnames for fa file

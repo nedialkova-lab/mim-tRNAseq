@@ -6,7 +6,6 @@ Home-page: https://github.com/nedialkova-lab/mim-tRNAseq
 Author: Drew Behrens
 Author-email: abehrens@biochem.mpg.de
 License: GPLv3
-Platform: UNKNOWN
 Classifier: Development Status :: 4 - Beta
 Classifier: Environment :: Console
 Classifier: Intended Audience :: Science/Research
@@ -15,6 +14,3 @@ Classifier: Natural Language :: English
 Classifier: Programming Language :: Python :: 3
 Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
 License-File: LICENSE.txt
-
-UNKNOWN
-

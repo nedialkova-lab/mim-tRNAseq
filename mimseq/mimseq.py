@@ -233,8 +233,8 @@ def main():
 
 	inputs = parser.add_argument_group("Input files")
 	inputs.add_argument('-s','--species', metavar='species', required = not ('-t' in sys.argv or '--trnas' in sys.argv), dest = 'species', help = \
-		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap19, Mmus, Rnor, Scer, Spom, Dmel, Drer, Ecol, Atha', \
-		choices = ['Hsap', 'Hsap19','Ggor','Mmus','Rnor','Scer', 'Spom','Dmel', 'Drer', 'Ecol', 'Atha', 'HsapTCC', 'ScerMut'])
+		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap19, Mmus, Rnor, Scer, Spom, Dmel, Drer, Cele, Ecol, Atha', \
+		choices = ['Hsap', 'Hsap19','Ggor','Mmus','Rnor','Scer', 'Spom','Dmel', 'Drer', 'Cele', 'Ecol', 'Atha', 'HsapTCC', 'ScerMut'])
 	inputs.add_argument('-t', '--trnas', metavar='genomic tRNAs', required = False, dest = 'trnas', help = \
 		'Genomic tRNA fasta file, e.g. from gtRNAdb or tRNAscan-SE. Already avalable in data folder for a few model organisms.')
 	inputs.add_argument('-o', '--trnaout', metavar = 'tRNA out file', required = (not '--species' or '-s' in sys.argv) or ('-t' in sys.argv),
@@ -412,6 +412,10 @@ def main():
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-mitotRNAs.fa"
 					# plastid reference needed for A.thaliana
 					args.plastid = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-plastidtRNAs.fa"
+				if args.species == 'Cele':
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-tRNAs-all.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-tRNAs-detailed.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-mitotRNAs.fa"
 			else:
 				args.species = args.trnas.split("/")[-1].split(".")[0]
 			mimseq(args.trnas, args.trnaout, args.name, args.species, args.out, args.cluster, args.cluster_id, args.cov_diff, \

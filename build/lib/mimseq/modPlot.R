@@ -337,9 +337,9 @@ for (i in unique(mods_agg$condition)) {
     mutate(new_prop = proportion/sum(proportion))
   filter_proportions = temp_mods %>%
     group_by(isodecoder, canon_pos, bam, identity) %>%
-    filter((any(max(new_prop) > 0.95) &
+    filter((any(max(new_prop) > 0.97) &
               any(canon_pos != 34)) |
-             (any(max(new_prop) > 0.95) &
+             (any(max(new_prop) > 0.97) &
                 any(identity != 'A') &
                 any(canon_pos == 34) & any(type != "G")))
   sub_mods_agg = mods_agg[mods_agg$condition == i, ]
@@ -420,12 +420,12 @@ for (i in unique(mods_agg$condition)) {
                                           !grepl("nmt", sub_mods_aggtype$isodecoder), ]
   # renormalise by sum of misinc at each site for each isodecoder in each bam file
   # this makes sum all misinc types = 1
-  # additionally filter all clusters at each pos where misinc of highest nucl > 0.95
+  # additionally filter all clusters at each pos where misinc of highest nucl > 0.97
   sub_mods_aggtype_cyt = sub_mods_aggtype_cyt %>%
     group_by(isodecoder, canon_pos, bam, identity) %>%
     mutate(new_prop = proportion/sum(proportion)) %>%
-    filter(any(max(new_prop) < 0.95) |
-             (any(max(new_prop) >= 0.95 &
+    filter(any(max(new_prop) < 0.97) |
+             (any(max(new_prop) >= 0.97 &
                     any(identity == 'A') &
                     any(canon_pos == 34) &
                     any(type == 'G'))))
@@ -475,7 +475,7 @@ for (i in unique(mods_agg$condition)) {
     sub_mods_aggtype_mito = sub_mods_aggtype[grepl("mito", sub_mods_aggtype$isodecoder) |
                                               grepl("plastid", sub_mods_aggtype$isodecoder) |
                                               grepl("nmt", sub_mods_aggtype$isodecoder), ]
-    sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, canon_pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.95))
+    sub_mods_aggtype_mito = sub_mods_aggtype_mito %>% group_by(isodecoder, canon_pos, bam) %>% mutate(new_prop = proportion/sum(proportion)) %>% filter(any(max(new_prop) < 0.97))
     
     if(nrow(sub_mods_aggtype_mito) != 0) {
       # renormalise by sum of misinc at each site for each isodecoder in each bam file - this makes sum all misinc types = 1

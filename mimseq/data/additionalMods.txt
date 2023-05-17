@@ -46,3 +46,11 @@ Rattus norvegicus	Pro-AGG	I34
 Rattus norvegicus	Ser-AGA	I34
 Rattus norvegicus	Thr-AGT	I34
 Rattus norvegicus	Val-AAC	I34
+Caenorhabditis elegans	Ala-AGC	I34
+Caenorhabditis elegans	Arg-ACG	I34
+Caenorhabditis elegans	Ile-AAT	I34
+Caenorhabditis elegans	Leu-AAG	I34
+Caenorhabditis elegans	Pro-AGG	I34
+Caenorhabditis elegans	Ser-AGA	I34
+Caenorhabditis elegans	Thr-AGT	I34
+Caenorhabditis elegans	Val-AAC	I34

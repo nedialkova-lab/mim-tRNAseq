@@ -55,6 +55,7 @@ mimseq/data/ce11-eColitK/ce11-mitotRNAs.fa
 mimseq/data/ce11-eColitK/ce11-tRNAs-all.fa
 mimseq/data/ce11-eColitK/ce11-tRNAs-all.tmp.fa
 mimseq/data/ce11-eColitK/ce11-tRNAs-detailed.out
+mimseq/data/ce11-eColitK/ce11-tRNAs-filtered.fa
 mimseq/data/ce11-eColitK/ce11-tRNAs.bed
 mimseq/data/ce11-eColitK/ce11-tRNAs_name_map.txt
 mimseq/data/danRer11-eColitK/README.txt

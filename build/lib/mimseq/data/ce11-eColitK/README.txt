@@ -15,8 +15,5 @@ Some tRNAs incorrectly named!
 ### Manually removed sequences due to strange sequence, poor score and issues with infernal alignment with mimseq
 ### See ce11-tRNAs-filtered.fa
 
-
-#### mitochondrial Tyr-GTA missing a 3'-A which leads to inaccuracies in alignment and shows as mostly CCA-less reads in CCA plots ####
-#### Gene should end on CCA and gain an additional CCA after processing
-#### manually added this A
-#### see https://www.nature.com/articles/s41467-020-18068-6#Sec24 (supplementary data 4)
+# remove tRNA-Lys-CTT-7-1 as this is definitely a weird tRNA with extra sequence in D-loop that is not an intron
+# despite high score, this is a strange tRNA (http://gtrnadb.ucsc.edu/genomes/eukaryota/Celeg11/genes/tRNA-Lys-CTT-7-1.html)

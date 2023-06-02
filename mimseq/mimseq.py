@@ -413,7 +413,7 @@ def main():
 					# plastid reference needed for A.thaliana
 					args.plastid = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-plastidtRNAs.fa"
 				if args.species == 'Cele':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-tRNAs-all.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-tRNAs-filtered.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-mitotRNAs.fa"
 			else:

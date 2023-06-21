@@ -350,7 +350,7 @@ for (type in c("cyto", "mito")) {
             scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#9970ab", "TRUE1"="#55ae61")) + 
             scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"=19, "TRUE-1"=17, "TRUE1"=17)) + 
             scale_size_manual(values = c(1,2), guide = "none") + theme_bw() +
-            labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
+            labs(x = paste(combinations[[i]][2], 'counts', sep = ' '), y = paste(combinations[[i]][1], 'counts', sep = ' ')) +
             annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", anticodon_cor), parse = TRUE)
           
           isodecoder_dot = ggplot(isodecoder_data, aes_string(x, y)) +
@@ -361,7 +361,7 @@ for (type in c("cyto", "mito")) {
             scale_color_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"="darkgrey", "TRUE-1"="#9970ab", "TRUE1"="#55ae61")) + 
             scale_shape_manual(paste('Differential expression\n(adj-p <=',p_adj, ')'), labels = c("None", "Down", "Up"), values = c("FALSE"=19, "TRUE-1"=17, "TRUE1"=17)) + 
             scale_size_manual(values = c(1,2), guide = "none") + theme_bw() +
-            labs(x = paste('log10', combinations[[i]][2], 'counts', sep = ' '), y = paste('log10', combinations[[i]][1], 'counts', sep = ' ')) +
+            labs(x = paste(combinations[[i]][2], 'counts', sep = ' '), y = paste(combinations[[i]][1], 'counts', sep = ' ')) +
             annotate("label", 0, Inf, hjust = 0, vjust = 1, label = paste("italic(r) == ", isodecoder_cor), parse = TRUE)
           
           ggsave(paste(subdir_anticodon, paste(paste(combinations[[i]], collapse="vs"), "diffexpr-countplot.pdf", sep="_"), sep="/"), anticodon_dot, height = 5, width = 8)

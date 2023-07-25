@@ -36,7 +36,7 @@ Detailed methodology is shown in the image below, and described in Behrens et al
 
 Please see the full documentation for explanations of dependencies, inputs formatting, and outputs.
 
-To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time improvements can be made to installing mimseq using mamba which we will use within the mimseq environment:
+To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time and dependency-related improvements can be made to using conda for managing environment and installing mimseq using the [Mambaforge](https://github.com/conda-forge/miniforge) version of conda Miniforge. We recommend installing Mambaforge and then followin the steps below:
 ```bash
 	conda create -n mimseq python=3.7
 	conda activate mimseq

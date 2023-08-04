@@ -24,7 +24,7 @@ Homo_sapiens_tRX-Asn-GTT-3-1 shares sequence with Homo_sapiens_tRX-Asn-GTT-2-1. 
 Homo_sapiens_tRX-Phe-GAA-1-1 shares sequence with Homo_sapiens_tRNA-Phe-GAA-10-1. Rename to Homo_sapiens_tRNA-Phe-GAA-10-2
 Homo_sapiens_tRNA-Ala-AGC-7-1 shares sequence with Homo_sapiens_tRNA-Ala-AGC-2. Renamed to Homo_sapiens_tRNA-Ala-AGC-2-3
 
-### Manually removed sequences due to strange sequence, poor score and issues with infernal alignment with mimseq
+### Manually curated set of sequences removing those with non-canonical secondary structure alignments
 ### See hg38-tRNAs-filtered.fa
 # Homo_sapiens_tRX-Phe-GAA-2-1 (tRNAscan-SE ID: chr1.trna134) Phe (GAA) 80 bp Sc: 26.6 chr1:121009543-121009623(-)
 # Homo_sapiens_tRX-Lys-CTT-5-1 (tRNAscan-SE ID: chr7.trna1) Lys (CTT) 84 bp Sc: 31.1 chr7:12601963-12602047(+)

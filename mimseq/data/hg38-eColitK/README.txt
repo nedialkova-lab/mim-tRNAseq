@@ -24,19 +24,6 @@ Homo_sapiens_tRX-Asn-GTT-3-1 shares sequence with Homo_sapiens_tRX-Asn-GTT-2-1. 
 Homo_sapiens_tRX-Phe-GAA-1-1 shares sequence with Homo_sapiens_tRNA-Phe-GAA-10-1. Rename to Homo_sapiens_tRNA-Phe-GAA-10-2
 Homo_sapiens_tRNA-Ala-AGC-7-1 shares sequence with Homo_sapiens_tRNA-Ala-AGC-2. Renamed to Homo_sapiens_tRNA-Ala-AGC-2-3
 
-### Manually curated set of sequences removing those with non-canonical secondary structure alignments
-### See hg38-tRNAs-filtered.fa
-# Homo_sapiens_tRX-Phe-GAA-2-1 (tRNAscan-SE ID: chr1.trna134) Phe (GAA) 80 bp Sc: 26.6 chr1:121009543-121009623(-)
-# Homo_sapiens_tRX-Lys-CTT-5-1 (tRNAscan-SE ID: chr7.trna1) Lys (CTT) 84 bp Sc: 31.1 chr7:12601963-12602047(+)
-# Homo_sapiens_tRX-Lys-CTT-4-1 (tRNAscan-SE ID: chr7.trna31) Lys (CTT) 73 bp Sc: 34.5 chr7:97141572-97141645(-)
-# Homo_sapiens_tRNA-Phe-GAA-9-1 (tRNAscan-SE ID: chr1.trna124) Phe (GAA) 80 bp Sc: 32.2 chr1:143792723-143792803(-)
-# Homo_sapiens_tRX-Arg-CCT-2-1 (tRNAscan-SE ID: chr11.trna9) Arg (CCT) 79 bp Sc: 21.2 chr11:118241371-118241450(+)
-# Homo_sapiens_tRX-Ile-AAT-4-1 (tRNAscan-SE ID: chr17.trna38) Ile (AAT) 87 bp Sc: 20.5 chr17:8206072-8206159(-)
-# Homo_sapiens_tRNA-Glu-TTC-13-1 (tRNAscan-SE ID: chr2.trna6) Glu (TCA) 73 bp Sc: 21.3 chr2:74896918-74896991(+)
-# Homo_sapiens_tRNA-Tyr-GTA-11-1 (tRNAscan-SE ID: chr7.trna29) Tyr (GTA) 77 bp Sc: 37.1 chr7:149356652-149356729(-)
-# Homo_sapiens_tRNA-Asn-GTT-20-1 (tRNAscan-SE ID: chr1.trna116) Asn (GTT) 76 bp Sc: 41.0 chr1:146049197-146049273(-)
-# Homo_sapiens_tRX-Cys-GCA-4-1 (tRNAscan-SE ID: chr7.trna16) Cys (GCA) 83 bp Sc: 26.6 chr7:149628152-149628235(+)
-# Homo_sapiens_tRNA-Cys-GCA-25-1 (tRNAscan-SE ID: chr3.trna11) Cys (GCA) 80 bp Sc: 40.9 chr3:17699892-17699972(-)
 
 #### mitochondrial Tyr-GTA missing a 3'-A which leads to inaccuracies in alignment and shows as mostly CCA-less reads in CCA plots ####
 #### Gene should end on CCA and gain an additional CCA after processing

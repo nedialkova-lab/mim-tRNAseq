@@ -88,8 +88,6 @@ mimseq/data/gorGor4-eColitK/gorGor4-mitotRNAs.fa
 mimseq/data/gorGor4-eColitK/gorGor4-tRNAs-all.fa
 mimseq/data/gorGor4-eColitK/gorGor4-tRNAs-all.tmp.fa
 mimseq/data/gorGor4-eColitK/gorGor4-tRNAs-detailed.out
-mimseq/data/gorGor4-eColitK/gorGor4-tRNAs-filtered.fa
-mimseq/data/gorGor4-eColitK/gorGor4-tRNAs-filtered2.fa
 mimseq/data/gorGor4-eColitK/gorGor4-tRNAs.bed
 mimseq/data/gorGor4-eColitK/gorGor4-tRNAs.fa
 mimseq/data/gorGor4-eColitK/gorGor4-tRNAs_name_map.txt
@@ -111,7 +109,6 @@ mimseq/data/hg38-eColitK/README.txt
 mimseq/data/hg38-eColitK/hg38-mitotRNAs.fa
 mimseq/data/hg38-eColitK/hg38-tRNAs-all.fa
 mimseq/data/hg38-eColitK/hg38-tRNAs-detailed.out
-mimseq/data/hg38-eColitK/hg38-tRNAs-filtered.fa
 mimseq/data/hg38-eColitK/hg38-tRNAs.bed
 mimseq/data/hg38-eColitK/hg38-tRNAs.fa
 mimseq/data/hg38-eColitK/hg38-tRNAs_name_map.txt

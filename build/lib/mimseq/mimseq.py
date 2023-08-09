@@ -359,7 +359,7 @@ def main():
 		else:
 			if args.species:
 				if args.species == 'Ggor':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-tRNAs-filtered2.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-tRNAs-all.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-mitotRNAs.fa"
 				if args.species == 'Hsap19':
@@ -367,7 +367,7 @@ def main():
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19_eschColi-tRNAs.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19-mitotRNAs.fa"
 				if args.species == 'Hsap':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-filtered.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-all.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-mitotRNAs.fa"
 				if args.species == 'HsapTCC':

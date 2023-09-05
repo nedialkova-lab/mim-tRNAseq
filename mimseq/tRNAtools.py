@@ -93,7 +93,7 @@ def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_ta
 
 	if mitotRNAs or plastidtRNAs:
 		num_cytosilic = len([k for k in tRNA_dict.keys() if tRNA_dict[k]['type'] == "cytosolic"])
-		log.info("{} cytosolic tRNA sequences imported".format(num_cytosilic))
+		log.info("{} filtered cytosolic tRNA sequences imported (Und, NNN and nmt sequences excluded)".format(num_cytosilic))
 
 	# Read in and parse modomics file to contain similar headers to tRNA_dict
 	# Save in new dict
@@ -338,7 +338,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications
 
 	tRNAbed.close()
 
-	log.info("{} total tRNA gene sequences (undetermined and nmt sequences excluded)".format(len(tRNA_dict)))
+	log.info("{} total tRNA gene sequences".format(len(tRNA_dict)))
 	log.info("{} sequences with a match to Modomics dataset".format(match_count))
 
 	with open(str(out_dir + experiment_name + '_tRNATranscripts.fa'), "w") as temptRNATranscripts:
@@ -945,7 +945,7 @@ def initIntronDict(tRNAscan_out):
 	tRNAscan = open(tRNAscan_out, 'r')
 	intron_count = 0
 	for line in tRNAscan:
-		if line.startswith("chr"):
+		if not line.startswith(("Sequence", "Name", "-")):
 			tRNA_ID = line.split()[0] + ".trna" + line.split()[1]
 			tRNA_start = int(line.split()[2])
 			intron_start = int(line.split()[6])

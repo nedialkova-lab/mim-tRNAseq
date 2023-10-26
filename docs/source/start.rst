@@ -4,12 +4,10 @@ Quick-start guide
 Installation
 ^^^^^^^^^^^^
 
-To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time and dependency-related improvements can be made to using conda for managing environment and installing mimseq using the Mambaforge_ version of conda Miniforge. We recommend installing Mambaforge and then followin the steps below:
+To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time and dependency-related improvements can be made to using conda for managing environment and installing mimseq using the Miniforge_ version of conda which oncludes optional use for Mamba. We recommend installing Miniforge and then following the steps below:
 ::
 	conda create -n mimseq python=3.7
 	conda activate mimseq
-	conda config --add channels conda-forge
-	conda install -c conda-forge mamba
 	mamba install -c bioconda mimseq
 
 usearch needs to be acquired and installed. Please do the following:
@@ -31,7 +29,7 @@ Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additi
 The source code is also available on GitHub_
 
 .. _GitHub: https://github.com/nedialkova-lab/mim-tRNAseq
-.. _Mambaforge: https://github.com/conda-forge/miniforge
+.. _Miniforge: https://github.com/conda-forge/miniforge
 
 Once installed, mim-tRNAseq should be executable and help displayed, by running
 ::

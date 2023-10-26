@@ -19,5 +19,4 @@ sphinx:
 # https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
 python:
   install:
-    - package: sphinx-rtd-theme
-#   - requirements: docs/requirements.txt
+    - requirements: docs/requirements.txt

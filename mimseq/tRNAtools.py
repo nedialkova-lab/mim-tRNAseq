@@ -28,11 +28,12 @@ def dd():
 def dd_list():
 	return(defaultdict(list))
 
-def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod):
+def tRNAparser (gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, posttrans_mod_off, double_cca, pretrnas, local_mod):
 # tRNA sequence files parser and dictionary building
 
 	# Generate modification reference table
-	modifications = modificationParser(modifications_table)
+	modifications_file, fetch = getModifications(local_mod)
+	modifications = modificationParser(modifications_file, fetch)
 	temp_name = gtRNAdb.split("/")[-1]
 
 	log.info("\n+" + ("-" * (len(temp_name)+24)) + "+\
@@ -214,7 +215,7 @@ def processModomics(modomics_file, fetch, species, modifications):
 	return(modomics_dict, perSpecies_count)
 
 def getModomics(local_mod):
-	# Get full Modomics modified tRNA data from web
+	# Get full Modomics modified tRNA data from API
 	fetch = False
 	if not local_mod:
 		try:
@@ -238,7 +239,128 @@ def getModomics(local_mod):
 
 	return modomics, fetch
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False, search='usearch'):
+def getModifications(local_mod):
+	# Get modification lookup table from Modomics via API
+	fetch = False
+	if not local_mod:
+		try:
+			response = requests.get("https://www.genesilico.pl/modomics/api/modifications")
+			response.raise_for_status()
+			modifications = response.json()
+			fetch = True
+			log.info("Modification table retrieved...")
+		except HTTPError as http_err:
+			log.error("Unable to connect to Modomics database! HTTP error: {}. Check status of Modomics webpage. Using local Modomics files...".format(http_err))
+			modifications_path = os.path.dirname(os.path.realpath(__file__)) + "/modifications"
+			modifications = open(modifications_path, "r+", encoding = "utf-8")
+		except Exception as err:
+			log.error("Error in connecting to Modomics: {}. Using local Modomics files...".format(err))
+			modifications_path = os.path.dirname(os.path.realpath(__file__)) + "/modifications"
+			modifications = open(modifications_path, "r+", encoding = "utf-8")
+	else:
+		log.warning("Retrieval of Modomics database disabled. Using local files instead...")
+		modifications_path = os.path.dirname(os.path.realpath(__file__)) + "/modifications"
+		modifications = open(modifications_path, "r+", encoding = "utf-8")
+
+	return modifications, fetch
+
+def modificationParser(modifications_table, fetch):
+	# Read in modifications and build dictionary
+
+	modifications = {}
+
+	if fetch:
+		log.info("Parsing Modification JSON data...")
+		for data in modifications_table.values():
+			modifications[data["abbrev"].strip()] = {'name':data["name"].strip(), 'abbr':data["short_name"].strip(), 'ref':data["reference_moiety"][0].strip()}
+		
+	elif not fetch:
+		log.info("Parsing local Modification data...")	
+		mods = open(modifications_table, 'r', encoding='utf-8')
+		for line in mods:
+			if not line.startswith("#"):
+				name, abbr, ref, mod = line.split('\t')
+				# replace unknown modifications with reference of N
+				if not ref or ref.isspace():
+					ref = 'N'
+				if mod and not mod.isspace():
+					modifications[mod.strip()] = {'name':name.strip(), 'abbr':abbr.strip(), 'ref':ref.strip()}
+
+	return(modifications)
+
+def getUnmodSeq(seq, modification_table):
+# Change modified bases into standard ACGT in input sequence
+
+	new_seq = []
+	for char in seq:
+		# for insertions ('_') make reference N - this is not described in the modifications table
+		if char == '_':
+			char = 'N'
+		else:
+			char = modification_table[char]['ref']
+			# Change queuosine to G (reference is preQ0base in modification file)
+			if char == 'preQ0base':
+				char = 'G'
+
+		new_seq.append(char)
+
+	new_seq = ''.join(new_seq)
+	new_seq = new_seq.replace('U','T')
+	return(new_seq)
+
+def initIntronDict(tRNAscan_out):
+# Build dictionary of intron locations
+
+	Intron_dict = {}
+	tRNAscan = open(tRNAscan_out, 'r')
+	intron_count = 0
+	for line in tRNAscan:
+		if not line.startswith(("Sequence", "Name", "-")):
+			tRNA_ID = line.split()[0] + ".trna" + line.split()[1]
+			tRNA_start = int(line.split()[2])
+			intron_start = int(line.split()[6])
+			intron_stop = int(line.split()[7])
+			# if inton boundaries are not 0, i.e. there is an intron then add to dict
+			if (intron_start > 0) & (intron_stop > 0):
+				if tRNA_start > intron_start: # tRNA is on reverse strand
+					intron_count += 1
+					intron_start = tRNA_start - intron_start
+					intron_stop = tRNA_start - intron_stop + 1 # needed for python 0 indexing and correct slicing of intron
+				else: # tRNA is on forward strand
+					intron_count += 1
+					intron_start -= tRNA_start
+					intron_stop -= tRNA_start
+					intron_stop += 1 # python 0 indexing
+
+				Intron_dict[tRNA_ID] = {}
+				Intron_dict[tRNA_ID]['intron_start'] = intron_start
+				Intron_dict[tRNA_ID]['intron_stop'] = intron_stop
+
+	log.info("{} introns registered...".format(intron_count))
+	return(Intron_dict)
+
+
+def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off, double_cca):
+# Use Intron_dict to find and remove introns plus add CCA and 5' G for His (if eukaryotic)
+
+	# Find a match, slice intron and add G and CCA
+	ID = re.search("tRNAscan-SE ID: (.*?)\).|\((chr.*?)-",seqIO_dict[seqIO_record].description).groups()
+	ID = list(filter(None, ID))[0]
+	if ID in Intron_dict:
+		seq = str(seqIO_dict[seqIO_record].seq[:Intron_dict[ID]['intron_start']] + seqIO_dict[seqIO_record].seq[Intron_dict[ID]['intron_stop']:])
+	else:
+		seq = str(seqIO_dict[seqIO_record].seq)
+	if posttrans_mod_off == False:
+		if double_cca:
+			seq = seq + 'CCACCA'
+		else:
+			seq = seq + 'CCA'
+		if 'His' in seqIO_record:
+			seq = 'G' + seq
+
+	return(seq)
+
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False, search='usearch'):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0
@@ -250,7 +372,7 @@ def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications
 	anticodon_list = list()
 	tRNAbed = open(out_dir + experiment_name + "_maturetRNA.bed","w")
 	# generate modomics_dict and tRNA_dict
-	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_table, posttrans_mod_off, double_cca, pretrnas, local_mod)
+	tRNA_dict, modomics_dict, species = tRNAparser(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, posttrans_mod_off, double_cca, pretrnas, local_mod)
 	temp_dir = out_dir + "/tmp/"
 
 	try:
@@ -902,93 +1024,6 @@ def generateSNPIndex(experiment_name, out_dir, snp_tolerance = False):
 	elif not snp_tolerance:
 		log.warning("SNP-tolerant alignment turned off or no modifications found for input tRNAs: SNP indices not built...\n")
 		snp_index_name = ""
-
-def modificationParser(modifications_table):
-	# Read in modifications and build dictionary
-
-		mods = open(modifications_table, 'r', encoding='utf-8')
-		modifications = {}
-		for line in mods:
-			if not line.startswith("#"):
-				name, abbr, ref, mod = line.split('\t')
-				# replace unknown modifications with reference of N
-				if not ref or ref.isspace():
-					ref = 'N'
-				if mod and not mod.isspace():
-					modifications[mod.strip()] = {'name':name.strip(), 'abbr':abbr.strip(), 'ref':ref.strip()}
-		return(modifications)
-
-def getUnmodSeq(seq, modification_table):
-# Change modified bases into standard ACGT in input sequence
-
-	new_seq = []
-	for char in seq:
-		# for insertions ('_') make reference N - this is not described in the modifications table
-		if char == '_':
-			char = 'N'
-		else:
-			char = modification_table[char]['ref']
-			# Change queuosine to G (reference is preQ0base in modification file)
-			if char == 'preQ0base':
-				char = 'G'
-
-		new_seq.append(char)
-
-	new_seq = ''.join(new_seq)
-	new_seq = new_seq.replace('U','T')
-	return(new_seq)
-
-def initIntronDict(tRNAscan_out):
-# Build dictionary of intron locations
-
-	Intron_dict = {}
-	tRNAscan = open(tRNAscan_out, 'r')
-	intron_count = 0
-	for line in tRNAscan:
-		if not line.startswith(("Sequence", "Name", "-")):
-			tRNA_ID = line.split()[0] + ".trna" + line.split()[1]
-			tRNA_start = int(line.split()[2])
-			intron_start = int(line.split()[6])
-			intron_stop = int(line.split()[7])
-			# if inton boundaries are not 0, i.e. there is an intron then add to dict
-			if (intron_start > 0) & (intron_stop > 0):
-				if tRNA_start > intron_start: # tRNA is on reverse strand
-					intron_count += 1
-					intron_start = tRNA_start - intron_start
-					intron_stop = tRNA_start - intron_stop + 1 # needed for python 0 indexing and correct slicing of intron
-				else: # tRNA is on forward strand
-					intron_count += 1
-					intron_start -= tRNA_start
-					intron_stop -= tRNA_start
-					intron_stop += 1 # python 0 indexing
-
-				Intron_dict[tRNA_ID] = {}
-				Intron_dict[tRNA_ID]['intron_start'] = intron_start
-				Intron_dict[tRNA_ID]['intron_stop'] = intron_stop
-
-	log.info("{} introns registered...".format(intron_count))
-	return(Intron_dict)
-
-
-def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off, double_cca):
-# Use Intron_dict to find and remove introns plus add CCA and 5' G for His (if eukaryotic)
-
-	# Find a match, slice intron and add G and CCA
-	ID = re.search("tRNAscan-SE ID: (.*?)\).|\((chr.*?)-",seqIO_dict[seqIO_record].description).groups()
-	ID = list(filter(None, ID))[0]
-	if ID in Intron_dict:
-		seq = str(seqIO_dict[seqIO_record].seq[:Intron_dict[ID]['intron_start']] + seqIO_dict[seqIO_record].seq[Intron_dict[ID]['intron_stop']:])
-	else:
-		seq = str(seqIO_dict[seqIO_record].seq)
-	if posttrans_mod_off == False:
-		if double_cca:
-			seq = seq + 'CCACCA'
-		else:
-			seq = seq + 'CCA'
-		if 'His' in seqIO_record:
-			seq = 'G' + seq
-
-	return(seq)
 
 def countsAnticodon(input_counts, out_dir):
 	# Counts per anticodon

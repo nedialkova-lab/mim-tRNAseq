@@ -96,10 +96,8 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	map_round = 1 #first round of mapping
 
 	# Parse tRNA and modifications, generate SNP index
-	modifications = os.path.dirname(os.path.realpath(__file__))
-	modifications += "/modifications"
 	coverage_bed, snp_tolerance, mismatch_dict, insert_dict, del_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
-	= modsToSNPIndex(trnas, trnaout, mito_trnas, plastid_trnas, modifications, name, out, double_cca, threads, snp_tolerance, cluster, cluster_id, posttrans, pretrnas, local_mod)
+	= modsToSNPIndex(trnas, trnaout, mito_trnas, plastid_trnas, name, out, double_cca, threads, snp_tolerance, cluster, cluster_id, posttrans, pretrnas, local_mod)
 	structureParser()
 	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)

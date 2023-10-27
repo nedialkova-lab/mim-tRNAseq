@@ -236,6 +236,12 @@ def getModomics(local_mod):
 
 	return modomics, fetch
 
+def openLocalModomics():
+	# Open the local modomics file for reading
+	modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
+	modomics = open(modomics_path, "r", encoding = "utf-8")
+	return modomics
+	
 def getModifications(local_mod):
 	# Get modification lookup table from Modomics via API
 	fetch = False
@@ -357,16 +363,7 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off, dou
 
 	return(seq)
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False, search='usearch'):
-=======
-def openLocalModomics():
-	# Open the local modomics file for reading
-	modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
-	modomics = open(modomics_path, "r", encoding = "utf-8")
-	return modomics
-
 def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False, search='usearch'):
->>>>>>> ea1f7bc492a3b3e8e69fad8de255e04409fd3c70
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0

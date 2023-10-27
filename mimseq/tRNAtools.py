@@ -226,19 +226,17 @@ def getModomics(local_mod):
 			log.info("Modomics retrieved...")
 		except HTTPError as http_err:
 			log.error("Unable to connect to Modomics database! HTTP error: {}. Check status of Modomics webpage. Using local Modomics files...".format(http_err))
-			modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
-			modomics = open(modomics_path, "r+", encoding = "utf-8")
+			modomics = openLocalModomics()
 		except Exception as err:
 			log.error("Error in connecting to Modomics: {}. Using local Modomics files...".format(err))
-			modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
-			modomics = open(modomics_path, "r+", encoding = "utf-8")
+			modomics = openLocalModomics()
 	else:
 		log.warning("Retrieval of Modomics database disabled. Using local files instead...")
-		modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
-		modomics = open(modomics_path, "r+", encoding = "utf-8")
+		modomics = openLocalModomics()
 
 	return modomics, fetch
 
+<<<<<<< HEAD
 def getModifications(local_mod):
 	# Get modification lookup table from Modomics via API
 	fetch = False
@@ -361,6 +359,15 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off, dou
 	return(seq)
 
 def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False, search='usearch'):
+=======
+def openLocalModomics():
+	# Open the local modomics file for reading
+	modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
+	modomics = open(modomics_path, "r", encoding = "utf-8")
+	return modomics
+
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False, search='usearch'):
+>>>>>>> ea1f7bc492a3b3e8e69fad8de255e04409fd3c70
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0

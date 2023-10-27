@@ -236,7 +236,6 @@ def getModomics(local_mod):
 
 	return modomics, fetch
 
-<<<<<<< HEAD
 def getModifications(local_mod):
 	# Get modification lookup table from Modomics via API
 	fetch = False

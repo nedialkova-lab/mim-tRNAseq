@@ -48,6 +48,7 @@ setup(name='mimseq',
 		"seaborn",
 		"matplotlib",
 		"pybedtools",
+        "requests",
 		"statsmodels"],
 	classifiers=[
 		"Development Status :: 4 - Beta",

@@ -363,7 +363,7 @@ def intronRemover (Intron_dict, seqIO_dict, seqIO_record, posttrans_mod_off, dou
 
 	return(seq)
 
-def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, modifications_table, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False, search='usearch'):
+def modsToSNPIndex(gtRNAdb, tRNAscan_out, mitotRNAs, plastidtRNAs, experiment_name, out_dir, double_cca, threads, snp_tolerance = False, cluster = False, cluster_id = 0.95, posttrans_mod_off = False, pretrnas = False, local_mod = False, search='usearch'):
 # Builds SNP index needed for GSNAP based on modificaiton data for each tRNA and clusters tRNAs
 
 	nomatch_count = 0

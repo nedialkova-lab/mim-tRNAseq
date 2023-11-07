@@ -279,8 +279,8 @@ def modificationParser(modifications_table, fetch):
 		
 	elif not fetch:
 		log.info("Parsing local Modification data...")	
-		mods = open(modifications_table, 'r', encoding='utf-8')
-		for line in mods:
+		#mods = open(modifications_table, 'r', encoding='utf-8')
+		for line in modifications_table:
 			if not line.startswith("#"):
 				name, abbr, ref, mod = line.split('\t')
 				# replace unknown modifications with reference of N

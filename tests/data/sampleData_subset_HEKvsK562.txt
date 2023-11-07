@@ -1,0 +1,4 @@
+./tests/data/mimseq_hek_1.subset.fastq.gz	HEK293T
+./tests/data/mimseq_hek_2.subset.fastq.gz	HEK293T
+./tests/data/mimseq_k562_1.subset.fastq.gz	K562
+./tests/data/mimseq_k562_2.subset.fastq.gz	K562

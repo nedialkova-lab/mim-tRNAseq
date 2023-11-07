@@ -278,8 +278,7 @@ def modificationParser(modifications_table, fetch):
 			modifications[data["abbrev"].strip()] = {'name':data["name"].strip(), 'abbr':data["short_name"].strip(), 'ref':data["reference_moiety"][0].strip()}
 		
 	elif not fetch:
-		log.info("Parsing local Modification data...")	
-		#mods = open(modifications_table, 'r', encoding='utf-8')
+		log.info("Parsing local Modification data...")
 		for line in modifications_table:
 			if not line.startswith("#"):
 				name, abbr, ref, mod = line.split('\t')

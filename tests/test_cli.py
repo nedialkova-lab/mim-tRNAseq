@@ -9,7 +9,8 @@ def run_cli(command):
         capture_output=True,
     )
     if out.returncode:
-        print(out)
+        print(out.stdout)
+        print(out.stderr)
     return out
 
 def test_cli():

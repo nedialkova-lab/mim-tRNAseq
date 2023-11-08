@@ -43,6 +43,11 @@ jobs:
         run: |
           pytest
         shell: micromamba-shell {0}
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: mimseq-output
+          path: "test_*"
 
   build-status: # for branch protection rule
     runs-on: ubuntu-latest

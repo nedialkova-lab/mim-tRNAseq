@@ -226,19 +226,19 @@ def getModomics(local_mod):
 			log.info("Modomics retrieved...")
 		except HTTPError as http_err:
 			log.error("Unable to connect to Modomics database! HTTP error: {}. Check status of Modomics webpage. Using local Modomics files...".format(http_err))
-			modomics = openLocalModomics()
+			modomics = openLocalModomics('/data/modomics')
 		except Exception as err:
 			log.error("Error in connecting to Modomics: {}. Using local Modomics files...".format(err))
-			modomics = openLocalModomics()
+			modomics = openLocalModomics('/data/modomics')
 	else:
 		log.warning("Retrieval of Modomics database disabled. Using local files instead...")
-		modomics = openLocalModomics()
+		modomics = openLocalModomics('/data/modomics')
 
 	return modomics, fetch
 
-def openLocalModomics():
+def openLocalModomics(filepath):
 	# Open the local modomics file for reading
-	modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
+	modomics_path = os.path.dirname(os.path.realpath(__file__)) + filepath
 	modomics = open(modomics_path, "r", encoding = "utf-8")
 	return modomics
 	
@@ -254,16 +254,13 @@ def getModifications(local_mod):
 			log.info("Modification table retrieved...")
 		except HTTPError as http_err:
 			log.error("Unable to connect to Modomics database! HTTP error: {}. Check status of Modomics webpage. Using local Modomics files...".format(http_err))
-			modifications_path = os.path.dirname(os.path.realpath(__file__)) + "/modifications"
-			modifications = open(modifications_path, "r+", encoding = "utf-8")
+			modifications = openLocalModomics('/modifications')
 		except Exception as err:
 			log.error("Error in connecting to Modomics: {}. Using local Modomics files...".format(err))
-			modifications_path = os.path.dirname(os.path.realpath(__file__)) + "/modifications"
-			modifications = open(modifications_path, "r+", encoding = "utf-8")
+			modifications = openLocalModomics('/modifications')
 	else:
 		log.warning("Retrieval of Modomics database disabled. Using local files instead...")
-		modifications_path = os.path.dirname(os.path.realpath(__file__)) + "/modifications"
-		modifications = open(modifications_path, "r+", encoding = "utf-8")
+		modifications = openLocalModomics('/modifications')
 
 	return modifications, fetch
 

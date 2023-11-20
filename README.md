@@ -56,7 +56,7 @@ For this last cp command, root access is required. However, if this is not possi
 export PATH=$PATH:full/path/to/usearch
 ```
 
-Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (see documentation) will also need to be installed.
+Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (including `usearch` as above, `BLAST`, `infernal`, `GMAP/GSNAP`, and all required R packages) will also need to be installed manually.
 ```bash
 	pip install mimseq
 ```

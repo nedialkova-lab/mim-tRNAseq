@@ -27,7 +27,7 @@ test_cli_local_modomics:
   - path: test_cli_local_modomics/mods/mismatchTable.csv
     md5sum: 8770ba48b83b6bb18a38351d224052f0
   - path: test_cli_local_modomics/mods/predictedMods.csv
-    md5sum: 17e841f5e47def3a3b7db66896383663
+    md5sum: bfc85f10d6d357b0b36fa6a581398c67
   - path: test_cli_local_modomics/DESeq2/cyto/anticodon/K562vsHEK293T_diffexpr-results.csv
     md5sum: c0038282d212e73c36ac6a0769add8e6
   - path: test_cli_local_modomics/DESeq2/cyto/isodecoder/K562vsHEK293T_diffexpr-results.csv

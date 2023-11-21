@@ -1,6 +1,18 @@
 test_cli:
-  - path: 
-    md5sum:
+  - path: test_cli/counts/Anticodon_counts_raw.txt
+    md5sum: 3306c6c112a12e75c16d50748cff46e7
+  - path: test_cli/counts/Isodecoder_counts_raw.txt
+    md5sum: 6aedc13a33b837d5854649e705c098d6
+  - path: test_cli/CCAanalysis/CCAcounts.csv
+    md5sum: 99193120e5bb0f419b23b24ad9de56db
+  - path: test_cli/mods/allModsTable.csv
+    md5sum: fc26c456f8c9902e7bf5f95f7dfbe5fa
+  - path: test_cli/mods/predictedMods.csv
+    md5sum: e559c490984fd0e17f8571c27ca5d443
+  - path: test_cli/DESeq2/cyto/anticodon/K562vsHEK293T_diffexpr-results.csv
+    md5sum: 61d2c83ae9722afb55582c18f0ff5563
+  - path: test_cli/DESeq2/cyto/isodecoder/K562vsHEK293T_diffexpr-results.csv
+    md5sum: b0fb1adea54c713dbff9a765f0a4d1d4
 test_cli_local_modomics:
   - path: test_cli_local_modomics/counts/Anticodon_counts_raw.txt
     md5sum: 8d6137502ea55c69d7e48bae402f6784

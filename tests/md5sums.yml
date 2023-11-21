@@ -7,6 +7,8 @@ test_cli:
     md5sum: 99193120e5bb0f419b23b24ad9de56db
   - path: test_cli/mods/allModsTable.csv
     md5sum: fc26c456f8c9902e7bf5f95f7dfbe5fa
+  - path: test_cli/mods/mismatchTable.csv
+    md5sum: a0989a9e4bef3bd35c613f2319dc6801
   - path: test_cli/mods/predictedMods.csv
     md5sum: e559c490984fd0e17f8571c27ca5d443
   - path: test_cli/DESeq2/cyto/anticodon/K562vsHEK293T_diffexpr-results.csv
@@ -22,6 +24,8 @@ test_cli_local_modomics:
     md5sum: cc82e37e9815547ab8d63482b82488c1
   - path: test_cli_local_modomics/mods/allModsTable.csv
     md5sum: 23337325c55702d6098cb90ebce60d06
+  - path: test_cli_local_modomics/mods/mismatchTable.csv
+    md5sum: 8770ba48b83b6bb18a38351d224052f0
   - path: test_cli_local_modomics/mods/predictedMods.csv
     md5sum: c0ddaf02682ed2c0ec08e518740d0d02
   - path: test_cli_local_modomics/DESeq2/cyto/anticodon/K562vsHEK293T_diffexpr-results.csv

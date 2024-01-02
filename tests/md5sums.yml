@@ -17,18 +17,18 @@ test_cli:
     md5sum: b0fb1adea54c713dbff9a765f0a4d1d4
 test_cli_local_modomics:
   - path: test_cli_local_modomics/counts/Anticodon_counts_raw.txt
-    md5sum: c9a8653427926f50b23dd45ee60864b9
+    md5sum: 8d6137502ea55c69d7e48bae402f6784
   - path: test_cli_local_modomics/counts/Isodecoder_counts_raw.txt
-    md5sum: 91de1307ae73cd824f9b3e7689a3a96c
+    md5sum: cc8ed25dccd0b062c73053dc8345ba24
   - path: test_cli_local_modomics/CCAanalysis/CCAcounts.csv
-    md5sum: 04282ef1bb479dc8d7a5bc254b67899a
+    md5sum: cc82e37e9815547ab8d63482b82488c1
   - path: test_cli_local_modomics/mods/allModsTable.csv
-    md5sum: 3e42f66961e706730c502b9b6d911dd7
+    md5sum: 23337325c55702d6098cb90ebce60d06
   - path: test_cli_local_modomics/mods/mismatchTable.csv
     md5sum: 8770ba48b83b6bb18a38351d224052f0
   - path: test_cli_local_modomics/mods/predictedMods.csv
-    md5sum: bfc85f10d6d357b0b36fa6a581398c67
+    md5sum: c0ddaf02682ed2c0ec08e518740d0d02
   - path: test_cli_local_modomics/DESeq2/cyto/anticodon/K562vsHEK293T_diffexpr-results.csv
-    md5sum: c0038282d212e73c36ac6a0769add8e6
+    md5sum: f6144b1ad7c075c3c18e999b8c3775ac
   - path: test_cli_local_modomics/DESeq2/cyto/isodecoder/K562vsHEK293T_diffexpr-results.csv
-    md5sum: 3e1836f8f30dbb66af077000b0f47677
+    md5sum: 1714c8e12a0fe9a1647d76d678d6e925

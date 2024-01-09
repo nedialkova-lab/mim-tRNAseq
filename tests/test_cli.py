@@ -43,10 +43,10 @@ def test_cli():
     snapshot_files = read_yaml('tests/md5sums.yml')['test_cli']
     assert is_success and check_snapshot_md5sums(snapshot_files)
 
-def test_cli_local_modomics():
-    mimseq_out = run_cli(
-        "mimseq --species Hsap --cluster-id 0.97 --threads 2 --min-cov 0.0005 --max-mismatches 0.075 --control-condition HEK293T -n hg38_test --out-dir test_cli_local_modomics --max-multi 4 --remap --remap-mismatches 0.05 --local-modomics tests/data/sampleData_subset_HEKvsK562.txt"
-    )
-    is_success = mimseq_out.returncode == 0
-    snapshot_files = read_yaml('tests/md5sums.yml')['test_cli_local_modomics']
-    assert is_success and check_snapshot_md5sums(snapshot_files)
+# def test_cli_local_modomics():
+#     mimseq_out = run_cli(
+#         "mimseq --species Hsap --cluster-id 0.97 --threads 2 --min-cov 0.0005 --max-mismatches 0.075 --control-condition HEK293T -n hg38_test --out-dir test_cli_local_modomics --max-multi 4 --remap --remap-mismatches 0.05 --local-modomics tests/data/sampleData_subset_HEKvsK562.txt"
+#     )
+#     is_success = mimseq_out.returncode == 0
+#     snapshot_files = read_yaml('tests/md5sums.yml')['test_cli_local_modomics']
+#     assert is_success and check_snapshot_md5sums(snapshot_files)

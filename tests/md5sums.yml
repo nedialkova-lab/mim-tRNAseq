@@ -6,7 +6,7 @@ test_cli:
   - path: test_cli/CCAanalysis/CCAcounts.csv
     md5sum: 99193120e5bb0f419b23b24ad9de56db
   - path: test_cli/mods/allModsTable.csv
-    md5sum: fc26c456f8c9902e7bf5f95f7dfbe5fa
+    md5sum: 2fa08bd87e6587447faedd5110ffa75b
   - path: test_cli/mods/mismatchTable.csv
     md5sum: a0989a9e4bef3bd35c613f2319dc6801
   - path: test_cli/mods/predictedMods.csv

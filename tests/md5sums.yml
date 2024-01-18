@@ -1,0 +1,34 @@
+test_cli:
+  - path: test_cli/counts/Anticodon_counts_raw.txt
+    md5sum: 3306c6c112a12e75c16d50748cff46e7
+  - path: test_cli/counts/Isodecoder_counts_raw.txt
+    md5sum: 6aedc13a33b837d5854649e705c098d6
+  - path: test_cli/CCAanalysis/CCAcounts.csv
+    md5sum: 99193120e5bb0f419b23b24ad9de56db
+  - path: test_cli/mods/allModsTable.csv
+    md5sum: 2fa08bd87e6587447faedd5110ffa75b
+  - path: test_cli/mods/mismatchTable.csv
+    md5sum: a0989a9e4bef3bd35c613f2319dc6801
+  - path: test_cli/mods/predictedMods.csv
+    md5sum: e559c490984fd0e17f8571c27ca5d443
+  - path: test_cli/DESeq2/cyto/anticodon/K562vsHEK293T_diffexpr-results.csv
+    md5sum: 61d2c83ae9722afb55582c18f0ff5563
+  - path: test_cli/DESeq2/cyto/isodecoder/K562vsHEK293T_diffexpr-results.csv
+    md5sum: b0fb1adea54c713dbff9a765f0a4d1d4
+test_cli_local_modomics:
+  - path: test_cli_local_modomics/counts/Anticodon_counts_raw.txt
+    md5sum: 8d6137502ea55c69d7e48bae402f6784
+  - path: test_cli_local_modomics/counts/Isodecoder_counts_raw.txt
+    md5sum: cc8ed25dccd0b062c73053dc8345ba24
+  - path: test_cli_local_modomics/CCAanalysis/CCAcounts.csv
+    md5sum: cc82e37e9815547ab8d63482b82488c1
+  - path: test_cli_local_modomics/mods/allModsTable.csv
+    md5sum: 23337325c55702d6098cb90ebce60d06
+  - path: test_cli_local_modomics/mods/mismatchTable.csv
+    md5sum: 8770ba48b83b6bb18a38351d224052f0
+  - path: test_cli_local_modomics/mods/predictedMods.csv
+    md5sum: c0ddaf02682ed2c0ec08e518740d0d02
+  - path: test_cli_local_modomics/DESeq2/cyto/anticodon/K562vsHEK293T_diffexpr-results.csv
+    md5sum: f6144b1ad7c075c3c18e999b8c3775ac
+  - path: test_cli_local_modomics/DESeq2/cyto/isodecoder/K562vsHEK293T_diffexpr-results.csv
+    md5sum: 1714c8e12a0fe9a1647d76d678d6e925

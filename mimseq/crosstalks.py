@@ -45,8 +45,6 @@ def analyze_1sample(s,dirpath,thres):
                                 oddsr, p = fisher_exact(cont_tab)
                                 outdf.loc[n] = [s,ref,v1,v2,p,oddsr,counts]
                                 n += 1
-    # Remove temporary files
-    rmtree(join(dirpath, s))
     return outdf
 
 def crosstalks_wrapper(dirpath, thres, threads):
@@ -70,4 +68,3 @@ def crosstalks_wrapper(dirpath, thres, threads):
     outdf["canon_var2"] = ["Charged" if s[1]=="Charged" else posinfo.loc[(s[0],s[1]),"canon_pos"] if s[0] in posinfo.index.get_level_values(0) else "NA" for s in outdf[["ref","var2"]].to_numpy()]
     # Save table
     outdf.to_csv(dirpath+"/crosstalks.tsv",sep="\t",index=False)
-    

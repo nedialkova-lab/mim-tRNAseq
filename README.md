@@ -86,11 +86,9 @@ To run the [SingLe-read Analysis of Crosstalks (SLAC)](https://doi.org/10.1093/n
 
 Please log all issues/suggestions on the mim-tRNAseq GitHub page: https://github.com/nedialkova-lab/mim-tRNAseq/issues
 
-Drew Behrens: abehrens@biochem.mpg.de
+Danny Nedialkova: danny.nedialkova@maxperutzlabs.ac.at
 
-Danny Nedialkova: nedialkova@biochem.mpg.de
-
-Nedialkova laboratory: https://www.biochem.mpg.de/nedialkova
+Nedialkova laboratory: https://www.maxperutzlabs.ac.at
 
 
 ## Cite
